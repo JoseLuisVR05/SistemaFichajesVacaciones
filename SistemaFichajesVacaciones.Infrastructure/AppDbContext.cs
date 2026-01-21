@@ -11,7 +11,8 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Employee> Employees => Set<Employee>();
-     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+    public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +69,15 @@ public class AppDbContext : DbContext
 
             // Índice compuesto para búsquedas eficientes
             entity.HasIndex(e => new { e.EmployeeId, e.EventTime });
+        });
+
+        // Configuración básica de User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(u => u.UserId);
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            entity.Property(u => u.PasswordHash).IsRequired();
         });
     }
 
