@@ -61,4 +61,25 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
+// ----- START Seeder invocation (solo en Development) -----
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var env = services.GetRequiredService<IWebHostEnvironment>();
+        if (env.IsDevelopment())
+        {
+            var db = services.GetRequiredService<AppDbContext>();
+            await SistemaFichajesVacaciones.Infrastructure.Data.SeedData.EnsureSeedDataAsync(db);
+            Console.WriteLine("SeedData ejecutado correctamente (Development).");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error during seeding: {ex}");
+        throw;
+    }
+}
+// ----- END Seeder invocation -----
 app.Run();
