@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SistemaFichajesVacaciones.Api/SistemaFichajesVacaciones.Api.csproj" />
+  <Project Path="SistemaFichajesVacaciones.Application/SistemaFichajesVacaciones.Application.csproj" />
+  <Project Path="SistemaFichajesVacaciones.Domain/SistemaFichajesVacaciones.Domain.csproj" />
+  <Project Path="SistemaFichajesVacaciones.Infrastructure/SistemaFichajesVacaciones.Infrastructure.csproj" />
+</Solution>
