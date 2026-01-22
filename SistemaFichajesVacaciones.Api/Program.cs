@@ -26,6 +26,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Registrar TokenService
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+// Configuracion para importar CSV
+builder.Services.AddScoped<IEmployeeImportService, EmployeeImportService>();
+
 //Configuracion JWT
 var key = builder.Configuration["Jwt:key"];
 builder.Services.AddAuthentication(options =>

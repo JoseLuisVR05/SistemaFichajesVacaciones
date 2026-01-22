@@ -13,6 +13,9 @@ public class AppDbContext : DbContext
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<EmployeesStaging> EmployeesStaging => Set<EmployeesStaging>();
+    public DbSet<ImportRun> ImportRuns => Set<ImportRun>();
+    public DbSet<ImportError> ImportErrors => Set<ImportError>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +81,31 @@ public class AppDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
             entity.Property(u => u.PasswordHash).IsRequired();
+        });
+
+        // Configuración para EmployeesStaging
+        modelBuilder.Entity<EmployeesStaging>(entity =>
+        {
+            entity.HasKey(e => e.StagingId);
+            entity.Property(e => e.EmployeeCode).HasMaxLength(50);
+            entity.Property(e => e.FullName).HasMaxLength(200);
+            entity.Property(e => e.Email).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<ImportRun>(entity =>
+        {
+            entity.HasKey(e => e.ImportRunId);
+            entity.Property(e => e.FileName).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<ImportError>(entity =>
+        {
+            entity.HasKey(e => e.ErrorId);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.HasOne(e => e.ImportRun)
+                  .WithMany(r => r.Errors)
+                  .HasForeignKey(e => e.ImportRunId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

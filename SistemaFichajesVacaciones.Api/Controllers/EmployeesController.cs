@@ -2,6 +2,7 @@ using SistemaFichajesVacaciones.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
@@ -11,10 +12,12 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 public class EmployeesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IEmployeeImportService _importService;
 
-    public EmployeesController(AppDbContext context)
+    public EmployeesController(AppDbContext context, IEmployeeImportService importService)
     {
         _context = context;
+        _importService = importService;
     }
 
     [HttpGet]
@@ -43,13 +46,20 @@ public class EmployeesController : ControllerBase
    
     [HttpPost("import")]
         public async Task<IActionResult> ImportEmployees(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest("Archivo vacío");
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "Archivo vacío" });
 
-                // aquí irá la lógica
-            return Ok("Archivo recibido correctamente");
+        try
+        {
+            var result = await _importService.ImportFromCsvAsync(file);
+            return Ok(new { message = "Importación finalizada", importRunId = result.ImportRunId, total = result.TotalRows, errors = result.ErrorRows });
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error en la importación", detail = ex.Message });
+        }
+    }
     
 }
 
