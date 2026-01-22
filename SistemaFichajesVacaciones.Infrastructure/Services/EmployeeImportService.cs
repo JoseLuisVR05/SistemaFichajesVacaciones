@@ -59,6 +59,8 @@ public class EmployeeImportService : IEmployeeImportService
                 var code = parts.Length > 0 ? parts[0].Trim() : null;
                 var fullName = parts.Length > 1 ? parts[1].Trim() : null;
                 var email = parts.Length > 2 ? parts[2].Trim() : null;
+                var company = parts.Length > 3 ? parts[3].Trim() : null;
+                var businessUnit = parts.Length > 4 ? parts[4].Trim() : null;
                 var department = parts.Length > 5 ? parts[5].Trim() : null;
                 var managerCode = parts.Length > 6 ? parts[6].Trim() : null;
                 var isActive = true;
@@ -79,6 +81,8 @@ public class EmployeeImportService : IEmployeeImportService
                     EmployeeCode = code!,
                     FullName = fullName!,
                     Email = email ?? string.Empty,
+                    Company = company,
+                    BusinessUnit = businessUnit,
                     Department = department,
                     ManagerEmployeeCode = managerCode,
                     IsActive = isActive,
@@ -117,15 +121,30 @@ public class EmployeeImportService : IEmployeeImportService
             var stagings = await _db.EmployeesStaging
                 .Where(s => s.ImportRunId == importRun.ImportRunId)
                 .ToListAsync(cancellationToken);
+            //Precargar empleados en memoria
+            var employeesByCode = await _db.Employees
+                .ToDictionaryAsync(e => e.EmployeeCode, e => e.EmployeeId, cancellationToken);
+
 
             foreach (var s in stagings)
             {
+                int? managerEmployeeId = null;
+
+                if (!string.IsNullOrWhiteSpace(s.ManagerEmployeeCode) &&
+                    employeesByCode.TryGetValue(s.ManagerEmployeeCode, out var mgrId))
+                {
+                    managerEmployeeId = mgrId;
+                }
+
                 var existing = await _db.Employees.SingleOrDefaultAsync(e => e.EmployeeCode == s.EmployeeCode, cancellationToken);
                 if (existing != null)
                 {
                     existing.FullName = s.FullName ?? existing.FullName;
                     existing.Email = s.Email ?? existing.Email;
+                    existing.Company = s.Company ?? existing.Company;
+                    existing.BusinessUnit = s.BusinessUnit ?? existing.BusinessUnit;
                     existing.Department = s.Department ?? existing.Department;
+                    existing.ManagerEmployeeId = managerEmployeeId;
                     existing.IsActive = s.IsActive;
                     existing.StartDate = s.StartDate ?? existing.StartDate;
                     existing.EndDate = s.EndDate ?? existing.EndDate;
@@ -138,7 +157,10 @@ public class EmployeeImportService : IEmployeeImportService
                         EmployeeCode = s.EmployeeCode ?? string.Empty,
                         FullName = s.FullName ?? string.Empty,
                         Email = s.Email ?? string.Empty,
+                        Company = s.Company,
+                        BusinessUnit = s.BusinessUnit,
                         Department = s.Department,
+                        ManagerEmployeeId = managerEmployeeId,
                         IsActive = s.IsActive,
                         StartDate = s.StartDate,
                         EndDate = s.EndDate,

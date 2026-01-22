@@ -6,8 +6,11 @@ namespace SistemaFichajesVacaciones.Domain.Entities
         public string? EmployeeCode { get; set; }
         public string? FullName { get; set; }
         public string? Email { get; set; }
+        public string? Company { get; set; }
+        public string? BusinessUnit { get; set; }
         public string? Department { get; set; }
         public string? ManagerEmployeeCode { get; set; }
+
         public bool IsActive { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
