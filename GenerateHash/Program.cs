@@ -1,5 +1,6 @@
 ﻿using System;
 
+// dotnet run --project .\GenerateHash -- "Admin123!" para generar contraseña
 class Program
 {
     static void Main(string[] args)

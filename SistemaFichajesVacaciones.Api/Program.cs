@@ -9,7 +9,12 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // 🔹 AQUÍ se añaden los servicios
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+.AddJsonOptions(options =>
+    {
+        // Esta opción ignora los ciclos y simplemente deja en 'null' la referencia repetida
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
