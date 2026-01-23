@@ -145,7 +145,8 @@ public class EmployeeImportService : IEmployeeImportService
             catch (Exception ex)
             {
                 errors++;
-                _db.ImportErrors.Add(new ImportError
+
+                ImportErrors.Add(new ImportError
                 {
                     ImportRunId = importRun.ImportRunId,
                     RowNumber = row,
@@ -282,6 +283,7 @@ public class EmployeeImportService : IEmployeeImportService
         _db.ImportRuns.Update(importRun);
 
         await _db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return importRun;
     }
