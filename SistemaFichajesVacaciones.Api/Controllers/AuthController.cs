@@ -22,18 +22,34 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var user = await _context.Set<Users>().SingleOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await _context.Users
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .Include(u => u.Employee)
+            .SingleOrDefaultAsync(u => u.Email == dto.Email);
+
         if (user == null || !user.IsEnabled)
             return Unauthorized(new { message = "Credenciales inválidas" });
-
-        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return Unauthorized(new { message = "Credenciales inválidas" });
+        
+        var primaryRole = user.UserRoles.FirstOrDefault()?.Role.Name;
 
         var token = _tokenService.GenerateToken(user.UserId, user.Email);
+        
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return Ok(new { token });
+        return Ok(new
+        {
+            token,
+            user = new
+            {
+                userId = user.UserId,
+                email = user.Email,
+                employeeId = user.EmployeeId,
+                employeeName = user.Employee?.FullName,
+                role = primaryRole
+            }
+        });
     }
 }
 
