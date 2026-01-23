@@ -27,6 +27,7 @@ namespace SistemaFichajesVacaciones.Domain.Entities
         public int TotalRows { get; set; }
         public int SuccessRows { get; set; }
         public int ErrorRows { get; set; }
+        public string? Status { get; set; }
         public ICollection<ImportError> Errors { get; set; } = new List<ImportError>();
     }
 

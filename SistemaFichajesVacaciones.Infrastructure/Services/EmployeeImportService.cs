@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using SistemaFichajesVacaciones.Domain.Entities;
 
+
 namespace SistemaFichajesVacaciones.Infrastructure.Services;
 
 public interface IEmployeeImportService
@@ -12,6 +13,11 @@ public interface IEmployeeImportService
 
 public class EmployeeImportService : IEmployeeImportService
 {
+    private string[] ParseCsvLine(string line)
+    {
+        // Manejo simple de CSV, considerar casos más complejos según necesidades
+        return line.Split(new[] { ',' }, StringSplitOptions.None);
+    }
     private readonly AppDbContext _db;
     public EmployeeImportService(AppDbContext db) => _db = db;
 
@@ -19,23 +25,33 @@ public class EmployeeImportService : IEmployeeImportService
     {
         if (file == null) throw new ArgumentNullException(nameof(file));
 
-        var importRun = new ImportRun
+        using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            var importRun = new ImportRun
         {
             FileName = file.FileName,
-            ImportedAt = DateTime.UtcNow
+            ImportedAt = DateTime.UtcNow,
+            Status = "In Progress"
         };
+            
 
         _db.ImportRuns.Add(importRun);
         await _db.SaveChangesAsync(cancellationToken); // obtener ImportRunId
 
+        // Procesar el archivo CSV
         using var stream = file.OpenReadStream();
         using var reader = new StreamReader(stream);
+
         string? header = await reader.ReadLineAsync();
         if (header == null)
         {
             importRun.ErrorRows = 1;
+            importRun.Status = "Failed";
             _db.ImportRuns.Update(importRun);
             await _db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return importRun;
         }
 
@@ -43,32 +59,64 @@ public class EmployeeImportService : IEmployeeImportService
         int row = 1;
         int success = 0, errors = 0;
         var stagingEntities = new List<EmployeesStaging>();
+        var ImportErrors = new List<ImportError>();
 
+        var existingEmployeeCodes = await _db.Employees
+            .Select(e => e.EmployeeCode)
+            .Distinct()
+            .ToHashSetAsync(cancellationToken);
+
+        
+        
         while (!reader.EndOfStream)
         {
             row++;
             var line = await reader.ReadLineAsync();
             if (string.IsNullOrWhiteSpace(line)) continue;
 
-            // Split simple, mejorar si hay comillas/commas dentro
-            var parts = line.Split(',');
-
             try
             {
+                
+                 var parts = ParseCsvLine(line);
+                
+                // Validaciones básicas
+                if (parts.Length < 2)
+                    throw new Exception("Fila no contiene suficientes columnas");
+
+                var code = parts[0]?.Trim();
+                var fullName = parts[1]?.Trim();
+
+                // Validaciones de negocio
+                if (string.IsNullOrEmpty(code))
+                    throw new Exception("EmployeeCode es requerido");
+                    
+                if (string.IsNullOrEmpty(fullName))
+                    throw new Exception("FullName es requerido");
+
+                if (code.Length > 50)
+                    throw new Exception("EmployeeCode no puede exceder 50 caracteres");
+                
                 // Esperamos columnas: EmployeeCode,FullName,Email,Company,BusinessUnit,Department,ManagerEmployeeCode,IsActive,StartDate,EndDate
-                var code = parts.Length > 0 ? parts[0].Trim() : null;
-                var fullName = parts.Length > 1 ? parts[1].Trim() : null;
                 var email = parts.Length > 2 ? parts[2].Trim() : null;
                 var company = parts.Length > 3 ? parts[3].Trim() : null;
                 var businessUnit = parts.Length > 4 ? parts[4].Trim() : null;
                 var department = parts.Length > 5 ? parts[5].Trim() : null;
+                
                 var managerCode = parts.Length > 6 ? parts[6].Trim() : null;
-                var isActive = true;
+                // Validar que manager exista (si se proporciona)
+                if (!string.IsNullOrEmpty(managerCode) && !existingEmployeeCodes.Contains(managerCode))
+                {
+                    throw new Exception($"Manager con código '{managerCode}' no existe en el sistema");
+                }
+                
+                bool isActive = true;
                 if (parts.Length > 7 && bool.TryParse(parts[7].Trim(), out var parsedActive))
                     isActive = parsedActive;
+                
                 DateTime? startDate = null;
                 if (parts.Length > 8 && DateTime.TryParse(parts[8].Trim(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var sd))
                     startDate = sd;
+                
                 DateTime? endDate = null;
                 if (parts.Length > 9 && DateTime.TryParse(parts[9].Trim(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var ed))
                     endDate = ed;
@@ -88,7 +136,8 @@ public class EmployeeImportService : IEmployeeImportService
                     IsActive = isActive,
                     StartDate = startDate,
                     EndDate = endDate,
-                    ImportRunId = importRun.ImportRunId
+                    ImportRunId = importRun.ImportRunId,
+                    CreatedAt = DateTime.UtcNow
                 };
                 stagingEntities.Add(staging);
                 success++;
@@ -100,7 +149,8 @@ public class EmployeeImportService : IEmployeeImportService
                 {
                     ImportRunId = importRun.ImportRunId,
                     RowNumber = row,
-                    ErrorMessage = ex.Message
+                    ErrorMessage = ex.Message,
+                    CreatedAt = DateTime.UtcNow
                 });
             }
         }
@@ -108,69 +158,77 @@ public class EmployeeImportService : IEmployeeImportService
         // Insertar a tabla staging en bloque
         if (stagingEntities.Any())
         {
-            _db.EmployeesStaging.AddRange(stagingEntities);
+            await _db.EmployeesStaging.AddRangeAsync(stagingEntities, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        // Ahora aplicar upsert a Employees basado en EmployeeCode
-        // NOTA: EF Core 10 admite ExecuteUpdate / ExecuteDelete; para upsert usaremos transacción y lógica: buscar por EmployeeCode y actualizar/insertar.
-        using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
-        try
+        // Guardar errores
+        if (ImportErrors.Any())
         {
-            // Traer todos los staging de este import run
-            var stagings = await _db.EmployeesStaging
-                .Where(s => s.ImportRunId == importRun.ImportRunId)
-                .ToListAsync(cancellationToken);
-            //Precargar empleados en memoria
-            var employeesByCode = await _db.Employees
-                .ToDictionaryAsync(e => e.EmployeeCode, e => e.EmployeeId, cancellationToken);
+            await _db.ImportErrors.AddRangeAsync(ImportErrors, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
 
+        var stagingData = await _db.EmployeesStaging
+            .Where(s => s.ImportRunId == importRun.ImportRunId)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
-            foreach (var s in stagings)
+        var existingEmployees = await _db.Employees
+            .Where(e => stagingData.Select(s => s.EmployeeCode).Contains(e.EmployeeCode))
+            .ToDictionaryAsync(e => e.EmployeeCode, cancellationToken);
+
+        var newEmployees = new List<Employee>();
+        var employeesToUpdate = new List<Employee>();
+
+        // Ahora aplicar upsert a Employees basado en EmployeeCode
+        
+           foreach (var staging in stagingData)
+        {
+            if (string.IsNullOrEmpty(staging.EmployeeCode))
+                continue;
+
+            if (existingEmployees.TryGetValue(staging.EmployeeCode, out var existing))
             {
-                int? managerEmployeeId = null;
-
-                if (!string.IsNullOrWhiteSpace(s.ManagerEmployeeCode) &&
-                    employeesByCode.TryGetValue(s.ManagerEmployeeCode, out var mgrId))
-                {
-                    managerEmployeeId = mgrId;
-                }
-
-                var existing = await _db.Employees.SingleOrDefaultAsync(e => e.EmployeeCode == s.EmployeeCode, cancellationToken);
-                if (existing != null)
-                {
-                    existing.FullName = s.FullName ?? existing.FullName;
-                    existing.Email = s.Email ?? existing.Email;
-                    existing.Company = s.Company ?? existing.Company;
-                    existing.BusinessUnit = s.BusinessUnit ?? existing.BusinessUnit;
-                    existing.Department = s.Department ?? existing.Department;
-                    existing.ManagerEmployeeId = managerEmployeeId;
-                    existing.IsActive = s.IsActive;
-                    existing.StartDate = s.StartDate ?? existing.StartDate;
-                    existing.EndDate = s.EndDate ?? existing.EndDate;
-                    existing.UpdatedAt = DateTime.UtcNow;
-                }
-                else
-                {
-                    var newEmp = new Employee
-                    {
-                        EmployeeCode = s.EmployeeCode ?? string.Empty,
-                        FullName = s.FullName ?? string.Empty,
-                        Email = s.Email ?? string.Empty,
-                        Company = s.Company,
-                        BusinessUnit = s.BusinessUnit,
-                        Department = s.Department,
-                        ManagerEmployeeId = managerEmployeeId,
-                        IsActive = s.IsActive,
-                        StartDate = s.StartDate,
-                        EndDate = s.EndDate,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    _db.Employees.Add(newEmp);
-                }
+                // Actualizar empleado existente
+                existing.FullName = staging.FullName ?? existing.FullName;
+                existing.Email = staging.Email ?? existing.Email;
+                existing.Company = staging.Company ?? existing.Company;
+                existing.BusinessUnit = staging.BusinessUnit ?? existing.BusinessUnit;
+                existing.Department = staging.Department ?? existing.Department;
+                existing.IsActive = staging.IsActive;
+                existing.StartDate = staging.StartDate ?? existing.StartDate;
+                existing.EndDate = staging.EndDate ?? existing.EndDate;
+                existing.UpdatedAt = DateTime.UtcNow;
+                
+                employeesToUpdate.Add(existing);
             }
-
+            else
+            {
+                // Crear nuevo empleado
+                var newEmployee = new Employee
+                {
+                    EmployeeCode = staging.EmployeeCode,
+                    FullName = staging.FullName ?? string.Empty,
+                    Email = staging.Email ?? string.Empty,
+                    Company = staging.Company,
+                    BusinessUnit = staging.BusinessUnit,
+                    Department = staging.Department,
+                    IsActive = staging.IsActive,
+                    StartDate = staging.StartDate,
+                    EndDate = staging.EndDate,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                newEmployees.Add(newEmployee);
+            }
+        }
+        // Insertar nuevos empleados
+        if (newEmployees.Any())
+        {
+            await _db.Employees.AddRangeAsync(newEmployees, cancellationToken);
+        }
             await _db.SaveChangesAsync(cancellationToken);
 
             // Si el proceso requiere gestionar bajas marcando IsActive=0 para empleados no presentes,
@@ -180,27 +238,57 @@ public class EmployeeImportService : IEmployeeImportService
             // var toDeactivate = _db.Employees.Where(e => !incomingCodes.Contains(e.EmployeeCode) && e.IsActive);
             // foreach (var e in toDeactivate) e.IsActive = false;
 
-            await tx.CommitAsync(cancellationToken);
-        }
-        catch (Exception ex)
+        // Actualizar relaciones de managers
+        // Necesitamos recargar los IDs después del save
+            var allEmployeeCodes = stagingData
+                .Select(s => s.EmployeeCode)
+                .Concat(stagingData.Where(s => !string.IsNullOrEmpty(s.ManagerEmployeeCode))
+                               .Select(s => s.ManagerEmployeeCode))
+                .Distinct()
+                .Where(c => !string.IsNullOrEmpty(c))
+                .ToList();
+
+            var employeeIdMap = await _db.Employees
+                .Where(e => allEmployeeCodes.Contains(e.EmployeeCode))
+                .ToDictionaryAsync(e => e.EmployeeCode!, e => e.EmployeeId, cancellationToken);
+            // --- FASE 2: ASIGNACIÓN DE MANAGERS ---
+            // Ahora que todos existen, refrescamos el diccionario de códigos a IDs
+             
+            foreach (var staging in stagingData)
         {
-            await tx.RollbackAsync(cancellationToken);
-            _db.ImportErrors.Add(new ImportError
+            if (string.IsNullOrEmpty(staging.EmployeeCode) || 
+                string.IsNullOrEmpty(staging.ManagerEmployeeCode))
+                continue;
+
+            if (employeeIdMap.TryGetValue(staging.EmployeeCode, out var employeeId) &&
+                employeeIdMap.TryGetValue(staging.ManagerEmployeeCode, out var managerId))
             {
-                ImportRunId = importRun.ImportRunId,
-                RowNumber = 0,
-                ErrorMessage = $"Error durante upsert: {ex.Message}"
-            });
-            await _db.SaveChangesAsync(cancellationToken);
+                var employee = await _db.Employees.FindAsync(new object[] { employeeId }, cancellationToken);
+                if (employee != null && employee.ManagerEmployeeId != managerId)
+                {
+                    employee.ManagerEmployeeId = managerId;
+                    employee.UpdatedAt = DateTime.UtcNow;
+                }
+            }
         }
+
+        await _db.SaveChangesAsync(cancellationToken);
 
         // Actualiza counters del importRun
         importRun.TotalRows = success + errors;
         importRun.SuccessRows = success;
         importRun.ErrorRows = errors;
+        importRun.Status =  "Completed";
         _db.ImportRuns.Update(importRun);
+
         await _db.SaveChangesAsync(cancellationToken);
 
         return importRun;
+    }
+    catch (Exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 }

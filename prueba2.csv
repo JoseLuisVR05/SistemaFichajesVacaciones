@@ -1,0 +1,3 @@
+EmployeeCode,FullName,Email,Company,BusinessUnit,Department,ManagerEmployeeCode,IsActive,StartDate,EndDate
+EMP010,prueba2 Pérez,nose@empresa.com,EmpresaA,IT,Desarrollo,EMP001,1,2026-01-10,
+

@@ -1,3 +1,3 @@
 EmployeeCode,FullName,Email,Company,BusinessUnit,Department,ManagerEmployeeId,IsActive,StartDate,EndDate
-EMP005,Josue Pérez,Josue@empresa.com,EmpresaA,IT,Desarrollo,,1,2026-01-10,
-EMP006,Consuelo López,Consuelo@empresa.com,EmpresaA,HR,RRHH,1,1,2026-02-01,
+EMP001,Josue Pérez,Josue@empresa.com,EmpresaA,IT,Desarrollo,,1,2026-01-10,
+EMP002,Consuelo López,Consuelo@empresa.com,EmpresaA,HR,RRHH,EMP001,1,2026-02-01,
