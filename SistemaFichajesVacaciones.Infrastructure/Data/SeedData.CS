@@ -16,7 +16,7 @@ public static class SeedData
         if (!await context.Users.AnyAsync(u => u.Email == adminEmail))
         {
             var hash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
-            var admin = new User
+            var admin = new Users
             {
                 Email = adminEmail,
                 PasswordHash = hash,

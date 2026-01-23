@@ -11,8 +11,11 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<Users> Users => Set<Users>();
+    public DbSet<Roles> Roles => Set<Roles>();
+    public DbSet<UserRoles> UserRoles => Set<UserRoles>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
-    public DbSet<User> Users => Set<User>();
+    
     public DbSet<EmployeesStaging> EmployeesStaging => Set<EmployeesStaging>();
     public DbSet<ImportRun> ImportRuns => Set<ImportRun>();
     public DbSet<ImportError> ImportErrors => Set<ImportError>();
@@ -51,6 +54,38 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+       // Configuración básica de Users
+        modelBuilder.Entity<Users>(entity =>
+        {
+            entity.HasKey(u => u.UserId);
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            entity.Property(u => u.PasswordHash).IsRequired();
+        });
+        // Configuración básica de Roles
+        modelBuilder.Entity<Roles>(entity =>
+        {
+            entity.HasKey(r => r.RoleId);
+            entity.Property(r => r.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(r => r.Name).IsUnique();
+        });
+
+        // USERROLE
+        modelBuilder.Entity<UserRoles>(entity =>
+        {
+            entity.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            entity.HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // Configuración de TimeEntry
         modelBuilder.Entity<TimeEntry>(entity =>
         {
@@ -72,15 +107,6 @@ public class AppDbContext : DbContext
 
             // Índice compuesto para búsquedas eficientes
             entity.HasIndex(e => new { e.EmployeeId, e.EventTime });
-        });
-
-        // Configuración básica de User
-        modelBuilder.Entity<User>(entity =>
-        {
-            entity.HasKey(u => u.UserId);
-            entity.HasIndex(u => u.Email).IsUnique();
-            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
-            entity.Property(u => u.PasswordHash).IsRequired();
         });
 
         // Configuración para EmployeesStaging

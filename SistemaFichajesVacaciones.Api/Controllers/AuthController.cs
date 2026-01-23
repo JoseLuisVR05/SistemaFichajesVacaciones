@@ -22,7 +22,7 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var user = await _context.Set<User>().SingleOrDefaultAsync(u => u.Email == dto.Email);
+        var user = await _context.Set<Users>().SingleOrDefaultAsync(u => u.Email == dto.Email);
         if (user == null || !user.IsEnabled)
             return Unauthorized(new { message = "Credenciales inválidas" });
 

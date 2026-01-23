@@ -1,6 +1,6 @@
 namespace SistemaFichajesVacaciones.Domain.Entities;
 
-public class User
+public class Users
 {
     public int UserId { get; set; }
     public string Email { get; set; } = string.Empty;
@@ -9,4 +9,8 @@ public class User
     public bool IsEnabled { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
+
+    // Navegación
+    public Employee? Employee { get; set; }
+    public ICollection<UserRoles> UserRoles { get; set; } = new List<UserRoles>();
 }
