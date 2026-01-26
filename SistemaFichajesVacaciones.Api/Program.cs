@@ -25,7 +25,7 @@ builder.Services.AddSwaggerGen(c =>
     { 
         Title = "Sistema de Fichajes y Vacaciones API", 
         Version = "v1",
-        Description = "API para gestión de fichajes y vacaciones"
+        Description = "API para gestión de fichajes y vacaciones",
         Contact = new OpenApiContact
         {
             Name = "Soporte Sistema Fichajes",
