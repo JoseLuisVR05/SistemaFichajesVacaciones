@@ -20,6 +20,8 @@ public class AppDbContext : DbContext
     public DbSet<ImportRun> ImportRuns => Set<ImportRun>();
     public DbSet<ImportError> ImportErrors => Set<ImportError>();
 
+    public DbSet<AuditLog> AuditLog => Set<AuditLog>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

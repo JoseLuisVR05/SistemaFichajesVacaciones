@@ -83,6 +83,9 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 // Configuracion para importar CSV 
 builder.Services.AddScoped<IEmployeeImportService, EmployeeImportService>();
 
+// Registrar AuditService
+builder.Services.AddScoped<IAuditService, AuditService>();
+
 //Configuracion JWT
 var key = builder.Configuration["Jwt:Key"] ?? 
           builder.Configuration["Jwt:key"] ?? 
