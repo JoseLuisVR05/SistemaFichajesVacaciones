@@ -80,6 +80,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Registrar TokenService
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+// Registrar TimeSummaryService
+builder.Services.AddScoped<ITimeSummaryService, TimeSummaryService>();
+
 // Configuracion para importar CSV 
 builder.Services.AddScoped<IEmployeeImportService, EmployeeImportService>();
 

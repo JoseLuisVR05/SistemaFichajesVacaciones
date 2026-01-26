@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 using System.Security.Claims;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
@@ -13,8 +14,12 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 public class TimeEntriesController : ControllerBase
 {
     private readonly AppDbContext _db;
-
-    public TimeEntriesController(AppDbContext db) => _db = db;
+    private readonly ITimeSummaryService _summaryService;
+    public TimeEntriesController(AppDbContext db, ITimeSummaryService summaryService)
+    {
+        _db = db;
+        _summaryService = summaryService;
+    }
 
     /// <summary>
     /// Registrar entrada (IN) o salida (OUT)
@@ -85,9 +90,7 @@ public class TimeEntriesController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
 
-        
-    {
-        
+        {
         // Si no se especifica employeeId, usar el del usuario autenticado
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
@@ -134,6 +137,54 @@ public class TimeEntriesController : ControllerBase
 
         return Ok(entries);
     }
+
+    /// <summary>
+    /// Obtener resumen diario de un empleado
+    /// </summary>
+    [HttpGet("summary/daily")]
+    public async Task<IActionResult> GetDailySummary(
+        [FromQuery] int? employeeId,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
+    {
+        var userIdClaim = User.FindFirst("userId")?.Value;
+        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        int targetEmployeeId;
+        if (employeeId.HasValue)
+        {
+            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            if (!isAdminOrRrhh)
+                return Forbid();
+            targetEmployeeId = employeeId.Value;
+        }
+        else
+        {
+            var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+            if (user.EmployeeId == null)
+                return BadRequest(new { message = "Usuario sin empleado asignado" });
+            targetEmployeeId = user.EmployeeId.Value;
+        }
+
+        var fromDate = from ?? DateTime.UtcNow.AddDays(-30).Date;
+        var toDate = to ?? DateTime.UtcNow.Date;
+
+        // Calcular resúmenes para cada día del rango
+        var summaries = new List<object>();
+        for (var d = fromDate; d <= toDate; d = d.AddDays(1))
+        {
+            var summary = await _summaryService.CalculateDailySummaryAsync(targetEmployeeId, d);
+            summaries.Add(new
+            {
+                date = summary.Date,
+                workedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
+                expectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
+                balanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2)
+            });
+        }
+        return Ok(summaries);
 }
 
 public record RegisterEntryDto(string EntryType, string? Comment);
+}

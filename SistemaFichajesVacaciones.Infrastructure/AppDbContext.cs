@@ -15,7 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Roles> Roles => Set<Roles>();
     public DbSet<UserRoles> UserRoles => Set<UserRoles>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
-    
+    public DbSet<TimeDailySummary> TimeDailySummaries => Set<TimeDailySummary>();
     public DbSet<EmployeesStaging> EmployeesStaging => Set<EmployeesStaging>();
     public DbSet<ImportRun> ImportRuns => Set<ImportRun>();
     public DbSet<ImportError> ImportErrors => Set<ImportError>();
@@ -133,6 +133,21 @@ public class AppDbContext : DbContext
                   .HasForeignKey(e => e.ImportRunId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // Configuración de TimeDailySummary
+        modelBuilder.Entity<TimeDailySummary>(entity =>
+        {
+            entity.HasKey(e => e.SummaryId);
+            entity.HasIndex(e => new { e.EmployeeId, e.Date }).IsUnique();
+    
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
     }
 
+        
 }
+    
