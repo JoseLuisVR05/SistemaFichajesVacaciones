@@ -8,7 +8,7 @@ public static class SeedData
 {
     public static async Task EnsureSeedDataAsync(AppDbContext context)
     {
-        // Aplica migraciones pendientes
+        // Aplica migraciones pendientes, asegura que la base de datos esté actualizada
         await context.Database.MigrateAsync();
 
          // ===== 1. ROLES =====
@@ -106,7 +106,7 @@ public static class SeedData
                 .AnyAsync(ur => ur.UserId == adminUser.UserId && ur.Role.Name == "EMPLOYEE");
         
                         if (!hasEmployeeRole)
-        {
+            {
             var employeeRole = await context.Roles.FirstAsync(r => r.Name == "EMPLOYEE");
             var userRoleEmployee = new UserRoles
             {

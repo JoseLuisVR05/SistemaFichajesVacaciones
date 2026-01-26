@@ -9,7 +9,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class EmployeesController : ControllerBase
+public class EmployeesController : ControllerBase// Controlador para devolver respuestas como ok(), notfound, badrequest, etc.
 {
     private readonly AppDbContext _context;
     private readonly IEmployeeImportService _importService;
@@ -21,14 +21,14 @@ public class EmployeesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var employees = await _context.Employees
-            .Where(e => e.IsActive)
-            .OrderBy(e =>e.EmployeeCode)
-            .ToListAsync();
+        public async Task<IActionResult> GetAll()
+        {
+            var employees = await _context.Employees
+                .Where(e => e.IsActive)
+                .OrderBy(e =>e.EmployeeCode)
+                .ToListAsync();
 
-        return Ok(employees);
+            return Ok(employees);
     }
     [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)
@@ -46,8 +46,8 @@ public class EmployeesController : ControllerBase
    
     [HttpPost("import")]
         public async Task<IActionResult> ImportEmployees(IFormFile file)
-    {
-        if (file == null || file.Length == 0)
+        {
+            if (file == null || file.Length == 0)
             return BadRequest(new { message = "Archivo vacío" });
 
         try
@@ -59,7 +59,7 @@ public class EmployeesController : ControllerBase
         {
             return StatusCode(500, new { message = "Error en la importación", detail = ex.Message });
         }
-    }
+        }
     
 }
 

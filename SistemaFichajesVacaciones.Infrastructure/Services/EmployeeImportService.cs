@@ -13,7 +13,7 @@ public interface IEmployeeImportService
 
 public class EmployeeImportService : IEmployeeImportService
 {
-    private string[] ParseCsvLine(string line)
+    private string[] ParseCsvLine(string line)// metodo simple para parsear una línea CSV
     {
         // Manejo simple de CSV
         return line.Split(new[] { ',' }, StringSplitOptions.None);
