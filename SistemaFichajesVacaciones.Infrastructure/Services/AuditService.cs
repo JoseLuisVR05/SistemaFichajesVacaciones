@@ -1,8 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
 using SistemaFichajesVacaciones.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
 using SistemaFichajesVacaciones.Infrastructure;
 public interface IAuditService
 {
