@@ -27,13 +27,14 @@ public class TokenService : ITokenService
             new Claim("userId", userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
-        
-        if (roles != null && roles.Any())
+
+        foreach(var role in roles)
         {
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+        
+        if (roles.Any())
+        {
             claims.Add(new Claim("role", roles.First()));
         }
 

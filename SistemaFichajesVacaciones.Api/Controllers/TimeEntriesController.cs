@@ -84,7 +84,10 @@ public class TimeEntriesController : ControllerBase
         [FromQuery] int? employeeId,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
+
+        
     {
+        
         // Si no se especifica employeeId, usar el del usuario autenticado
         var userIdClaim = User.FindFirst("userId")?.Value;
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
