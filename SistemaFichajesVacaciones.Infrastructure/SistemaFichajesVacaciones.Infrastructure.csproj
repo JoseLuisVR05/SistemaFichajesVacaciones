@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\SistemaFichajesVacaciones.Domain\SistemaFichajesVacaciones.Domain.csproj" />
@@ -6,13 +6,13 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.02" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.02">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.02" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.02">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.02" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.02">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.02" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.02">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -20,9 +20,10 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>
+

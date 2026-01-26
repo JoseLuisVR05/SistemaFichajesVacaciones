@@ -1,0 +1,5 @@
+EmployeeCode,FullName,Email,Company,BusinessUnit,Department,ManagerEmployeeCode,IsActive,StartDate,EndDate
+EMP001,Juan Director,juan@empresa.com,EmpresaA,IT,Dirección,,1,2024-01-01,
+EMP002,María Manager,maria@empresa.com,EmpresaA,IT,Desarrollo,EMP001,1,2024-02-01,
+EMP003,Pedro Dev,pedro@empresa.com,EmpresaA,IT,Desarrollo,EMP002,1,2024-03-01,
+EMP004,Ana RRHH,ana@empresa.com,EmpresaA,HR,RRHH,EMP001,1,2024-04-01,
