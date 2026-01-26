@@ -61,10 +61,11 @@ public class EmployeeImportService : IEmployeeImportService
         var stagingEntities = new List<EmployeesStaging>();
         var ImportErrors = new List<ImportError>();
 
-        var existingEmployeeCodes = await _db.Employees
+        var existingEmployeeCodes = (await _db.Employees
             .Select(e => e.EmployeeCode)
             .Distinct()
-            .ToHashSetAsync(cancellationToken);
+            .ToListAsync(cancellationToken))
+            .ToHashSet();
 
         
         
