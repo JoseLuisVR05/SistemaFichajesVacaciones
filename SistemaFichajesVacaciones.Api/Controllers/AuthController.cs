@@ -29,11 +29,17 @@ public class AuthController : ControllerBase
             .SingleOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user == null || !user.IsEnabled)
-            return Unauthorized(new { message = "Credenciales inválidas" });
-        
-        var primaryRole = user.UserRoles.FirstOrDefault()?.Role.Name;
+            return Unauthorized(new { message = "Credenciales usuario inválidas" });
 
-        var token = _tokenService.GenerateToken(user.UserId, user.Email);
+        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            return Unauthorized(new { message = "Credenciales contraseña inválidas" });
+
+        //Obtenemos todos los roles
+        var userRoles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+        //var primaryRole = userRoles.FirstOrDefault();
+        // Si se necesita lógica más compleja para determinar el rol principal, implementarla aquí
+
+        var token = _tokenService.GenerateToken(user.UserId, user.Email, userRoles);
         
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -47,7 +53,7 @@ public class AuthController : ControllerBase
                 email = user.Email,
                 employeeId = user.EmployeeId,
                 employeeName = user.Employee?.FullName,
-                role = primaryRole
+                role = userRoles
             }
         });
     }
