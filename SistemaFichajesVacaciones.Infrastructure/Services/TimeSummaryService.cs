@@ -18,6 +18,27 @@ public class TimeSummaryService : ITimeSummaryService
         var dateOnly = date.Date;
         var nextDay = dateOnly.AddDays(1);
 
+        //Verificar si es festivo o fin de semana
+        var calendarDay = await _db.Calendar_Days
+            .SingleOrDefaultAsync(c => c.Date == dateOnly);
+        
+        bool isWorkingDay = calendarDay == null || (!calendarDay.IsWeekend && !calendarDay.IsHoliday);
+        
+        //Obtener horario del empleado para esa fecha
+        var schedule = await _db.Employee_WorkSchedules
+            .Where(s => s.EmployeeId == employeeId 
+                && s.ValidFrom <= dateOnly 
+                && (s.ValidTo == null || s.ValidTo >= dateOnly))
+            .OrderByDescending(s => s.ValidFrom)
+            .FirstOrDefaultAsync();
+
+        int expectedMinutes = 0;
+        if (isWorkingDay && schedule != null)
+        {
+            var workDuration = schedule.ExpectedEndTime - schedule.ExpectedStartTime;
+            expectedMinutes = (int)workDuration.TotalMinutes - schedule.BreakMinutes;
+        }
+
         //Obtener todos los fichajes del dia ordenados
         var entries = await _db.TimeEntries
             .Where(e => e.EmployeeId == employeeId && e.EventTime >= dateOnly && e.EventTime < nextDay)
@@ -40,15 +61,20 @@ public class TimeSummaryService : ITimeSummaryService
         //Buscar o crear  resumen
         var summary = await _db.TimeDailySummaries
             .SingleOrDefaultAsync(s => s.EmployeeId == employeeId && s.Date == dateOnly);
+           
            if (summary == null)
             {
                 summary = new TimeDailySummary
                 {
                     EmployeeId = employeeId,
                     Date = dateOnly,
-                    ExpectedMinutes = 480, // 8 horas por defecto
+                    ExpectedMinutes = expectedMinutes // 8 horas por defecto
                 };
                 _db.TimeDailySummaries.Add(summary); 
+            }
+            else
+            {
+                summary.ExpectedMinutes = expectedMinutes; 
             }
 
             summary.WorkedMinutes = totalMinutes;

@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
     public DbSet<ImportError> ImportErrors => Set<ImportError>();
     public DbSet<AuditLog> AuditLog => Set<AuditLog>();
     public DbSet<TimeCorrection> TimeCorrections => Set<TimeCorrection>();
+    public DbSet<Calendar_Days> Calendar_Days => Set<Calendar_Days>();
+    public DbSet<Employee_WorkSchedule> Employee_WorkSchedules => Set<Employee_WorkSchedule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -196,12 +198,32 @@ public class AppDbContext : DbContext
         
             entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
 
-        //Relación con Users (PerformedByUser)
+            //Relación con Users (PerformedByUser)
             entity.HasOne(e => e.PerformedByUser)
-                .WithMany() // O .WithMany(u => u.AuditLogs) si agregas la lista en Users
+                .WithMany() // O .WithMany(u => u.AuditLogs) si agrego la lista en Users
                 .HasForeignKey(e => e.PerformedByUserId)
                 .OnDelete(DeleteBehavior.Restrict); 
-});
+        });
+
+        // Configuración de Calendar_Days
+        modelBuilder.Entity<Calendar_Days>(entity =>
+        {
+            entity.HasKey(e => e.Date);
+            entity.Property(e => e.HolidayName)
+                .HasMaxLength(200);
+        });
+
+        // Configuración de Employee_WorkSchedule
+        modelBuilder.Entity<Employee_WorkSchedule>(entity =>
+        {
+            entity.HasKey(e => e.WorkScheduleId);
+            entity.HasIndex(e => new { e.EmployeeId, e.ValidFrom});
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
         
     }      
 }
