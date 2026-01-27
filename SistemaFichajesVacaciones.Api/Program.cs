@@ -118,6 +118,18 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+//Congiguracion CORS para poder comsumir Api
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+        {
+            policy.WithOrigins("http://localhost:3000","http://localhost:5173") //  URLs de los frontends
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
 // 🔹 AQUÍ se construye la app
 var app = builder.Build();
 
@@ -138,8 +150,7 @@ if  (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Si usas CORS, va aquí:
-// app.UseCors("MiPolitica");
+app.UseCors("AllowFrontend");
 
 
 app.UseAuthentication();

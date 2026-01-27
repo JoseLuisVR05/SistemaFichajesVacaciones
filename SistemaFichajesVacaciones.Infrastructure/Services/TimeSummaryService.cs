@@ -47,17 +47,21 @@ public class TimeSummaryService : ITimeSummaryService
 
         int totalMinutes = 0;
 
-        //Calcular por pares IN/OUT
-        for (int i = 0; i < entries.Count - 1; i += 2)
+        // Calcular minutos trabajados
+        TimeEntry? lastIn = null;
+        foreach (var entry in entries)
         {
-
-            if (entries[i].EntryType == "IN" && entries[i + 1].EntryType == "OUT")
+            if (entry.EntryType == "IN")
             {
-                var span = entries[i + 1].EventTime - entries[i].EventTime;
+                lastIn = entry;
+            }
+            else if (entry.EntryType == "OUT" && lastIn != null)
+            {
+                var span = entry.EventTime - lastIn.EventTime;
                 totalMinutes += (int)span.TotalMinutes;
+                lastIn = null; // Reiniciar para siguiente par
             }
         }
-
         //Buscar o crear  resumen
         var summary = await _db.TimeDailySummaries
             .SingleOrDefaultAsync(s => s.EmployeeId == employeeId && s.Date == dateOnly);

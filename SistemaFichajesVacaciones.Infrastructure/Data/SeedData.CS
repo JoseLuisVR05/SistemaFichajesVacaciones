@@ -24,11 +24,14 @@ public static class SeedData
             context.Roles.AddRange(roles);
             await context.SaveChangesAsync();
         }
+        // ===== 2. CALENDARIO =====
+        await InitializeCalendarDays(context);
 
 
         // Crear empleado admin si no existe
         var adminEmployeeCode = "ADMIN001";
-        var adminEmployee = await context.Employees.FirstOrDefaultAsync(e => e.EmployeeCode == adminEmployeeCode);
+        var adminEmployee = await context.Employees
+            .FirstOrDefaultAsync(e => e.EmployeeCode == adminEmployeeCode);
         
         if (adminEmployee == null)
         {
@@ -44,8 +47,25 @@ public static class SeedData
                 StartDate = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
-        };
+            };
             context.Employees.Add(adminEmployee);
+            await context.SaveChangesAsync();
+
+            // Crear horario de trabajo por defecto para el empleado admin
+
+            var defaultSchedule = new Employee_WorkSchedule
+            {
+                EmployeeId = adminEmployee.EmployeeId,
+                ValidFrom = DateTime.UtcNow.Date,
+                ExpectedStartTime = new TimeSpan(9, 0, 0), //09:00 AM
+                ExpectedEndTime = new TimeSpan(18, 0, 0), //18:00 PM
+                BreakMinutes = 60, //1 hora de descanso
+                Notes = "Horario por defecto para administrador",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+                
+            };
+            context.Employee_WorkSchedules.Add(defaultSchedule);
             await context.SaveChangesAsync();
         }
 
@@ -81,6 +101,7 @@ public static class SeedData
             
             // Asignar rol EMPLOYEE al usuario creado para poder fichar
             var employeeRole = await context.Roles.FirstAsync(r => r.Name == "EMPLOYEE");
+            
             var userRoleEmployee = new UserRoles
             {
                 UserId = adminUser.UserId,
@@ -105,23 +126,66 @@ public static class SeedData
                 .Include(ur => ur.Role)
                 .AnyAsync(ur => ur.UserId == adminUser.UserId && ur.Role.Name == "EMPLOYEE");
         
-                        if (!hasEmployeeRole)
+            if (!hasEmployeeRole)
             {
-            var employeeRole = await context.Roles.FirstAsync(r => r.Name == "EMPLOYEE");
-            var userRoleEmployee = new UserRoles
-            {
-                UserId = adminUser.UserId,
-                RoleId = employeeRole.RoleId
-            };
-            context.UserRoles.Add(userRoleEmployee);
-
-            await context.SaveChangesAsync();
-            Console.WriteLine("Rol EMPLOYEE asignado al usuario administrador.");
-        }
-        else
+                var employeeRole = await context.Roles.FirstAsync(r => r.Name == "EMPLOYEE");
+                
+                var userRoleEmployee = new UserRoles
+                {
+                    UserId = adminUser.UserId,
+                    RoleId = employeeRole.RoleId
+                };
+                context.UserRoles.Add(userRoleEmployee);
+                await context.SaveChangesAsync();
+                Console.WriteLine("Rol EMPLOYEE asignado al usuario administrador.");
+            }
+            else
             {
                 Console.WriteLine("✅ Usuario admin ya tiene rol EMPLOYEE");
             }
         }
     }
+     private static async Task InitializeCalendarDays(AppDbContext context)
+    {
+        var today = DateTime.UtcNow.Date;
+        
+        // Crear días para los próximos 6 meses (incluyendo el mes actual)
+        var startDate = new DateTime(today.Year, today.Month, 1);
+        var endDate = startDate.AddMonths(6).AddDays(-1); // 6 meses completos
+        
+        var existingDates = await context.Calendar_Days
+            .Where(c => c.Date >= startDate && c.Date <= endDate)
+            .Select(c => c.Date)
+            .ToListAsync();
+
+        var daysToAdd = new List<Calendar_Days>();
+        
+        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        {
+            if (existingDates.Contains(date))
+                continue;
+            
+            var isWeekend = date.DayOfWeek == DayOfWeek.Saturday || 
+                           date.DayOfWeek == DayOfWeek.Sunday;
+            
+            daysToAdd.Add(new Calendar_Days
+            {
+                Date = date,
+                IsWeekend = isWeekend,
+                IsHoliday = false
+            });
+        }
+
+        if (daysToAdd.Any())
+        {
+            await context.Calendar_Days.AddRangeAsync(daysToAdd);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✅ Calendario inicializado: {daysToAdd.Count} días creados");
+        }
+        else
+        {
+            Console.WriteLine("✅ Calendario ya está inicializado");
+        }
+    }
 }
+
