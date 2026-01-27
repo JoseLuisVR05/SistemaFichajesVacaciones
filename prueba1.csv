@@ -1,3 +1,0 @@
-EmployeeCode,FullName,Email,Company,BusinessUnit,Department,ManagerEmployeeCode,IsActive,StartDate,EndDate
-EMP006,Prueba Pérez,prueba@empresa.com,EmpresaA,IT,Desarrollo,EMP001,1,2026-01-10,
-EMP008,prueb2 López,nose@empresa.com,EmpresaA,HR,RRHH,EMP002,1,2026-02-01,
