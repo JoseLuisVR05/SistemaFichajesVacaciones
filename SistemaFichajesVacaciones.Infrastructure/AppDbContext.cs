@@ -60,16 +60,25 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Users>(entity =>
         {
             entity.HasKey(u => u.UserId);
-            entity.HasIndex(u => u.Email).IsUnique();
-            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            entity.HasIndex(u => u.Email)
+                .IsUnique();
+
+            entity.Property(u => u.Email)
+                .IsRequired()
+                .HasMaxLength(255);
+
             entity.Property(u => u.PasswordHash).IsRequired();
         });
         // Configuración básica de Roles
         modelBuilder.Entity<Roles>(entity =>
         {
             entity.HasKey(r => r.RoleId);
-            entity.Property(r => r.Name).IsRequired().HasMaxLength(50);
-            entity.HasIndex(r => r.Name).IsUnique();
+            entity.Property(r => r.Name)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.HasIndex(r => r.Name)
+                .IsUnique();
         });
 
         // USERROLE
@@ -115,9 +124,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<EmployeesStaging>(entity =>
         {
             entity.HasKey(e => e.StagingId);
-            entity.Property(e => e.EmployeeCode).HasMaxLength(50);
-            entity.Property(e => e.FullName).HasMaxLength(200);
-            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.EmployeeCode)
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.FullName)
+                .HasMaxLength(200);
+            
+            entity.Property(e => e.Email)
+                .HasMaxLength(255);
         });
 
         modelBuilder.Entity<ImportRun>(entity =>
@@ -129,7 +143,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ImportError>(entity =>
         {
             entity.HasKey(e => e.ErrorId);
-            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.ErrorMessage)
+            .HasMaxLength(500);
+            
             entity.HasOne(e => e.ImportRun)
                   .WithMany(r => r.Errors)
                   .HasForeignKey(e => e.ImportRunId)
@@ -140,7 +156,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TimeDailySummary>(entity =>
         {
             entity.HasKey(e => e.SummaryId);
-            entity.HasIndex(e => new { e.EmployeeId, e.Date }).IsUnique();
+            entity.HasIndex(e => new { e.EmployeeId, e.Date })
+            .IsUnique();
     
             entity.HasOne(e => e.Employee)
                 .WithMany()
@@ -152,7 +169,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<TimeCorrection>(entity =>
         {
             entity.HasKey(e => e.CorrectionId);
-            entity.Property(e => e.Status).HasMaxLength(20);
+            entity.Property(e => e.Status)
+                .HasMaxLength(20);
+
             entity.HasIndex(e => new { e.EmployeeId, e.Status });
 
             entity.HasOne(e => e.Employee)
@@ -165,6 +184,24 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.ApprovedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // Configuración de AuditLog
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            
+            entity.HasKey(e => e.AuditId); 
+            entity.Property(e => e.Action)
+                .IsRequired()
+                .HasMaxLength(50);
+        
+            entity.Property(e => e.EntityName).IsRequired().HasMaxLength(100);
+
+        //Relación con Users (PerformedByUser)
+            entity.HasOne(e => e.PerformedByUser)
+                .WithMany() // O .WithMany(u => u.AuditLogs) si agregas la lista en Users
+                .HasForeignKey(e => e.PerformedByUserId)
+                .OnDelete(DeleteBehavior.Restrict); 
+});
         
     }      
 }
