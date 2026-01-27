@@ -22,7 +22,7 @@ export default function Login() {
 
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', mt: 8 }}>
-      <form onSubmit={handleSubmit}> // Ejecuta handleSubmit al enviar el formulario
+      <form onSubmit={handleSubmit}>
         <TextField fullWidth label="Email" value={email} onChange={(e) => setEmail(e.target.value)} margin="normal" />
         <TextField fullWidth label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} margin="normal" />
         {error && <Alert severity="error">{error}</Alert>}
