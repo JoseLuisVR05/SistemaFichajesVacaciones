@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/dashboard'); // Redirige al usuario al dashboard después del login exitoso
     } catch (err) {
       setError('Credenciales inválidas');
     }

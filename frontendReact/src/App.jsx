@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import History from './pages/History';
+import MainLayout from './components/common/MainLayout';
 
 
 export default function App() {
@@ -12,21 +13,20 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+
           <Route
-            path="/dashboard"
+            path="/*"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <MainLayout>
+                  <Routes>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/history" element={<History />} />
+                    <Route path="*" element={<Navigate to="/dashboard" />} />
+                  </Routes>
+                </MainLayout>
               </ProtectedRoute>
             } />
-          <Route
-            path="/history"
-            element={
-              <ProtectedRoute>
-                <History />
-              </ProtectedRoute>
-            } />
-          <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
