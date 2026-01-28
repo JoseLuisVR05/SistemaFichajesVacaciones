@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, Typography, Alert, CircularProgress, Paper, Grid, Card, CardContent, Chip } from '@mui/material';
+import { Box, Button, Typography, Alert, CircularProgress, Paper, Grid, Card, CardContent, Chip, Container } from '@mui/material';
 import { AccessTime, CheckCircle, Cancel, TrendingUp } from '@mui/icons-material';
 import { getDailySummary, getEntries, registerEntry } from '../services/timeService';
 import { useAuth } from '../context/AuthContext';
@@ -62,7 +62,8 @@ export default function Dashboard() {
 
   return (
     <Box>
-      <Box sx={{ mb:4 }}>
+
+      <Box sx={{ mb:4, textAlign:"center" }}>
         {/* Saludo y fecha actual */}
         <Typography variant="h4" gutterBottom>
           Bienvenido, {user?.employeeName}
@@ -81,6 +82,53 @@ export default function Dashboard() {
           {message}
           </Alert>
         )}
+      
+        {/* Resumen diario */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              Horas del día
+            </Typography>
+            {loadingData ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : summary ?(
+              <Box sx={{ mt:1,  }}>
+                <Box sx={{ display: 'flex', justifyContent: "space-between", mb:1 }}>
+                  <Typography variant="body2" color='text.secondary'>
+                  Horas trabajadas
+                  </Typography>
+                  <Typography variant="h5" color="primary">
+                    {summary.workedHours}h
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: "space-between", mb:2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Horas esperadas
+                  </Typography>
+                  <Typography variant="body1">
+                    {summary.expectedHours}h
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Balance de horas
+                  </Typography>  
+                  <Typography 
+                    variant="h6" 
+                    color={summary.balanceHours >=0 ? 'success.main' : 'error.main'}>
+                    {summary.balanceHours > 0 ? '+' : ''}{summary.balanceHours}h
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                No hay fichajes registrados hoy.
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
 
         <Grid container spacing={3}>
           {/* Botones de entrada/salida */}
@@ -127,53 +175,7 @@ export default function Dashboard() {
               </Box>
           </Paper>
         </Grid>
-
-        {/* Resumen diario */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Resumen del día
-            </Typography>
-            {loadingData ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : summary ?(
-              <Box sx={{ mt:2 }}>
-                <Box sx={{ display: 'flex', justifyContent: "space-between", mb:2 }}>
-                  <Typography variant="body2" color='text.secondary'>
-                  Horas trabajadas
-                  </Typography>
-                  <Typography variant="h5" color="primary">
-                    {summary.workedHours}h
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: "space-between", mb:2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Horas esperadas
-                  </Typography>
-                  <Typography variant="body1">
-                    {summary.expectedHours}h
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: "space-between" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Balance de horas
-                  </Typography>  
-                  <Typography 
-                    variant="h6" 
-                    color={summary.balanceHours >=0 ? 'success.main' : 'error.main'}>
-                    {summary.balanceHours > 0 ? '+' : ''}{summary.balanceHours}h
-                  </Typography>
-                </Box>
-              </Box>
-            ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-                No hay fichajes registrados hoy.
-              </Typography>
-            )}
-          </Paper>
-        </Grid>
+        
         {/* Últimos fichajes */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
