@@ -36,7 +36,7 @@ public class AuthController : ControllerBase
 
         //Obtenemos todos los roles
         var userRoles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-        //var primaryRole = userRoles.FirstOrDefault();
+        
         // Si se necesita lógica más compleja para determinar el rol principal, implementarla aquí
 
         var token = _tokenService.GenerateToken(user.UserId, user.Email, userRoles);

@@ -7,7 +7,6 @@ public interface IAuditService
     Task LogAsync(string entityName, int entityId, string action, object? oldValue, object? newValue, int userId);
 }
 
-// Infrastructure/Services/AuditService.cs
 public class AuditService : IAuditService
 {
     private readonly AppDbContext _db;
