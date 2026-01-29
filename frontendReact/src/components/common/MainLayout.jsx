@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import {Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Badge, Chip } from '@mui/material';
+import {Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Badge } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
+  AccessTime as AccessTimeIcon,
   History as HistoryIcon,
   Event as EventIcon,
   People as PeopleIcon,
@@ -42,8 +43,9 @@ export default function MainLayout({ children }) {
 
   // Navegación principal
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard',color:'#667eea' },
-    { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#f093fb' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', color:'#667eea' },
+    { text: 'Fichajes', icon: <AccessTimeIcon />, path: '/timeclock', color:'#f093fb' },
+    { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#4facfe' },
     { text: 'Vacaciones', icon: <EventIcon />, path: '/vacations', disabled: true },
     { text: 'Empleados', icon: <PeopleIcon />, path: '/employees', disabled: true },
   ];
@@ -62,7 +64,7 @@ export default function MainLayout({ children }) {
           Sistema de Fichajes
         </Typography>
         <Typography variant="caption" sx={{ opacity: 0.9 }}>
-          Version de prueba
+          Versión de prueba
         </Typography>
       </Box>
 
@@ -97,7 +99,6 @@ export default function MainLayout({ children }) {
                   fontWeight: location.pathname === item.path ? 600 : 400
                 }}
               />
-              {item.disabled}
             </ListItemButton>
           </ListItem>
         ))}
@@ -233,8 +234,8 @@ export default function MainLayout({ children }) {
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           minHeight: '100vh',
         }}
-        >
-      <Toolbar /> {/* Espaciado del AppBar */}
+      >
+        <Toolbar /> {/* Espaciado del AppBar */}
         {children}
       </Box>
     </Box>

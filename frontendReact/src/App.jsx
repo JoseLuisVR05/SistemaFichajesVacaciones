@@ -3,6 +3,7 @@ import{ AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import TimeClockPage from './pages/Timeclockpage';
 import History from './pages/History';
 import MainLayout from './components/common/MainLayout';
 
@@ -21,6 +22,7 @@ export default function App() {
                 <MainLayout>
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/timeclock" element={<TimeClockPage />} />
                     <Route path="/history" element={<History />} />
                     <Route path="*" element={<Navigate to="/dashboard" />} />
                   </Routes>
