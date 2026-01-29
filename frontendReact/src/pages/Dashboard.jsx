@@ -131,7 +131,7 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      <Grid container spacing={20}>
+      <Grid container spacing={3} >
         {/* Columna izquierda - Acciones rápidas */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: '92%' }}>
@@ -180,7 +180,7 @@ export default function Dashboard() {
         </Grid>
 
         {/* Columna derecha */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} size={5.7}>
           {/* Pendientes */}
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" fontWeight="600" gutterBottom>
