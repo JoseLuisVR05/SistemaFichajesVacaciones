@@ -16,6 +16,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadDashboardData();
+    // Actualizar cada minuto
+    const interval = setInterval(() => {
+      loadDashboardData();
+    }, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
@@ -52,7 +57,8 @@ export default function Dashboard() {
 
       setTimeout(() => {
         loadDashboardData();
-      }, 1000);
+        setMessage('');
+      }, 2000);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error al registrar');
     } finally {
@@ -61,11 +67,19 @@ export default function Dashboard() {
   };
 
   return (
-    <Box>
-
-      <Box sx={{ mb:4, textAlign:"center" }}>
-        {/* Saludo y fecha actual */}
-        <Typography variant="h4" gutterBottom>
+    <Box 
+      sx={{
+      display: 'flex',
+      overflow: 'auto',
+      alignItems:'center',
+      justifyContent:'center',
+      ml: 15
+      }}
+      >
+      <Box>
+      {/* Saludo y fecha actual */}
+      <Box sx={{ mb:4, textAlign:"center" }}>              
+        <Typography variant="h4" fontWeight="600" gutterBottom>
           Bienvenido, {user?.employeeName}
         </Typography>
         <Typography variant ="body1" color="text.secondary">
@@ -82,10 +96,11 @@ export default function Dashboard() {
           {message}
           </Alert>
         )}
-      
-        {/* Resumen diario */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 1 }}>
+
+        <Grid container spacing={3} >
+        {/* Resumen Semanal */}
+        <Grid item xs={12} md={3}>
+          <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Horas del día
             </Typography>
@@ -130,9 +145,111 @@ export default function Dashboard() {
           </Paper>
         </Grid>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} >
+        {/* Resumen Semanal */}
+        <Grid item xs={12} md={3}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Horas de la semana
+            </Typography>
+            {loadingData ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : summary ?(
+              <Box sx={{ mt:1,  }}>
+                <Box sx={{ display: 'flex', justifyContent: "space-between", mb:1 }}>
+                  <Typography variant="body2" color='text.secondary'>
+                  Horas trabajadas
+                  </Typography>
+                  <Typography variant="h5" color="primary">
+                    {summary.workedHours}h
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: "space-between", mb:2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Horas esperadas
+                  </Typography>
+                  <Typography variant="body1">
+                    {summary.expectedHours}h
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: "space-between" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Balance de horas
+                  </Typography>  
+                  <Typography 
+                    variant="h6" 
+                    color={summary.balanceHours >=0 ? 'success.main' : 'error.main'}>
+                    {summary.balanceHours > 0 ? '+' : ''}{summary.balanceHours}h
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+                No hay fichajes registrados hoy.
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+        
+        {/* Vacaciones restantes */}
+        <Grid item xs={12}>
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Vacaciones restantes
+            </Typography>
+            {loadingData ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : lastEntries.length > 0 ? (
+              <Box sx={{ mt:2 }}>
+                {lastEntries.map((entry) => (
+                  <Box
+                    key ={entry.timeEntryId}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      py: 1.5,
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '$:last-child': { borderBottom: 'none' },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Chip
+                        label={entry.type}
+                        color={entry.type === 'IN' ? 'success' : 'error'}
+                        size="small"
+                      />
+                      <Typography variant="body1">
+                      {format(new Date(entry.eventTime), "dd/MM/yyyy HH:mm:ss", {locale: es})}
+                      </Typography>
+                    </Box>
+                    <Chip
+                      label={entry.source}
+                      variant="outlined"
+                      size="small"
+                    />
+                  </Box>
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
+               No hay fichajes registrados.
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+      </Grid>
+      <Grid container spacing={2} >
+
+        <Grid container spacing={16}>
           {/* Botones de entrada/salida */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} size={{ xs: 40, md: 6 }}>
             <Paper sx={{ p: 3, textAlign:'center' }}>
               <Typography variant="h6" gutterBottom>
                 Registrar Fichaje
@@ -227,6 +344,9 @@ export default function Dashboard() {
           </Paper>
         </Grid>
       </Grid>
+      </Grid>
     </Box>
+    </Box>
+    
   );
 }
