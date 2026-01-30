@@ -53,7 +53,7 @@ export default function TimeClockPage() {
     <Box
         sx={{width: '75vw', height: '100vh'}}
     >
-        <Box sx={{ mb:4, textAlign:"center"}}>
+      <Box sx={{ mb:4, textAlign:"center"}}>
       <Typography variant="h4" fontWeight="600" gutterBottom>
         Registro de fichaje
       </Typography>

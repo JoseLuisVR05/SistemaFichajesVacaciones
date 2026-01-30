@@ -24,7 +24,7 @@ export default function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/timeclock" element={<TimeClockPage />} />
                     <Route path="/history" element={<History />} />
-                    <Route path="*" element={<Navigate to="/dashboard" />} />
+                    <Route path="*" element={<Navigate to="/login" />} />
                   </Routes>
                 </MainLayout>
               </ProtectedRoute>
