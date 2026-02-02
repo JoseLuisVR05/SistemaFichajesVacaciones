@@ -185,7 +185,11 @@ public class TimeCorrectionsController : ControllerBase
     /// Listar correcciones (propias o de equipo si es manager/admin)
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetCorrections([FromQuery] int? employeeId, [FromQuery] string? status)
+    public async Task<IActionResult> GetCorrections(
+        [FromQuery] int? employeeId,
+        [FromQuery] string? status,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
@@ -228,6 +232,10 @@ public class TimeCorrectionsController : ControllerBase
 
         if (!string.IsNullOrEmpty(status))
             query = query.Where(tc => tc.Status == status.ToUpper());
+        if (from.HasValue)
+            query = query.Where(tc => tc.Date >= from.Value.Date);
+        if (to.HasValue)
+            query = query.Where(tc => tc.Date <= to.Value.Date);
 
         var corrections = await query
             .OrderByDescending(tc => tc.CreatedAt)

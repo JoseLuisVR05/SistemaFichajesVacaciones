@@ -28,14 +28,15 @@ public class TokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        foreach(var role in roles)
+        if (roles != null && roles.Any())
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-        
-        if (roles.Any())
-        {
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+            
             claims.Add(new Claim("role", roles.First()));
+            
         }
 
         var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);

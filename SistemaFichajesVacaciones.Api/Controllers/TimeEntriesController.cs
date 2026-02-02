@@ -101,8 +101,21 @@ public class TimeEntriesController : ControllerBase
         {
             // Solo ADMIN y RRHH pueden ver fichajes de otros
             var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            
             if (!isAdminOrRrhh)
-                return Forbid();
+            {
+                if(User.IsInRole("MANAGER"))
+                {
+                    var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
+                    var subordinateIds = await _db.Employees
+                        .Where(e => e.ManagerEmployeeId == managerUser.EmployeeId)
+                        .Select(e => e.EmployeeId)
+                        .ToListAsync();
+
+                    if(!subordinateIds.Contains(employeeId.Value))
+                        return Forbid();
+                }
+            }
 
             targetEmployeeId = employeeId.Value;
         }
@@ -155,8 +168,26 @@ public class TimeEntriesController : ControllerBase
         if (employeeId.HasValue)
         {
             var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            
             if (!isAdminOrRrhh)
-                return Forbid();
+            {
+                if (User.IsInRole("MANAGER"))
+                {
+                    var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
+                    var subordinateIds = await _db.Employees
+                        .Where(e => e.ManagerEmployeeId == managerUser.EmployeeId)
+                        .Select(e => e.EmployeeId)
+                        .ToListAsync();
+
+                    if (!subordinateIds.Contains(employeeId.Value))
+                        return Forbid();
+                }
+                else
+                {
+                    return Forbid();
+                }
+            }
+            
             targetEmployeeId = employeeId.Value;
         }
         else
@@ -175,16 +206,29 @@ public class TimeEntriesController : ControllerBase
         for (var d = fromDate; d <= toDate; d = d.AddDays(1))
         {
             var summary = await _summaryService.CalculateDailySummaryAsync(targetEmployeeId, d);
-            summaries.Add(new
+            if(summary != null)
             {
-                date = summary.Date,
-                workedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
-                expectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
-                balanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2)
-            });
+                summaries.Add(new
+                {
+                    date = summary.Date,
+                    workedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
+                    expectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
+                    balanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2)
+                });
+            }
+            else
+            {
+                summaries.Add(new
+                {
+                    date = d,
+                    workedHours = 0.0,
+                    expectedHours = 0.0,
+                    balanceHours = 0.0
+                });
+            }
         }
         return Ok(summaries);
-}
+    }
 
 public record RegisterEntryDto(string EntryType, string? Comment);
 }
