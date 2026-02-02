@@ -6,11 +6,13 @@ import { getEntries } from '../services/timeService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../context/AuthContext';
+import {useNavigate} from 'react-router-dom';
 
 export default function History() {
   const {user, hasRole} = useAuth();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   //Filtros
   const [fromDate, setFromDate] = useState(
@@ -87,7 +89,19 @@ export default function History() {
           <IconButton size = "small" title = "Ver detalle">
             <Visibility fontSize = "small" />
           </IconButton>
-          <IconButton size = "small" title = "Solicitar corección">
+          <IconButton 
+          size = "small" 
+          title = "Solicitar corección"
+          onClick = { () => navigate('/corrections',{
+            state: {
+              fromEntry: {
+                date: params.row.eventTime?.split('T')[0],
+                entryType: params.row.entryType,
+                source: params.row.source,
+                timeEntryId: params.row.id
+              }
+            }
+          })}>
             <Edit fontSize = "small" />
           </IconButton>
         </Box>
