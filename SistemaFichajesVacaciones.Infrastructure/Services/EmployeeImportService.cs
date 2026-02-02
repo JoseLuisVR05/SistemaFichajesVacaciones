@@ -84,7 +84,7 @@ public class EmployeeImportService : IEmployeeImportService
                 if (parts.Length < 2)
                     throw new Exception("Fila no contiene suficientes columnas");
 
-                var code = parts[0]?.Trim();
+                var code = parts[0]?.Trim(); // Trim elimina espacios en blancos
                 var fullName = parts[1]?.Trim();
 
                 // Validaciones de negocio
@@ -183,7 +183,7 @@ public class EmployeeImportService : IEmployeeImportService
         var newEmployees = new List<Employee>();
         var employeesToUpdate = new List<Employee>();
 
-        // Ahora aplicar upsert a Employees basado en EmployeeCode
+        // Aplicar upsert a Employees basado en EmployeeCode
         
            foreach (var staging in stagingData)
         {

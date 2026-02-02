@@ -24,7 +24,7 @@ export default function Login() {
     <Box
       component="main"
       sx={{
-        position: 'fixed',  // Esto asegura que ocupe toda la pantalla
+        position: 'fixed',  //ocupa toda la pantalla
         top: 0,
         left: 0,
         right: 0,
