@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import{Search, Visibility, Edit} from '@mui/icons-material';
-import { getEntries } from '../services/timeService';
+import { getEntries, exportEntries } from '../services/timeService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../context/AuthContext';
@@ -165,6 +165,18 @@ export default function History() {
             onClick={handleSearch}
           >
             Buscar
+          </Button>
+          <Button
+            variant='outlined'
+            onClick={async () =>{
+              try {
+                await exportEntries({ from: fromDate, to: toDate});
+              } catch (err){
+                console.error('Error exportando', err);
+              }
+            }}
+          >
+            Exportar CSV
           </Button>
         </Box>
       </Paper>
