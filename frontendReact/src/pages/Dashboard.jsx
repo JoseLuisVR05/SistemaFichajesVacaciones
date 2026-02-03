@@ -2,17 +2,20 @@ import { useState, useEffect } from 'react';
 import { Box, Button, Typography, Alert, CircularProgress, Paper, Grid, Chip, Card, CardContent } from '@mui/material';
 import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { getDailySummary, getEntries, registerEntry } from '../services/timeService';
+import { getCorrections } from '../services/correctionsService';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [lastEntries, setLastEntries] = useState([]);
-  const [todaySummary, setTodaySummary] = useState(null);
-  const [loadingData, setLoadingData] = useState(true);
+  const [ loading, setLoading ] = useState(false);
+  const [ message, setMessage ] = useState('');
+  const [ lastEntries, setLastEntries ] = useState([]);
+  const [ todaySummary, setTodaySummary ] = useState(null);
+  const [ weekBalance, setWeekBalance ] = useState(null);
+  const [ loadingData, setLoadingData ] = useState(true);
+  const [ pendingCorrections, setPendingCorrections] = useState(0);
 
   useEffect(() => {
     loadDashboardData();
@@ -32,6 +35,28 @@ export default function Dashboard() {
       
       if (summaryData && summaryData.length > 0) {
         setTodaySummary(summaryData[0]);
+      }
+
+      //Calcular balance semanal
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek -1;
+      const monday = new Date(now);
+
+      monday.setDate(now.getDate() - diffToMonday);
+
+      const mondayStr = monday.toISOString().split('T')[0];
+
+      const weekData = await getDailySummary({from: mondayStr, to: today});
+      if( weekData && weekData.length > 0){
+        const totalBalance = weekData.reduce(( acc, day ) => acc +(day.balanceHours || 0), 0);
+        setWeekBalance(Math.round(totalBalance * 100) /100);
+      }
+      try{
+        const corrections = await getCorrections({status: 'PENDING'});
+        setPendingCorrections(Array.isArray(corrections)?corrections.length: 0);
+      }catch{
+        setPendingCorrections(0);
       }
     } catch (err) {
       console.error('Error cargando datos:', err);
@@ -109,9 +134,17 @@ export default function Dashboard() {
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 Balance semana
               </Typography>
-              <Typography variant="h4" fontWeight="600">
-                --
+              {loadingData?(
+                <CircularProgress size={24}/>
+              ):(
+                <Typography 
+                variant="h4" 
+                fontWeight="600"
+                color={weekBalance !== null && weekBalance < 0 ? 'error.main':'success.main'}
+                >
+                {weekBalance !== null ? `${weekBalance >= 0 ? '+':''}${weekBalance}h`:'0h'}
               </Typography>
+              )}
             </CardContent>
           </Card>
         </Grid>
@@ -187,12 +220,16 @@ export default function Dashboard() {
               Pendientes
             </Typography>
             <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                • Correcciones (n)
+              <Box sx = {{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
+              <Typography variant="body2">
+                • Correcciones Pendientes
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                • Aprobaciones (n)
-              </Typography>
+              <Chip
+              label = {pendingCorrections}
+              color = {pendingCorrections > 0 ? 'warning':'default'}
+              size = "small"
+              />
+              </Box>
             </Box>
           </Paper>
 

@@ -6,6 +6,7 @@ import {
   Dashboard as DashboardIcon,
   AccessTime as AccessTimeIcon,
   History as HistoryIcon,
+  EditNote as EditNoteIcon,
   Event as EventIcon,
   People as PeopleIcon,
   Logout as LogoutIcon,
@@ -46,8 +47,9 @@ export default function MainLayout({ children }) {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', color:'#667eea' },
     { text: 'Fichajes', icon: <AccessTimeIcon />, path: '/timeclock', color:'#f093fb' },
     { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#4facfe' },
+    { text: 'Correcciones', icon: <EditNoteIcon/>, path : '/corrections', color: '#f5576c'},
+    { text: 'Empleados', icon: <PeopleIcon />, path: '/employees', color: '#43e97b' },
     { text: 'Vacaciones', icon: <EventIcon />, path: '/vacations', disabled: true },
-    { text: 'Empleados', icon: <PeopleIcon />, path: '/employees' },
   ];
 
   const drawer = (

@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class EmployeesController : ControllerBase// Controlador para devolver respuestas como ok(), notfound, badrequest, etc.
 {
     private readonly AppDbContext _context;
