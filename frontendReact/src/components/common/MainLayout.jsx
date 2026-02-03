@@ -47,7 +47,7 @@ export default function MainLayout({ children }) {
     { text: 'Fichajes', icon: <AccessTimeIcon />, path: '/timeclock', color:'#f093fb' },
     { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#4facfe' },
     { text: 'Vacaciones', icon: <EventIcon />, path: '/vacations', disabled: true },
-    { text: 'Empleados', icon: <PeopleIcon />, path: '/employees', disabled: true },
+    { text: 'Empleados', icon: <PeopleIcon />, path: '/employees' },
   ];
 
   const drawer = (

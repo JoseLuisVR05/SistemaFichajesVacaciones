@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import TimeClockPage from './pages/Timeclockpage';
 import History from './pages/History';
 import Corrections from './pages/Corrections';
+import Employees from './pages/Employees';
 import MainLayout from './components/common/MainLayout';
 
 
@@ -26,6 +27,7 @@ export default function App() {
                     <Route path="/timeclock" element={<TimeClockPage />} />
                     <Route path="/history" element={<History />} />
                     <Route path="/corrections" element={<Corrections />} />
+                    <Route path="/employees" element={<Employees />} />
                     <Route path="*" element={<Navigate to="/dashboard" />} />
                   </Routes>
                 </MainLayout>
