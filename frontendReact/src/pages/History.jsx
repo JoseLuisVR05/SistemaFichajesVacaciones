@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import{Search, Visibility, Edit} from '@mui/icons-material';
+import{ Search, Visibility, Edit } from '@mui/icons-material';
 import { getEntries, exportEntries } from '../services/timeService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -194,7 +194,7 @@ export default function History() {
             initialState={{
               pagination: { paginationModel: { pageSize: 10 } },
             }}
-            pageSizeOptions={[10, 25, 50]}
+            pageSizeOptions ={[10, 25, 50]}
             disableRowSelectionOnClick
           />
         )}

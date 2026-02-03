@@ -36,7 +36,7 @@ public class TimeCorrectionsController : ControllerBase
             return BadRequest(new { message = "Usuario sin empleado asignado" });
 
         // Validar fecha no futura
-        if (dto.Date > DateTime.UtcNow.Date)
+        if (dto.Date > DateTime.Now.Date)
             return BadRequest(new { message = "No se puede corregir una fecha futura" });
 
         // Validar que no exista corrección pendiente para esa fecha
@@ -60,8 +60,8 @@ public class TimeCorrectionsController : ControllerBase
             CorrectedMinutes = dto.CorrectedMinutes,
             Reason = dto.Reason,
             Status = "PENDING",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
         _db.TimeCorrections.Add(correction);
@@ -106,8 +106,8 @@ public class TimeCorrectionsController : ControllerBase
         
         correction.Status = "APPROVED";
         correction.ApprovedByUserId = userId;
-        correction.ApprovedAt = DateTime.UtcNow;
-        correction.UpdatedAt = DateTime.UtcNow;
+        correction.ApprovedAt = DateTime.Now;
+        correction.UpdatedAt = DateTime.Now;
 
         // Actualizar resumen diario
         var summary = await _db.TimeDailySummaries
@@ -116,7 +116,7 @@ public class TimeCorrectionsController : ControllerBase
         if (summary != null)
         {
             summary.WorkedMinutes = correction.CorrectedMinutes;
-            summary.LastCalculatedAt = DateTime.UtcNow;
+            summary.LastCalculatedAt = DateTime.Now;
         }
         else
         {
@@ -126,7 +126,7 @@ public class TimeCorrectionsController : ControllerBase
                 Date = correction.Date,
                 WorkedMinutes = correction.CorrectedMinutes,
                 ExpectedMinutes = 480,
-                LastCalculatedAt = DateTime.UtcNow
+                LastCalculatedAt = DateTime.Now
             };
             _db.TimeDailySummaries.Add(summary);
         }
@@ -171,9 +171,9 @@ public class TimeCorrectionsController : ControllerBase
         
         correction.Status = "REJECTED";
         correction.ApprovedByUserId = userId;
-        correction.ApprovedAt = DateTime.UtcNow;
+        correction.ApprovedAt = DateTime.Now;
         correction.Reason += $"\n[RECHAZO]: {dto.RejectionReason}";
-        correction.UpdatedAt = DateTime.UtcNow;
+        correction.UpdatedAt = DateTime.Now;
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("TimeCorrection", id, "UPDATE", oldValue, new { correction.Status }, userId);

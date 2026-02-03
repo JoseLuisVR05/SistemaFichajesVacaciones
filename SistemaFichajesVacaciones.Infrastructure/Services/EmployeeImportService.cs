@@ -32,7 +32,7 @@ public class EmployeeImportService : IEmployeeImportService
             var importRun = new ImportRun
         {
             FileName = file.FileName,
-            ImportedAt = DateTime.UtcNow,
+            ImportedAt = DateTime.Now,
             Status = "In Progress"
         };
             
@@ -136,7 +136,7 @@ public class EmployeeImportService : IEmployeeImportService
                     StartDate = startDate,
                     EndDate = endDate,
                     ImportRunId = importRun.ImportRunId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
                 stagingEntities.Add(staging);
                 success++;
@@ -150,7 +150,7 @@ public class EmployeeImportService : IEmployeeImportService
                     ImportRunId = importRun.ImportRunId,
                     RowNumber = row,
                     ErrorMessage = ex.Message,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 });
             }
         }
@@ -199,7 +199,7 @@ public class EmployeeImportService : IEmployeeImportService
                 existing.IsActive = staging.IsActive;
                 existing.StartDate = staging.StartDate ?? existing.StartDate;
                 existing.EndDate = staging.EndDate ?? existing.EndDate;
-                existing.UpdatedAt = DateTime.UtcNow;
+                existing.UpdatedAt = DateTime.Now;
                 
                 employeesToUpdate.Add(existing);
             }
@@ -217,8 +217,8 @@ public class EmployeeImportService : IEmployeeImportService
                     IsActive = staging.IsActive,
                     StartDate = staging.StartDate,
                     EndDate = staging.EndDate,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
                 
                 newEmployees.Add(newEmployee);
@@ -259,7 +259,7 @@ public class EmployeeImportService : IEmployeeImportService
                 if (employee != null && employee.ManagerEmployeeId != managerId)
                 {
                     employee.ManagerEmployeeId = managerId;
-                    employee.UpdatedAt = DateTime.UtcNow;
+                    employee.UpdatedAt = DateTime.Now;
                 }
             }
         }

@@ -11,8 +11,8 @@ public class TimeCorrection
     public string Status { get; set; } = "PENDING"; // PENDING, APPROVED, REJECTED
     public int? ApprovedByUserId { get; set; }
     public DateTime? ApprovedAt { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
     public Employee Employee { get; set; } = null!;
     public Users? ApprovedByUser { get; set; }

@@ -64,7 +64,7 @@ public class TimeEntriesController : ControllerBase
         {
             EmployeeId = employeeId,
             EntryType = dto.EntryType,
-            EventTime = DateTime.UtcNow,
+            EventTime = DateTime.Now,
             Source = "WEB",
             Comment = dto.Comment,
             CreatedByUserId = userId

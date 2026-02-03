@@ -39,7 +39,7 @@ public class AuthController : ControllerBase
 
         var token = _tokenService.GenerateToken(user.UserId, user.Email, userRoles);
         
-        user.LastLoginAt = DateTime.UtcNow;
+        user.LastLoginAt = DateTime.Now;
         await _context.SaveChangesAsync();
 
         return Ok(new

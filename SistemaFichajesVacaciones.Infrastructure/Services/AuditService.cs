@@ -22,7 +22,7 @@ public class AuditService : IAuditService
             OldValueJson = oldValue != null ? JsonSerializer.Serialize(oldValue) : null,
             NewValueJson = newValue != null ? JsonSerializer.Serialize(newValue) : null,
             PerformedByUserId = userId,
-            PerformedAt = DateTime.UtcNow
+            PerformedAt = DateTime.Now
         };
         
         _db.AuditLog.Add(audit);

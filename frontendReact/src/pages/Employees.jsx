@@ -11,18 +11,18 @@ import { getEmployees, getEmployee } from "../services/employeesService";
 export default function Employees(){
     const [ rows, setRows ] = useState([]);
     const [ allRows, setAllRows] = useState([]);
-    const [ loading, SetLoading ] = useState([true]);
-    const [ searchText, setSearchText ] = useState(['']);
-    const [ detailOpen, setDetailOpen ] = useState([false]);
-    const [ selectedEmployee, setSelectedEmployee ] = useState([null]);
-    const [ detailLoading, setDetailLoading ] = useState([false]);
+    const [ loading, setLoading ] = useState(true);
+    const [ searchText, setSearchText ] = useState('');
+    const [ detailOpen, setDetailOpen ] = useState(false);
+    const [ selectedEmployee, setSelectedEmployee ] = useState(null);
+    const [ detailLoading, setDetailLoading ] = useState(false);
 
     useEffect(() =>{
         loadData();
     }, []);
 
     const loadData = async () => {
-        SetLoading(true);
+        setLoading(true);
         try{
             const data = await getEmployees();
             const formated = data.map(emp => ({
@@ -35,7 +35,7 @@ export default function Employees(){
         } catch(err){
             console.error('Error cargando empleados:', err);
         }finally{
-            SetLoading(false);
+            setLoading(false);
         }
     };
 
@@ -132,7 +132,7 @@ return(
             </Button>
             <Button
             variant = "outlined"
-            onClick={() => {searchText(''); setRows(allRows);}}
+            onClick={() => {setSearchText(''); setRows(allRows);}}
             >
                 Limpiar
             </Button>
@@ -161,7 +161,7 @@ return(
     {/* Dialog: dellate del empleado*/}
     <Dialog
     open = {detailOpen}
-    onClose={() => {setDetailOpen(flase); setSelectedEmployee(null);}}
+    onClose={() => {setDetailOpen(false); setSelectedEmployee(null);}}
     maxWidth = "sm"
     fullWidth
     >
@@ -213,6 +213,7 @@ return(
                         {new Date(selectedEmployee.endDate).toLocaleDateString('es-ES')}
                     </Typography>
                     )}
+                    
                 </Box>
             ) : (
                 <Typography>No se pudo cargar el detalle</Typography>

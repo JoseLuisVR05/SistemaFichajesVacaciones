@@ -44,9 +44,9 @@ public static class SeedData
                 BusinessUnit = "IT",
                 Department = "Administración",
                 IsActive = true,
-                StartDate = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                StartDate = DateTime.Now,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
             context.Employees.Add(adminEmployee);
             await context.SaveChangesAsync();
@@ -56,13 +56,13 @@ public static class SeedData
             var defaultSchedule = new Employee_WorkSchedule
             {
                 EmployeeId = adminEmployee.EmployeeId,
-                ValidFrom = DateTime.UtcNow.Date,
+                ValidFrom = DateTime.Now.Date,
                 ExpectedStartTime = new TimeSpan(9, 0, 0), //09:00 AM
                 ExpectedEndTime = new TimeSpan(18, 0, 0), //18:00 PM
                 BreakMinutes = 60, //1 hora de descanso
                 Notes = "Horario por defecto para administrador",
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
                 
             };
             context.Employee_WorkSchedules.Add(defaultSchedule);
@@ -85,7 +85,7 @@ public static class SeedData
                 PasswordHash = hash,
                 EmployeeId = adminEmployee.EmployeeId,
                 IsEnabled = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
             context.Users.Add(adminUser);
             await context.SaveChangesAsync();
@@ -147,7 +147,7 @@ public static class SeedData
     }
      private static async Task InitializeCalendarDays(AppDbContext context)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTime.Now.Date;
         
         // Crear días para los próximos 6 meses (incluyendo el mes actual)
         var startDate = new DateTime(today.Year, today.Month, 1);

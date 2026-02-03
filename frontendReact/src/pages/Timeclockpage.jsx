@@ -98,17 +98,6 @@ export default function TimeClockPage() {
         <Typography variant="h6" fontWeight="600" gutterBottom>
           Acción principal
         </Typography>
-        
-        {message && (
-          <Alert 
-            severity={message.includes('Error') ? 'error' : 'success'} 
-            sx={{ mb: 3, mt: 2 }}
-            onClose={() => setMessage('')}
-          >
-            {message}
-          </Alert>
-        )}
-
         <Box sx={{ display: 'flex', gap: 3, mt: 4 }}>
           <Button
             variant="contained"
@@ -153,8 +142,15 @@ export default function TimeClockPage() {
         <Typography variant="h6" fontWeight="600" gutterBottom>
           Mensajes
         </Typography>
-        <Typography variant="body2" color="text.secondary">• Confirmación</Typography>
-        <Typography variant="body2" color="text.secondary">• Errores / avisos</Typography>
+          {message && (
+          <Alert 
+            severity={message.includes('Error') ? 'error' : 'success'} 
+            sx={{ mb: 3, mt: 2 }}
+            onClose={() => setMessage('')}
+          >
+            {message}
+          </Alert>
+        )}
       </Paper>
     </Box>
   );
