@@ -10,7 +10,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 
 [ApiController]
 [Route("api/time-entries")]
-[Authorize] // Solo usuarios autenticados
+[Authorize] 
 public class TimeEntriesController : ControllerBase
 {
     private readonly AppDbContext _db;

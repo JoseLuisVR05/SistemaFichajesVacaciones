@@ -34,7 +34,7 @@ public class TimeExportController : ControllerBase
             .Include(u => u.Employee)
             .SingleAsync(u => u.UserId == userId);
 
-        // Determinar qué empleados puede exportar
+        // Determina qué empleados puede exportar
         IQueryable<Domain.Entities.TimeEntry> query = _db.TimeEntries
             .Include(e => e.Employee);
 

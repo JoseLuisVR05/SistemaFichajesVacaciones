@@ -11,7 +11,7 @@ public static class SeedData
         // Aplica migraciones pendientes, asegura que la base de datos esté actualizada
         await context.Database.MigrateAsync();
 
-         // ===== 1. ROLES =====
+         // Implementa roles si no hubiera en la base de datos
         if (!await context.Roles.AnyAsync())
         {
             var roles = new List<Roles>
@@ -24,7 +24,7 @@ public static class SeedData
             context.Roles.AddRange(roles);
             await context.SaveChangesAsync();
         }
-        // ===== 2. CALENDARIO =====
+        // Implementa calendario si no hubiera en la base de datos
         await InitializeCalendarDays(context);
 
 

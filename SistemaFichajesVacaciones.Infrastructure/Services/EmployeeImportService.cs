@@ -67,8 +67,6 @@ public class EmployeeImportService : IEmployeeImportService
             .ToListAsync(cancellationToken))
             .ToHashSet();
 
-        
-        
         while (!reader.EndOfStream)
         {
             row++;
@@ -233,13 +231,6 @@ public class EmployeeImportService : IEmployeeImportService
         }
             await _db.SaveChangesAsync(cancellationToken);
 
-            // Si el proceso requiere gestionar bajas marcando IsActive=0 para empleados no presentes,
-            // hacerlo con lógica adicional (comentar o habilitar según política).
-            // Ejemplo (opcional):
-            // var incomingCodes = stagings.Select(s=>s.EmployeeCode).Where(c=>c!=null).ToList();
-            // var toDeactivate = _db.Employees.Where(e => !incomingCodes.Contains(e.EmployeeCode) && e.IsActive);
-            // foreach (var e in toDeactivate) e.IsActive = false;
-
         // Actualizar relaciones de managers
         // Necesitamos recargar los IDs después del save
             var allEmployeeCodes = stagingData
@@ -253,13 +244,12 @@ public class EmployeeImportService : IEmployeeImportService
             var employeeIdMap = await _db.Employees
                 .Where(e => allEmployeeCodes.Contains(e.EmployeeCode))
                 .ToDictionaryAsync(e => e.EmployeeCode!, e => e.EmployeeId, cancellationToken);
-            // --- FASE 2: ASIGNACIÓN DE MANAGERS ---
+    
             // Ahora que todos existen, refrescamos el diccionario de códigos a IDs
              
             foreach (var staging in stagingData)
         {
-            if (string.IsNullOrEmpty(staging.EmployeeCode) || 
-                string.IsNullOrEmpty(staging.ManagerEmployeeCode))
+            if (string.IsNullOrEmpty(staging.EmployeeCode) || string.IsNullOrEmpty(staging.ManagerEmployeeCode))
                 continue;
 
             if (employeeIdMap.TryGetValue(staging.EmployeeCode, out var employeeId) &&
