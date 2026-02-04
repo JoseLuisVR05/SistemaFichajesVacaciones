@@ -3,21 +3,23 @@ import {
   Box, Typography, Paper, CircularProgress, TextField,
   MenuItem, Button, IconButton, Chip, Tabs, Tab,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Alert, Snackbar, Tooltip
+  Alert, Snackbar, Tooltip, Autocomplete
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import {
   Add, CheckCircle, Cancel, Visibility,
-  Search, FilterList
+  Search
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import {
   getCorrections, createCorrection,
   approveCorrection, rejectCorrection
 } from '../services/correctionsService';
+import { getEmployees } from '../services/employeesService'
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useLocation } from 'react-router-dom';
+import { useRole } from '../hooks/useRole';
 
 // ─── Constantes ──────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -25,8 +27,6 @@ const STATUS_CONFIG = {
   APPROVED: { label: 'Aprobada',  color: 'success' },
   REJECTED: { label: 'Rechazada', color: 'error' },
 };
-
-
 
 const formatMinutes = (mins) => {
   if (mins == null) return '-';
@@ -38,12 +38,16 @@ const formatMinutes = (mins) => {
 
 // ─── Componente principal ────────────────────────────────────
 export default function Corrections() {
-  const { hasRole, user } = useAuth();
-  const canManage = hasRole ? hasRole(['ADMIN', 'RRHH', 'MANAGER']) : false;
+  const { user } = useAuth();
+  const { canManageCorrections, canViewEmployees, isManager } = useRole();
 
   const [activeTab, setActiveTab] = useState(0);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   // Filtros
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -86,12 +90,37 @@ export default function Corrections() {
       setCreateOpen(true);
     }
   }, [location.state]);
-  // ─── Carga de datos ──────────────────────────────────────
+
+  useEffect(() => {
+    if (canViewEmployees() && activeTab === 1) {
+      loadEmployees();
+    }
+  }, [activeTab]);
+
+  const loadEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      const data = await getEmployees();
+      console.log('✅ Empleados cargados para correcciones:', data);
+      setEmployees(data);
+    } catch (err) {
+      console.error('❌ Error cargando empleados:', err);
+      setEmployees([]);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const params = { from: fromDate, to: toDate };
       if (statusFilter !== 'ALL') params.status = statusFilter;
+
+      if(activeTab === 1 && selectedEmployee){
+        params.employeeId = selectedEmployee.employeeId;
+        console.log('Buscando correciones de:', selectedEmployee.fullName);
+      }
 
       const data = await getCorrections(params);
       const list = data || [];
@@ -120,7 +149,7 @@ export default function Corrections() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, statusFilter, activeTab, user]);
+  }, [fromDate, toDate, statusFilter, activeTab, user, selectedEmployee]);
 
   useEffect(() => {
     loadData();
@@ -195,6 +224,7 @@ export default function Corrections() {
 
   // ─── Columnas ────────────────────────────────────────────
   const baseColumns = [
+    { field: 'employeeName', headerName: 'Empleado', width: 180},
     { field: 'fechaFormateada', headerName: 'Fecha', width: 110 },
     {
       field: 'originalMinutes',
@@ -270,7 +300,7 @@ export default function Corrections() {
   ];
 
   const myColumns = [
-    ...baseColumns,
+    ...baseColumns.filter(col => col.field !== 'employeeName'),
     {
       field: 'acciones',
       headerName: 'Acciones',
@@ -314,10 +344,13 @@ export default function Corrections() {
 </Box>
 
       {/* Tabs: Mis solicitudes / Gestión */}
-      {canManage && (
+      {canManageCorrections() && (
         <Tabs
           value={activeTab}
-          onChange={(_, v) => setActiveTab(v)}
+          onChange={(_, v) => {
+            setActiveTab(v);
+          setSelectedEmployee(null);
+        }}
           sx={{ mb: 2 }}
         >
           <Tab label="Mis solicitudes" />
@@ -358,6 +391,55 @@ export default function Corrections() {
             <MenuItem value="REJECTED">Rechazada</MenuItem>
           </TextField>
 
+          {/*Selector de empleados solo en tab gestión */}
+          {activeTab === 1 && canViewEmployees() && (
+            <Autocomplete
+              options={employees}
+              getOptionLabel={(option) =>
+                `${option.fullName} (${option.employeeCode})`
+              }
+              value={selectedEmployee}
+              onChange={(_, newValue) => setSelectedEmployee(newValue)}
+              loading={loadingEmployees}
+              size="small"
+              sx={{ minWidth: 300 }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={isManager() ? "Buscar subordinado" : "Buscar empleado"}
+                  placeholder="Nombre, código..."
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? <CircularProgress size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props} key={option.employeeId}>
+                  <Box>
+                    <Typography variant="body2">
+                      <strong>{option.fullName}</strong>
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.department || 'Sin dept.'}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+              noOptionsText={
+                isManager()
+                  ? "No tienes subordinados"
+                  : "No se encontraron empleados"
+              }
+              clearText="Limpiar"
+            />
+          )}
+
           <Button
             variant="contained"
             startIcon={<Search />}
@@ -365,8 +447,28 @@ export default function Corrections() {
           >
             Buscar
           </Button>
+
+          {/*  Botón para limpiar filtro */}
+          {selectedEmployee && (
+            <Button
+              variant="outlined"
+              onClick={() => setSelectedEmployee(null)}
+            >
+              Ver todas
+            </Button>
+          )}
         </Box>
-      </Paper>
+
+        {/* Indicador de filtro activo */}
+        {selectedEmployee && (
+          <Box sx={{ mt: 2, p: 1.5, bgcolor: 'info.light', borderRadius: 1 }}>
+            <Typography variant="body2">
+              <strong>📋 Correcciones de:</strong> {selectedEmployee.fullName}
+            </Typography>
+          </Box>
+        )}
+        
+        </Paper>
 
       {/* Tabla */}
       <Paper sx={{ height: 500 }}>
@@ -377,7 +479,7 @@ export default function Corrections() {
         ) : (
           <DataGrid
             rows={rows}
-            columns={activeTab === 1 && canManage ? managementColumns : myColumns}
+            columns={activeTab === 1 && canManageCorrections() ? managementColumns : myColumns}
             initialState={{
               pagination: { paginationModel: { pageSize: 10 } },
             }}

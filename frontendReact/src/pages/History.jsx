@@ -121,9 +121,6 @@ export default function History() {
       sortable: false,
       renderCell: (params) => (
         <Box>
-          <IconButton size = "small" title = "Ver detalle">
-            <Visibility fontSize = "small" />
-          </IconButton>
           <IconButton 
           size = "small" 
           title = "Solicitar corección"
