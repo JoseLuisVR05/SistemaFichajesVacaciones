@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip } from '@mui/material';
+import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip, Autocomplete } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import{ Search, Visibility, Edit } from '@mui/icons-material';
+import { Search, Visibility, Edit } from '@mui/icons-material';
+import { getEmployees } from '../services/employeesService';
 import { getEntries, exportEntries } from '../services/timeService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from '../context/AuthContext';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useRole } from '../hooks/useRole';
 
 export default function History() {
-  const {user, hasRole} = useAuth();
+  const { user } = useAuth();
+  const { canViewEmployees, isManager } = useRole();
+  const navigate = useNavigate();
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  
 
   //Filtros
   const [fromDate, setFromDate] = useState(
@@ -21,20 +29,49 @@ export default function History() {
   const [toDate, setToDate] = useState(
     format(new Date(), 'yyyy-MM-dd')
   );
-  const [typeFilter, setTypeFilter] = useState('ALL')
+  const [typeFilter, setTypeFilter] = useState('ALL');
+
+  // Cargar empleados si es MANAGER/RRHH/ADMIN
+  useEffect(() =>{
+    if (canViewEmployees){
+      loadEmployees();
+    }
+  }, []);
 
   useEffect(() => {
 
     loadData();
 
-  }, []);
+  }, [selectedEmployee]);
+
+   const loadEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      const data = await getEmployees();
+      setEmployees(data);
+      console.log('Empleados cargados:', data)
+    }catch(err){
+      console.error('Error cargando empleados:', err);
+    }finally{
+      setLoadingEmployees(false);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
 
     try {
       const params ={ from: fromDate, to: toDate};
+
+      if(selectedEmployee){
+        params.employeeId = selectedEmployee.employeeId;
+        console.log('Buscando fichajes de:', selectedEmployee.fullName);
+      }else{
+        console.log('Buscandos mis propios fichajes');
+      }
+
       const data = await getEntries(params);
+      console.log('Fichajes recibidos:', data.length);
 
       let filtered = data;
       if(typeFilter !=='ALL'){
@@ -59,8 +96,6 @@ export default function History() {
   const handleSearch = () =>{
     loadData();
   };
-
-  const canViewAllEmployees = hasRole ? hasRole(['ADMIN', 'RRHH']) : false;
 
   const columns = [
     { field:'fecha', headerName: 'Fecha', width: 120},
@@ -149,14 +184,51 @@ export default function History() {
             <MenuItem value="OUT">Salida</MenuItem>
           </TextField>
 
-          {canViewAllEmployees &&(
-            <TextField
-              label="Empleado"
-              placeholder="Solo Manager/RRHH"
+          {canViewEmployees() &&(
+           <Autocomplete
+              options={employees}
+              getOptionLabel={(option) =>
+                `${option.fullName} (${option.employeeCode})`
+              }
+              value={selectedEmployee}
+              onChange={(_, newValue) => setSelectedEmployee(newValue)}
+              loading={loadingEmployees}
               size="small"
-              //disabled // Implementar después
+              sx={{ minWidth: 300 }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={isManager() ? "Buscar Subordinado":"Buscar empleado"}
+                  placeholder="Nombre, código, email..."
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingEmployees ? <CircularProgress size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props} key={option.employeeId}>
+                  <Box>
+                    <Typography variant="body2">
+                      <strong>{option.fullName}</strong>
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.employeeCode} • {option.email} • {option.department || 'Sin departamento'}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+              noOptionsText={isManager() ? "NO tienes subordinados o no se encontraron": "No se encontraron empleados"}
+              clearText="Limpiar"
+              isOptionEqualToValue={(option, value) =>
+                option.employeeId === value.employeeId
+              }
             />
-
           )}
           
           <Button 

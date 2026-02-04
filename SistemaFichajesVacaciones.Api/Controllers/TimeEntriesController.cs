@@ -97,6 +97,7 @@ public class TimeEntriesController : ControllerBase
             return Unauthorized();
 
         int targetEmployeeId;
+
         if (employeeId.HasValue)
         {
             // Solo ADMIN y RRHH pueden ver fichajes de otros
@@ -114,6 +115,10 @@ public class TimeEntriesController : ControllerBase
 
                     if(!subordinateIds.Contains(employeeId.Value))
                         return Forbid();
+                }
+                else
+                {
+                    return Forbid();
                 }
             }
 

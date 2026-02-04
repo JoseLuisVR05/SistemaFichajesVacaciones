@@ -27,7 +27,14 @@ export default function App() {
                     <Route path="/timeclock" element={<TimeClockPage />} />
                     <Route path="/history" element={<History />} />
                     <Route path="/corrections" element={<Corrections />} />
-                    <Route path="/employees" element={<Employees />} />
+                    <Route 
+                      path="/employees" 
+                      element={
+                        <ProtectedRoute roles={['ADMIN', 'RRHH', 'MANAGER']}>
+                          <Employees />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="*" element={<Navigate to="/dashboard" />} />
                   </Routes>
                 </MainLayout>

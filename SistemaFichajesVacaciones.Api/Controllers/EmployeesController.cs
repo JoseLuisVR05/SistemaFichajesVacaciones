@@ -25,13 +25,37 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
     [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var employees = await _context.Employees
-                .Where(e => e.IsActive)
-                .OrderBy(e =>e.EmployeeCode)
-                .ToListAsync();
+           var userIdClaim = User.FindFirst("userId")?.Value;
+            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
 
-            return Ok(employees);
-    }
+            var user = await _context.Users.SingleAsync(u => u.UserId == userId);
+
+            IQueryable<Employee> query = _context.Employees.Where(e => e.IsActive);
+
+            //  ADMIN y RRHH ven todos
+            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+    
+            if (!isAdminOrRrhh)
+            {
+                // MANAGER solo ve sus subordinados
+                if (User.IsInRole("MANAGER"))
+                {
+                    query = query.Where(e => e.ManagerEmployeeId == user.EmployeeId);
+                }
+                else
+                {
+                    // ✅ EMPLOYEE no puede ver esta página
+                    return Forbid();
+                }
+            }
+
+    var employees = await query
+        .OrderBy(e => e.EmployeeCode)
+        .ToListAsync();
+
+    return Ok(employees);
+}
     [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)
         {

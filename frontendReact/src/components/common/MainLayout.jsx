@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useRole } from '../../hooks/useRole';
 import {Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Badge } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -24,6 +25,7 @@ export default function MainLayout({ children }) {
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const { hasRole } = useRole();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -43,12 +45,18 @@ export default function MainLayout({ children }) {
   };
 
   // Navegación principal
-  const menuItems = [
+ const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', color:'#667eea' },
     { text: 'Fichajes', icon: <AccessTimeIcon />, path: '/timeclock', color:'#f093fb' },
     { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#4facfe' },
     { text: 'Correcciones', icon: <EditNoteIcon/>, path : '/corrections', color: '#f5576c'},
-    { text: 'Empleados', icon: <PeopleIcon />, path: '/employees', color: '#43e97b' },
+    
+    // ✅ Ahora sí funciona
+    ...(hasRole(['ADMIN', 'RRHH', 'MANAGER']) 
+      ? [{ text: 'Empleados', icon: <PeopleIcon />, path: '/employees', color: '#43e97b' }]
+      : []
+    ),
+    
     { text: 'Vacaciones', icon: <EventIcon />, path: '/vacations', disabled: true },
   ];
 
