@@ -12,7 +12,6 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 public class TimeExportController : ControllerBase
 {
     private readonly AppDbContext _db;
-
     public TimeExportController(AppDbContext db) => _db = db;
 
     /// <summary>
@@ -27,7 +26,9 @@ public class TimeExportController : ControllerBase
         [FromQuery] string format = "csv")
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
+
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+
             return Unauthorized();
 
         var user = await _db.Users
@@ -42,6 +43,7 @@ public class TimeExportController : ControllerBase
         {
             // Verificar permisos
             var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            
             if (!isAdminOrRrhh)
             {
                 if (User.IsInRole("MANAGER"))

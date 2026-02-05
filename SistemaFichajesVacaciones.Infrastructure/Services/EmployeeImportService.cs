@@ -75,7 +75,6 @@ public class EmployeeImportService : IEmployeeImportService
 
             try
             {
-                
                  var parts = ParseCsvLine(line);
                 
                 // Validaciones básicas
@@ -138,6 +137,7 @@ public class EmployeeImportService : IEmployeeImportService
                     ImportRunId = importRun.ImportRunId,
                     CreatedAt = DateTime.Now
                 };
+
                 stagingEntities.Add(staging);
                 success++;
             }
@@ -248,7 +248,7 @@ public class EmployeeImportService : IEmployeeImportService
             // Ahora que todos existen, refrescamos el diccionario de códigos a IDs
              
             foreach (var staging in stagingData)
-        {
+            {
             if (string.IsNullOrEmpty(staging.EmployeeCode) || string.IsNullOrEmpty(staging.ManagerEmployeeCode))
                 continue;
 
@@ -256,13 +256,14 @@ public class EmployeeImportService : IEmployeeImportService
                 employeeIdMap.TryGetValue(staging.ManagerEmployeeCode, out var managerId))
             {
                 var employee = await _db.Employees.FindAsync(new object[] { employeeId }, cancellationToken);
+
                 if (employee != null && employee.ManagerEmployeeId != managerId)
                 {
                     employee.ManagerEmployeeId = managerId;
                     employee.UpdatedAt = DateTime.Now;
                 }
             }
-        }
+            }
 
         await _db.SaveChangesAsync(cancellationToken);
 
@@ -277,6 +278,7 @@ public class EmployeeImportService : IEmployeeImportService
         await transaction.CommitAsync(cancellationToken);
 
         return importRun;
+        
     }
     catch (Exception)
         {

@@ -16,6 +16,7 @@ builder.Services.AddControllers()
         // Esta opción ignora los ciclos y simplemente deja en 'null' la referencia repetida
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+    
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>

@@ -128,6 +128,7 @@ public class TimeCorrectionsController : ControllerBase
                 ExpectedMinutes = 480,
                 LastCalculatedAt = DateTime.Now
             };
+
             _db.TimeDailySummaries.Add(summary);
         }
 
@@ -164,6 +165,7 @@ public class TimeCorrectionsController : ControllerBase
                 .SingleOrDefaultAsync();
 
             if (correction.Employee.ManagerEmployeeId != managerEmployeeId)
+            
                 return Forbid();
         }
 
@@ -189,10 +191,15 @@ public class TimeCorrectionsController : ControllerBase
         [FromQuery] int? employeeId,
         [FromQuery] string? status,
         [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to)
+        [FromQuery] DateTime? to,
+        [FromQuery] bool includeOwn = false)
+        
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+
+        var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+        var isManager = User.IsInRole("MANAGER");
 
         IQueryable<TimeCorrection> query = _db.TimeCorrections
             .Include(tc => tc.Employee);
@@ -200,10 +207,10 @@ public class TimeCorrectionsController : ControllerBase
         if (employeeId.HasValue)
         {
             // Solo admin/rrhh pueden ver de cualquier empleado
-            if (!User.IsInRole("ADMIN") && !User.IsInRole("RRHH"))
+            if (!isAdminOrRrhh)
             {
                 // Manager puede ver de sus subordinados
-                if (User.IsInRole("MANAGER"))
+                if (isManager)
                 {
                     var subordinateIds = await _db.Employees
                         .Where(e => e.ManagerEmployeeId == user.EmployeeId)
@@ -215,7 +222,8 @@ public class TimeCorrectionsController : ControllerBase
                 }
                 else
                 {
-                    return Forbid();
+                    if(employeeId.Value !=user.EmployeeId)
+                        return Forbid();
                 }
             }
 
@@ -224,28 +232,37 @@ public class TimeCorrectionsController : ControllerBase
         else
         {
            // Sin employeeId especificado
-            if (User.IsInRole("ADMIN") || User.IsInRole("RRHH"))
+            if (includeOwn)
             {
-                // Admin/RRHH ven todas las correcciones
-                // No filtrar por empleado
+                if (user.EmployeeId == null)
+                    return BadRequest(new { message = "Usuario sin empleado asignado" });
+                    
+                query = query.Where(tc => tc.EmployeeId == user.EmployeeId.Value);
             }
-            else if (User.IsInRole("MANAGER") && user.EmployeeId.HasValue)
-            {
-                // Manager ve las correcciones de sus subordinados
-                var subordinateIds = await _db.Employees
-                    .Where(e => e.ManagerEmployeeId == user.EmployeeId)
-                    .Select(e => e.EmployeeId)
-                    .ToListAsync();
-        
-                query = query.Where(tc => subordinateIds.Contains(tc.EmployeeId));
-            }
+
             else
             {
-                // Usuario normal solo ve las propias
-                if (user.EmployeeId == null)
+                if (isAdminOrRrhh)
+                {
+                    
+                }
+                else if(isManager && user.EmployeeId.HasValue)
+                {
+                    // Manager ve las correcciones de sus subordinados (sin incluir las propias)
+                    var subordinateIds = await _db.Employees
+                        .Where(e => e.ManagerEmployeeId == user.EmployeeId)
+                        .Select(e => e.EmployeeId)
+                        .ToListAsync();
+
+                    query = query.Where(tc => subordinateIds.Contains(tc.EmployeeId));
+                }
+                else
+                {
+                    if (user.EmployeeId == null)
                     return BadRequest(new { message = "Usuario sin empleado asignado" });
 
                 query = query.Where(tc => tc.EmployeeId == user.EmployeeId.Value);
+                }
             }
         }
 
@@ -271,6 +288,7 @@ public class TimeCorrectionsController : ControllerBase
                 tc.CreatedAt,
                 tc.ApprovedAt
             })
+
             .ToListAsync();
 
         return Ok(corrections);

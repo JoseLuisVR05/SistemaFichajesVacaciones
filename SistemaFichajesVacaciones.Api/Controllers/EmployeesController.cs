@@ -26,6 +26,7 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
         public async Task<IActionResult> GetAll()
         {
            var userIdClaim = User.FindFirst("userId")?.Value;
+
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
 
@@ -76,15 +77,15 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
             if (file == null || file.Length == 0)
             return BadRequest(new { message = "Archivo vacío" });
 
-        try
-        {
-            var result = await _importService.ImportFromCsvAsync(file);
-            return Ok(new { message = "Importación finalizada", importRunId = result.ImportRunId, total = result.TotalRows, errors = result.ErrorRows });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "Error en la importación", detail = ex.Message });
-        }
+            try
+            {
+                var result = await _importService.ImportFromCsvAsync(file);
+                return Ok(new { message = "Importación finalizada", importRunId = result.ImportRunId, total = result.TotalRows, errors = result.ErrorRows });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error en la importación", detail = ex.Message });
+            }
         }
     
 }

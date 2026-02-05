@@ -21,6 +21,7 @@ public static class SeedData
                 new() { Name = "MANAGER", Description = "Responsable de equipo" },
                 new() { Name = "EMPLOYEE", Description = "Empleado básico" }
             };
+
             context.Roles.AddRange(roles);
             await context.SaveChangesAsync();
         }
@@ -30,6 +31,7 @@ public static class SeedData
 
         // Crear empleado admin si no existe
         var adminEmployeeCode = "ADMIN001";
+
         var adminEmployee = await context.Employees
             .FirstOrDefaultAsync(e => e.EmployeeCode == adminEmployeeCode);
         
@@ -48,6 +50,7 @@ public static class SeedData
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
+
             context.Employees.Add(adminEmployee);
             await context.SaveChangesAsync();
 
@@ -65,12 +68,14 @@ public static class SeedData
                 UpdatedAt = DateTime.Now
                 
             };
+
             context.Employee_WorkSchedules.Add(defaultSchedule);
             await context.SaveChangesAsync();
         }
 
         // Crear usuario admin si no existe
         var adminEmail = "admin@local.dev";
+
         var adminUser = await context.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
@@ -79,6 +84,7 @@ public static class SeedData
         if(adminUser == null)
         {
             var hash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+
             adminUser = new Users
             {
                 Email = adminEmail,
@@ -87,6 +93,7 @@ public static class SeedData
                 IsEnabled = true,
                 CreatedAt = DateTime.Now
             };
+
             context.Users.Add(adminUser);
             await context.SaveChangesAsync();
 
@@ -151,6 +158,7 @@ public static class SeedData
         
         // Crear días para los próximos 6 meses (incluyendo el mes actual)
         var startDate = new DateTime(today.Year, today.Month, 1);
+        
         var endDate = startDate.AddMonths(6).AddDays(-1); // 6 meses completos
         
         var existingDates = await context.Calendar_Days

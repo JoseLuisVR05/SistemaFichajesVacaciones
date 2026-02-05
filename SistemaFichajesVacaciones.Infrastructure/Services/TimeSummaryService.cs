@@ -46,6 +46,7 @@ public class TimeSummaryService : ITimeSummaryService
             .FirstOrDefaultAsync();
 
         int expectedMinutes = 0;
+
         if (isWorkingDay)
         {
            if(schedule != null) 
@@ -126,6 +127,7 @@ public class TimeSummaryService : ITimeSummaryService
                     WorkedMinutes = totalMinutes,
                     LastCalculatedAt = DateTime.Now
                 };
+
                 _db.TimeDailySummaries.Add(summary); 
             }
             else
@@ -147,6 +149,7 @@ public class TimeSummaryService : ITimeSummaryService
         for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
         {
             var summary = await CalculateDailySummaryAsync(employeeId, date);
+
             if( summary != null)
             {
                 summaries.Add(summary);
@@ -189,6 +192,7 @@ public class TimeSummaryService : ITimeSummaryService
                     validation.HasSequenceErrors = true;
                     validation.Warnings.Add($"Entrada duplicada detectada a las {entry.EventTime:HH:mm}");
                 }
+                
                 lastIn = entry;
             }
             else if (entry.EntryType == "OUT")

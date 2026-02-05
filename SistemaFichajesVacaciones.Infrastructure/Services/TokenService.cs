@@ -20,6 +20,7 @@ public class TokenService : ITokenService
     public string GenerateToken(int userId, string email, List<string>? roles = null)
     {
         var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key missing"));
+        
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
@@ -40,6 +41,7 @@ public class TokenService : ITokenService
         }
 
         var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],

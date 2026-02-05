@@ -9,6 +9,7 @@ export const getCorrections = async (params = {}) => {
   if (params.from) query.append('from', params.from);
   if (params.to) query.append('to', params.to);
   if (params.employeeId) query.append('employeeId', params.employeeId);
+  if (params.includeOwn) query.append ('includeOwn', 'true');
 
   const queryString = query.toString();
   const url = queryString ? `/time-corrections?${queryString}` : '/time-corrections';

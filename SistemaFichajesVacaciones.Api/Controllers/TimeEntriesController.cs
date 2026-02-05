@@ -114,6 +114,7 @@ public class TimeEntriesController : ControllerBase
                         .ToListAsync();
 
                     if(!subordinateIds.Contains(employeeId.Value))
+
                         return Forbid();
                 }
                 else
@@ -127,7 +128,9 @@ public class TimeEntriesController : ControllerBase
         else
         {
             var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+
             if (user.EmployeeId == null)
+
                 return BadRequest(new { message = "Usuario sin empleado asignado" });
 
             targetEmployeeId = user.EmployeeId.Value;
@@ -138,6 +141,7 @@ public class TimeEntriesController : ControllerBase
 
         if (from.HasValue)
             query = query.Where(e => e.EventTime >= from.Value);
+
         if (to.HasValue)
             query = query.Where(e => e.EventTime <= to.Value.AddDays(1).AddSeconds(-1));
 
@@ -151,6 +155,7 @@ public class TimeEntriesController : ControllerBase
                 e.Source,
                 e.Comment
             })
+
             .ToListAsync();
 
         return Ok(entries);
@@ -166,10 +171,13 @@ public class TimeEntriesController : ControllerBase
         [FromQuery] DateTime? to)
     {
         var userIdClaim = User.FindFirst("userId")?.Value;
+
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+
             return Unauthorized();
 
         int targetEmployeeId;
+
         if (employeeId.HasValue)
         {
             var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
@@ -198,8 +206,11 @@ public class TimeEntriesController : ControllerBase
         else
         {
             var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+
             if (user.EmployeeId == null)
+
                 return BadRequest(new { message = "Usuario sin empleado asignado" });
+
             targetEmployeeId = user.EmployeeId.Value;
         }
 
@@ -208,9 +219,11 @@ public class TimeEntriesController : ControllerBase
 
         // Calcular resúmenes para cada día del rango
         var summaries = new List<object>();
+
         for (var d = fromDate; d <= toDate; d = d.AddDays(1))
         {
             var summary = await _summaryService.CalculateDailySummaryAsync(targetEmployeeId, d);
+
             if(summary != null)
             {
                 summaries.Add(new
@@ -232,6 +245,7 @@ public class TimeEntriesController : ControllerBase
                 });
             }
         }
+        
         return Ok(summaries);
     }
 
