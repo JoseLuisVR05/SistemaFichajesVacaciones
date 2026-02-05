@@ -223,11 +223,30 @@ public class TimeCorrectionsController : ControllerBase
         }
         else
         {
-            // Sin employeeId, solo mostrar las propias
-            if (user.EmployeeId == null)
-                return BadRequest(new { message = "Usuario sin empleado asignado" });
+           // Sin employeeId especificado
+            if (User.IsInRole("ADMIN") || User.IsInRole("RRHH"))
+            {
+                // Admin/RRHH ven todas las correcciones
+                // No filtrar por empleado
+            }
+            else if (User.IsInRole("MANAGER") && user.EmployeeId.HasValue)
+            {
+                // Manager ve las correcciones de sus subordinados
+                var subordinateIds = await _db.Employees
+                    .Where(e => e.ManagerEmployeeId == user.EmployeeId)
+                    .Select(e => e.EmployeeId)
+                    .ToListAsync();
+        
+                query = query.Where(tc => subordinateIds.Contains(tc.EmployeeId));
+            }
+            else
+            {
+                // Usuario normal solo ve las propias
+                if (user.EmployeeId == null)
+                    return BadRequest(new { message = "Usuario sin empleado asignado" });
 
-            query = query.Where(tc => tc.EmployeeId == user.EmployeeId.Value);
+                query = query.Where(tc => tc.EmployeeId == user.EmployeeId.Value);
+            }
         }
 
         if (!string.IsNullOrEmpty(status))

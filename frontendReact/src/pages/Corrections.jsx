@@ -117,13 +117,19 @@ export default function Corrections() {
       const params = { from: fromDate, to: toDate };
       if (statusFilter !== 'ALL') params.status = statusFilter;
 
-      if(activeTab === 1 && selectedEmployee){
-        params.employeeId = selectedEmployee.employeeId;
-        console.log('Buscando correciones de:', selectedEmployee.fullName);
+      if(activeTab === 1){
+        if(selectedEmployee){
+          params.employeeId = selectedEmployee.employeeId;
+        }
+        
+        params.viewMode = 'management';
       }
+
+      
 
       const data = await getCorrections(params);
       const list = data || [];
+
 
       const formattedRows = list.map(c => ({
         id: c.correctionId,
@@ -139,17 +145,25 @@ export default function Corrections() {
       // Tab 0 = mis solicitudes, Tab 1 = todas (gestión)
       if (activeTab === 0 && user?.employeeId) {
         setRows(formattedRows.filter(r => r.employeeId === user.employeeId));
-      } else {
-        setRows(formattedRows);
       }
-    } catch (err) {
-      console.error('Error cargando correcciones:', err);
-      setRows([]);
-      showSnack('Error al cargar las correcciones', 'error');
-    } finally {
-      setLoading(false);
+      else if (activeTab === 1) {
+        if(isManager() && user?.employeeId){
+            const filtered = formattedRows.filter(r => r.employeeId !==user.employeeId);
+            setRows(filtered);
+        } else {
+            setRows(formattedRows);
+        }
+      }
+      else{
+        setRows(formattedRows);
     }
-  }, [fromDate, toDate, statusFilter, activeTab, user, selectedEmployee]);
+  } catch (err) {
+    console.error('Error cargando correcciones:', err);
+    setRows([]);
+  } finally {
+    setLoading(false);
+  }
+}, [fromDate, toDate, statusFilter, activeTab, user, selectedEmployee]);
 
   useEffect(() => {
     loadData();
