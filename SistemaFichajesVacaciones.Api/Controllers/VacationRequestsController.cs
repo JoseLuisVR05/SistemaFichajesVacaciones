@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
+using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -33,7 +34,7 @@ public class VacationRequestsController : ControllerBase
     /// Crea una solicitud de vacaciones en estado DRAFT
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> CreateRequest([FromBody] CreateRequestDto dto)
+    public async Task<IActionResult> CreateRequest([FromBody] CreateVacationRequestDto dto)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
@@ -151,7 +152,7 @@ public class VacationRequestsController : ControllerBase
     /// </summary>
     [HttpPost("{id}/approve")]
     [RequireRole("ADMIN", "RRHH", "MANAGER")]
-    public async Task<IActionResult> ApproveRequest(int id, [FromBody] ApproveRejectDto? dto = null)
+    public async Task<IActionResult> ApproveRequest(int id, [FromBody] ApproveRejectRequestDto? dto = null)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
         var request = await _db.VacationRequests
@@ -198,7 +199,7 @@ public class VacationRequestsController : ControllerBase
     /// </summary>
     [HttpPost("{id}/reject")]
     [RequireRole("ADMIN", "RRHH", "MANAGER")]
-    public async Task<IActionResult> RejectRequest(int id, [FromBody] ApproveRejectDto dto)
+    public async Task<IActionResult> RejectRequest(int id, [FromBody] ApproveRejectRequestDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Comment))
             return BadRequest(new { message = "El motivo del rechazo es obligatorio" });
@@ -375,7 +376,7 @@ public class VacationRequestsController : ControllerBase
     /// Valida un rango de fechas sin crear la solicitud (preview)
     /// </summary>
     [HttpPost("validate")]
-    public async Task<IActionResult> ValidateDates([FromBody] ValidateDatesDto dto)
+    public async Task<IActionResult> ValidateDates([FromBody] ValidateVacationDatesDto dto)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
@@ -399,7 +400,3 @@ public class VacationRequestsController : ControllerBase
         });
     }
 }
-
-public record CreateRequestDto(DateTime StartDate, DateTime EndDate, string? Type);
-public record ApproveRejectDto(string Comment);
-public record ValidateDatesDto(DateTime StartDate, DateTime EndDate);

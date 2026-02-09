@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
+using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -161,7 +162,7 @@ public class VacationBalanceController : ControllerBase
     /// </summary>
     [HttpPost("bulk-assign")]
     [RequireRole("ADMIN", "RRHH")]
-    public async Task<IActionResult> BulkAssign([FromBody] BulkAssignDto dto)
+    public async Task<IActionResult> BulkAssign([FromBody] BulkAssignBalanceDto dto)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
 
@@ -226,6 +227,3 @@ public class VacationBalanceController : ControllerBase
         });
     }
 }
-
-// ─── DTOs ────────────────────────────────────────────────────────
-public record BulkAssignDto(int PolicyId, int Year);

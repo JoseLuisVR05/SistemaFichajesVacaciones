@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -207,19 +208,3 @@ public class VacationPoliciesController : ControllerBase
     }
 }
 
-// ─── DTOs ────────────────────────────────────────────────────────
-public record CreatePolicyDto(
-    string Name,
-    int Year,
-    string? AccrualType,       // ANNUAL o MONTHLY (default: ANNUAL)
-    decimal TotalDaysPerYear,
-    decimal CarryOverMaxDays
-);
-
-public record UpdatePolicyDto(
-    string? Name,
-    int? Year,
-    string? AccrualType,
-    decimal? TotalDaysPerYear,
-    decimal? CarryOverMaxDays
-);

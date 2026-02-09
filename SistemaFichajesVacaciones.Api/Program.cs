@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using SistemaFichajesVacaciones.Application.Interfaces;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,10 +91,8 @@ builder.Services.AddScoped<IEmployeeImportService, EmployeeImportService>();
 // Registrar AuditService
 builder.Services.AddScoped<IAuditService, AuditService>();
 
-// Registrar VacationBalanceService
-builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
+// Servicios de Vacaciones (desde Application)
 
-builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();
 
 //Configuracion JWT
 var key = builder.Configuration["Jwt:Key"] ?? 
