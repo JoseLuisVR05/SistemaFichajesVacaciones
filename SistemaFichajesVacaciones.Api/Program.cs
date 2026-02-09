@@ -92,6 +92,8 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 // Registrar VacationBalanceService
 builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
 
+builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();
+
 //Configuracion JWT
 var key = builder.Configuration["Jwt:Key"] ?? 
           builder.Configuration["Jwt:key"] ?? 

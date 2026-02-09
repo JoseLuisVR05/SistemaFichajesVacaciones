@@ -25,6 +25,26 @@ public static class SeedData
             context.Roles.AddRange(roles);
             await context.SaveChangesAsync();
         }
+
+        //Crear política de vacaciones por defecto si no existe
+        if (!await context.VacationPolicies.AnyAsync())
+        {
+            var defaultPolicy = new VacationPolicies
+            {
+                Name = "Estándar España",
+                Year = DateTime.Now.Year,
+                AccrualType = "ANNUAL",
+                TotalDaysPerYear = 22,        // 22 días laborables (estándar España)
+                CarryOverMaxDays = 5,          // Máximo 5 días de arrastre
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            context.VacationPolicies.Add(defaultPolicy);
+            await context.SaveChangesAsync();
+            Console.WriteLine("✅ Política de vacaciones por defecto creada (22 días/año)");
+        
+        }
         // Implementa calendario si no hubiera en la base de datos
         await InitializeCalendarDays(context);
 

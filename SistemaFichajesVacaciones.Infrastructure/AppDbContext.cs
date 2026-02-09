@@ -24,6 +24,13 @@ public class AppDbContext : DbContext
     public DbSet<Calendar_Days> Calendar_Days => Set<Calendar_Days>();
     public DbSet<Employee_WorkSchedule> Employee_WorkSchedules => Set<Employee_WorkSchedule>();
 
+    // Vacaciones
+    public DbSet<VacationPolicies> VacationPolicies => Set<VacationPolicies>();
+    public DbSet<Employee_VacationBalance> EmployeeVacationBalances => Set<Employee_VacationBalance>();
+    public DbSet<VacationRequests> VacationRequests => Set<VacationRequests>();
+    public DbSet<VacationRequest_Days> VacationRequestDays => Set<VacationRequest_Days>();
+    public DbSet<AbsenceCalendar> AbsenceCalendar => Set<AbsenceCalendar>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -224,7 +231,142 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
-    }      
+
+        // VACACIONES
+
+        // Configuración de VacationPolicy
+        modelBuilder.Entity<VacationPolicies>(entity =>
+        {
+            entity.HasKey(e => e.PolicyId);
+            
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(200);
+            
+            entity.Property(e => e.AccrualType)
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.TotalDaysPerYear)
+                .HasColumnType("decimal(5,2)");
+            
+            entity.Property(e => e.CarryOverMaxDays)
+                .HasColumnType("decimal(5,2)");
+            
+            entity.HasIndex(e => new { e.Year, e.Name }).IsUnique();
+        });
+
+        // Configuración de Employee_VacationBalance
+        modelBuilder.Entity<Employee_VacationBalance>(entity =>
+        {
+            entity.HasKey(e => e.BalanceId);
+            
+            entity.Property(e => e.AllocatedDays)
+                .HasColumnType("decimal(5,2)");
+            
+            entity.Property(e => e.UsedDays)
+                .HasColumnType("decimal(5,2)");
+            
+            entity.Property(e => e.RemainingDays)
+                .HasColumnType("decimal(5,2)");
+            
+            entity.HasIndex(e => new { e.EmployeeId, e.Year }).IsUnique();
+            
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Policy)
+                .WithMany(p => p.VacationBalances)
+                .HasForeignKey(e => e.PolicyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuración de VacationRequest
+        modelBuilder.Entity<VacationRequests>(entity =>
+        {
+            entity.HasKey(e => e.RequestId);
+            
+            entity.Property(e => e.StartDate)
+                .HasColumnType("date");
+            
+            entity.Property(e => e.EndDate)
+                .HasColumnType("date");
+            
+            entity.Property(e => e.RequestedDays)
+                .HasColumnType("decimal(5,2)");
+            
+            entity.Property(e => e.Type)
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(e => e.ApproverComment)
+                .HasMaxLength(1000);
+            
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Approver)
+                .WithMany()
+                .HasForeignKey(e => e.ApproverEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => new { e.EmployeeId, e.StartDate, e.EndDate });
+        });
+
+        // Configuración de VacationRequest_Day
+        modelBuilder.Entity<VacationRequest_Days>(entity =>
+        {
+            entity.HasKey(e => e.RequestDayId);
+            
+            entity.Property(e => e.Date)
+                .HasColumnType("date");
+            
+            entity.Property(e => e.DayFraction)
+                .HasColumnType("decimal(3,2)");
+            
+            entity.HasOne(e => e.Request)
+                .WithMany(r => r.RequestDays)
+                .HasForeignKey(e => e.RequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.RequestId, e.Date }).IsUnique();
+        });
+
+        // Configuración de AbsenceCalendar
+        modelBuilder.Entity<AbsenceCalendar>(entity =>
+        {
+            entity.HasKey(e => e.AbsenceId);
+            
+            entity.Property(e => e.Date)
+                .HasColumnType("date");
+            
+            entity.Property(e => e.AbsenceType)
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.SourceRequest)
+                .WithMany(r => r.AbsenceEntries)
+                .HasForeignKey(e => e.SourceRequestId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.EmployeeId, e.Date }).IsUnique();
+            entity.HasIndex(e => e.Date);
+        });
+
+    }           
 }
     

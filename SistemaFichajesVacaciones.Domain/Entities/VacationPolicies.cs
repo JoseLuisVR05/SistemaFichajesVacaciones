@@ -1,9 +1,5 @@
 namespace SistemaFichajesVacaciones.Domain.Entities;
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// VACATION POLICIES
-// ═══════════════════════════════════════════════════════════════════════════════
-
 public class VacationPolicies
 {
     public int PolicyId { get; set; }
