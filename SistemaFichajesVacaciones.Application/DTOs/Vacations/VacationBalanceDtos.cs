@@ -2,43 +2,41 @@ namespace SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
 /// <summary>
 /// DTO para asignar saldos masivamente a empleados
-/// Usado cuando RRHH quiere dar vacaciones a todos los empleados activos
 /// </summary>
-public record BulkAssignBalanceDto(
-    int PolicyId,  // ID de la política a aplicar (ej: "Estándar España 2025")
-    int Year       // Año para el que se asignan los saldos
-);
-
-/// <summary>
-/// DTO de respuesta cuando se consulta el saldo de un empleado
-/// Incluye información calculada y denormalizada para el frontend
-/// </summary>
-public record VacationBalanceResponseDto
+public class BulkAssignBalanceDto
 {
-    public int BalanceId { get; init; }         // ID único del saldo
-    public int EmployeeId { get; init; }        // ID del empleado
-    public string EmployeeName { get; init; } = string.Empty; // Nombre completo
-    public int Year { get; init; }              // Año del saldo
-    public string? PolicyName { get; init; }    // Nombre de la política aplicada
-    public decimal AllocatedDays { get; init; } // Días asignados (incluye arrastre)
-    public decimal UsedDays { get; init; }      // Días ya consumidos/aprobados
-    public decimal RemainingDays { get; init; } // Días disponibles = Allocated - Used
-    public DateTime UpdatedAt { get; init; }    // Última actualización
+    public int PolicyId { get; set; }
+    public int Year { get; set; }
 }
 
 /// <summary>
-/// DTO para el resumen de saldos de un equipo/departamento
-/// Usado en vistas de manager para ver estado de su equipo
+/// DTO de respuesta cuando se consulta el saldo de un empleado
 /// </summary>
-public record TeamBalanceDto
+public class VacationBalanceResponseDto
 {
-    public int EmployeeId { get; init; }
-    public string EmployeeCode { get; init; } = string.Empty;
-    public string FullName { get; init; } = string.Empty;
-    public string? Department { get; init; }
-    public int Year { get; init; }
-    public decimal AllocatedDays { get; init; }
-    public decimal UsedDays { get; init; }
-    public decimal RemainingDays { get; init; }
-    public string PolicyName { get; init; } = "Sin política";
+    public int BalanceId { get; set; }
+    public int EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = string.Empty;
+    public int Year { get; set; }
+    public string? PolicyName { get; set; }
+    public decimal AllocatedDays { get; set; }
+    public decimal UsedDays { get; set; }
+    public decimal RemainingDays { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// DTO para el resumen de saldos de un equipo
+/// </summary>
+public class TeamBalanceDto
+{
+    public int EmployeeId { get; set; }
+    public string EmployeeCode { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string? Department { get; set; }
+    public int Year { get; set; }
+    public decimal AllocatedDays { get; set; }
+    public decimal UsedDays { get; set; }
+    public decimal RemainingDays { get; set; }
+    public string PolicyName { get; set; } = "Sin política";
 }
