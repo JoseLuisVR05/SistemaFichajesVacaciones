@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using SistemaFichajesVacaciones.Application.Interfaces;
+using SistemaFichajesVacaciones.Application.Services;
+
 
 
 
@@ -92,7 +94,8 @@ builder.Services.AddScoped<IEmployeeImportService, EmployeeImportService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
 
 // Servicios de Vacaciones (desde Application)
-
+builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
+builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();
 
 //Configuracion JWT
 var key = builder.Configuration["Jwt:Key"] ?? 

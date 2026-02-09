@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SistemaFichajesVacaciones.Domain\SistemaFichajesVacaciones.Domain.csproj" />
+    <ProjectReference Include="..\SistemaFichajesVacaciones.Infrastructure\SistemaFichajesVacaciones.Infrastructure.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
-using SistemaFichajesVacaciones.Infrastructure.Services;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
+using SistemaFichajesVacaciones.Application.Interfaces;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -85,7 +85,17 @@ public class VacationRequestsController : ControllerBase
         _db.AddRange(requestDays);
         await _db.SaveChangesAsync();
 
-        await _audit.LogAsync("VacationRequests", request.RequestId, "CREATE", null, request, userId);
+        await _audit.LogAsync("VacationRequest", request.RequestId, "CREATE", 
+        null, 
+        new
+            {
+                request.StartDate,
+                request.EndDate,
+                request.RequestedDays,
+                request.Type,
+                request.Status
+            }, 
+            userId);
 
         return Ok(new
         {
@@ -142,7 +152,10 @@ public class VacationRequestsController : ControllerBase
         request.UpdatedAt = DateTime.Now;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("VacationRequests", id, "SUBMIT", oldValue, new { request.Status }, userId);
+        await _audit.LogAsync("VacationRequest", id, "SUBMIT", 
+        oldValue, 
+        new { request.Status, request.SubmittedAt }, 
+        userId);
 
         return Ok(new { message = "Solicitud enviada para aprobación" });
     }
@@ -189,7 +202,16 @@ public class VacationRequestsController : ControllerBase
         // Sincronizar calendario de ausencias
         await _requestService.SyncAbsenceCalendarAsync(request.RequestId);
 
-        await _audit.LogAsync("VacationRequests", id, "APPROVE", oldValue, new { request.Status }, userId);
+        await _audit.LogAsync("VacationRequest", id, "APPROVE", 
+            oldValue, 
+            new 
+            { 
+                request.Status,
+                request.ApproverComment,
+                request.DecisionAt
+        
+            }, 
+            userId);
 
         return Ok(new { message = "Solicitud aprobada correctamente" });
     }
@@ -232,11 +254,20 @@ public class VacationRequestsController : ControllerBase
         request.UpdatedAt = DateTime.Now;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("VacationRequests", id, "REJECT", oldValue, new { request.Status }, userId);
+        await _audit.LogAsync("VacationRequest", id, "REJECT", 
+            oldValue, 
+            new 
+            { 
+                request.Status,
+                request.ApproverComment,
+                request.DecisionAt
+
+            }, 
+            userId);
 
         return Ok(new { message = "Solicitud rechazada" });
     }
-
+    /// <summary>
     /// Cancela una solicitud propia (solo si está en DRAFT o SUBMITTED)
     /// </summary>
     [HttpPost("{id}/cancel")]
@@ -267,7 +298,12 @@ public class VacationRequestsController : ControllerBase
         request.UpdatedAt = DateTime.Now;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("VacationRequests", id, "CANCEL", oldValue, new { request.Status }, userId);
+        await _audit.LogAsync("VacationRequest", id, "CANCEL", 
+            oldValue, 
+            new 
+            { 
+                request.Status, CancelledAt = DateTime.Now }, 
+                userId);
 
         return Ok(new { message = "Solicitud cancelada" });
     }

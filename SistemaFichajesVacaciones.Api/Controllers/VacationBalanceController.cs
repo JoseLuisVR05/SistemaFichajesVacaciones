@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
-using SistemaFichajesVacaciones.Infrastructure.Services;
+using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
