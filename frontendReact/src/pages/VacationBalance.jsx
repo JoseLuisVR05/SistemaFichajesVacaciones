@@ -6,8 +6,8 @@ import {
 } from '@mui/material';
 import { 
     BeachAccess as BeachIcon,
-    EventAvaliable as AvaliableIcon,
-    EventBussy as UsedIcon,
+    EventAvailable as AvailableIcon,
+    EventBusy as UsedIcon,
     CalendarMonth as CalendarIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
@@ -155,7 +155,7 @@ export default function VacationBalance(){
                         }}>
                             <CardContent>
                                 <Box display="flex" alignItems="center" gap={1} mb={1}>
-                                    <AvaliableIcon />
+                                    <AvailableIcon />
                                     <Typography variant="subtitle2">
                                         Días disponibles
                                     </Typography>

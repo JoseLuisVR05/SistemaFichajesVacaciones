@@ -81,7 +81,7 @@ export const getVacationRequests = async (params = {}) => {
     if (params.status && params.status !=='ALL') query.status = params.status;
     if (params.from) query.from = params.from;
     if (params.top) query.to = params.to;
-    const { data } = await api.get('/vacations/requests', { params: query});
+    const { data } = await api.get('/vacation/requests', { params: query});
     return data;
 };
 

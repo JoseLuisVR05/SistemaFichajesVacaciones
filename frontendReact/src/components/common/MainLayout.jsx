@@ -41,7 +41,7 @@ export default function MainLayout({ children }) {
   const loadNotifications = async () => {
     try {
 
-      const readIds = JSON.parse(localStorage.getItem)('readNotifications' || '[]');
+      const readIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
       let allNotifs = [];
 
       // Para MANAGER/ADMIN/RRHH: correcciones pendientes de aprobar

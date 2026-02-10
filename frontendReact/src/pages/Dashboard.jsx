@@ -6,7 +6,7 @@ import { getCorrections } from '../services/correctionsService';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { getBalance } from '../services/vacationsService;'
+import { getBalance } from '../services/vacationsService';
 
 export default function Dashboard() {
   const { user } = useAuth();
