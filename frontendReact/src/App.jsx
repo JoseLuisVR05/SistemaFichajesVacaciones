@@ -8,6 +8,10 @@ import History from './pages/History';
 import Corrections from './pages/Corrections';
 import Employees from './pages/Employees';
 import MainLayout from './components/common/MainLayout';
+import VacationBalance from './pages/VacationRequests';
+import VacationRequests from './pages/VacationBalance';
+import VacationApprovals from './pages/VacationApprovals';
+import VacationCalendar from './pages/VacationCalendar';
 
 
 export default function App() {
@@ -35,6 +39,17 @@ export default function App() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route path="/vacations" element={<VacationBalance/>} />
+                    <Route path="/vacations/requests" element={<VacationRequests/>} />
+                    <Route 
+                      path="/vacations/approvals" 
+                      element={
+                        <ProtectedRoute roles={['ADMIN', 'RRHH', 'MANAGER']}>
+                          <VacationApprovals />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/vacations/calendar" element={<VacationCalendar/>} />
                     <Route path="*" element={<Navigate to="/dashboard" />} />
                   </Routes>
                 </MainLayout>

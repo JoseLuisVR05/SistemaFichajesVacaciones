@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../hooks/useRole';
 import { getCorrections } from '../../services/correctionsService'
-import {Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Badge } from '@mui/material';
+import {Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Badge, patch } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   AccessTime as AccessTimeIcon,
@@ -159,13 +159,21 @@ export default function MainLayout({ children }) {
     { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#4facfe' },
     { text: 'Correcciones', icon: <EditNoteIcon/>, path : '/corrections', color: '#f5576c'},
     
-    
     ...(hasRole(['ADMIN', 'RRHH', 'MANAGER']) 
       ? [{ text: 'Empleados', icon: <PeopleIcon />, path: '/employees', color: '#43e97b' }]
       : []
     ),
     
-    { text: 'Vacaciones', icon: <EventIcon />, path: '/vacations', disabled: true },
+    { text: 'Mi saldo', icon: <EventIcon />, path: '/vacations', color: '#ff9a9e' },
+    { text: 'Solicitudes', icon: <EventIcon />, path: '/vacations/requests', color: '#a18cd1'},
+
+    ...(hasRole(['ADMIN', 'RRHH', 'MANAGER'])
+      ?[{text: 'Aprobaciones', icon: <EventIcon/>, path: '/vacations/approvals', color: '#fbc2eb'}]
+      : []
+    ),
+
+    { text: 'Calenario', icon: <EventIcon/>, path: '/vacations/calendar', color: '#84fab0'},
+
   ];
 
   const drawer = (

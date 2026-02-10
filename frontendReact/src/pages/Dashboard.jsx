@@ -6,6 +6,7 @@ import { getCorrections } from '../services/correctionsService';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { getBalance } from '../services/vacationsService;'
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [ weekBalance, setWeekBalance ] = useState(null);
   const [ loadingData, setLoadingData ] = useState(true);
   const [ pendingCorrections, setPendingCorrections] = useState(0);
+  const [vacationBalance, setVacationBalance] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -57,6 +59,13 @@ export default function Dashboard() {
         setPendingCorrections(Array.isArray(corrections)?corrections.length: 0);
       }catch{
         setPendingCorrections(0);
+      }
+      try {
+        const balance = await getBalance();
+        // Actualizar estado con los días restantes
+        setVacationBalance(balance);
+      } catch {
+        setVacationBalance(null);
       }
     } catch (err) {
       console.error('Error cargando datos:', err);
@@ -153,11 +162,11 @@ export default function Dashboard() {
         <Grid item xs={12} sm={4} size={4}>
           <Card>
             <CardContent>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Vacaciones restantes
-              </Typography>
               <Typography variant="h4" fontWeight="600">
-                --
+                {vacationBalance ? `${vacationBalance.remainingDays}` : '--'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {vacationBalance ? `de ${vacationBalance.allocatedDays} asignados` : 'Sin política asignada'}
               </Typography>
             </CardContent>
           </Card>
