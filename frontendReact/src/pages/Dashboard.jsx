@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, Typography, Alert, CircularProgress, Paper, Grid, Chip, Card, CardContent } from '@mui/material';
 import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { getDailySummary, getEntries, registerEntry } from '../services/timeService';
 import { getCorrections } from '../services/correctionsService';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../hooks/useRole';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { getBalance } from '../services/vacationsService';
+import { getBalance, getVacationRequests } from '../services/vacationsService';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { hasRole } = useRole();
+  const navigate = useNavigate();
+
   const [ loading, setLoading ] = useState(false);
   const [ message, setMessage ] = useState('');
   const [ lastEntries, setLastEntries ] = useState([]);
@@ -17,7 +22,9 @@ export default function Dashboard() {
   const [ weekBalance, setWeekBalance ] = useState(null);
   const [ loadingData, setLoadingData ] = useState(true);
   const [ pendingCorrections, setPendingCorrections] = useState(0);
-  const [vacationBalance, setVacationBalance] = useState(null);
+  const [ pendingApprovals, setpPendingApprovals ] = useState(0);
+  const [ vacationBalance, setVacationBalance ] = useState(null);
+  const [ lastRequests, setLastRequests ] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -54,18 +61,40 @@ export default function Dashboard() {
         const totalBalance = weekData.reduce(( acc, day ) => acc +(day.balanceHours || 0), 0);
         setWeekBalance(Math.round(totalBalance * 100) /100);
       }
+
+      // Correcciones pendientes
       try{
         const corrections = await getCorrections({status: 'PENDING'});
         setPendingCorrections(Array.isArray(corrections)?corrections.length: 0);
       }catch{
         setPendingCorrections(0);
       }
+
+      // Aprobaciones de vacaciones pendientes
+      if(hasRole(['ADMIN', 'RRHH', 'MANAGER', ])) {
+        
+        try{
+          const pendingVac = await getVacationRequests({ status: 'SUBMITED'});
+          setpPendingApprovals(Array.isArray(pendingVac)?pendingVac.length: 0);
+        } catch{
+          setpPendingApprovals(0);
+        }
+      }
+
       try {
         const balance = await getBalance();
         // Actualizar estado con los días restantes
         setVacationBalance(balance);
       } catch {
         setVacationBalance(null);
+      }
+
+      // Ultimas solicitudes de vacaciones
+      try{
+        const requests = await getVacationRequests({});
+        setLastRequests(Array.isArray(requests) ? requests.slice( 0, 3) : []);
+      } catch{
+        setLastRequests([]);
       }
     } catch (err) {
       console.error('Error cargando datos:', err);
@@ -162,11 +191,11 @@ export default function Dashboard() {
         <Grid item xs={12} sm={4} size={4}>
           <Card>
             <CardContent>
-              <Typography variant="h4" fontWeight="600">
-                {vacationBalance ? `${vacationBalance.remainingDays}` : '--'}
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Vacaciones restantes
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {vacationBalance ? `de ${vacationBalance.allocatedDays} asignados` : 'Sin política asignada'}
+              <Typography variant="h4" fontWeight="600">
+                {vacationBalance ? `${vacationBalance.remainingDays} días` : '--'}
               </Typography>
             </CardContent>
           </Card>
@@ -212,7 +241,7 @@ export default function Dashboard() {
                 fullWidth
                 variant="outlined"
                 size="large"
-                disabled
+                onClick={() => navigate('/vacations/requests')}
                 sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
               >
                 Solicitar vacaciones
@@ -239,6 +268,19 @@ export default function Dashboard() {
               size = "small"
               />
               </Box>
+              {/* Aprobaciones pendientes */}
+              
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="body2">
+                   • Aprobaciones de vacaciones pendientes
+                  </Typography>
+                  <Chip 
+                  label={pendingApprovals} 
+                  color={pendingApprovals > 0 ? 'info' : 'default'} 
+                  size="small" 
+                  />
+                </Box>
+              
             </Box>
           </Paper>
 
@@ -291,11 +333,38 @@ export default function Dashboard() {
             )}
 
             <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
-              Últimas solicitudes
+              Últimas solicitudes de vacaciones
             </Typography>
+             {lastRequests.length > 0 ? (
+              <Box>
+                {lastRequests.map((req) => (
+                  <Box 
+                    key={req.requestId}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      py: 1,
+                      borderBottom: '1px solid', 
+                      borderColor: 'divider', '&:last-child': {borderBottom: 'none'}
+                    }}>
+                      <Typography variant='body2'>
+                        {req.startDate ? format(new Date(req.startDate), 'dd/MM',{ locale: es}) : ''} - {req.endDate ? format(new Date(req.endDate), 'dd/MM', {locale: es}) : ''}
+                      </Typography>
+                        <Chip
+                          label={req.status}
+                          size="small"
+                          variant="outlined"
+                          color={req.status === 'APROVED' ? 'success' : req.status === 'REJECTED' ? 'error' : 'default'}
+                        />
+                    </Box>                        
+                ))}
+              </Box>
+          ) : (
             <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
               Sin solicitudes
             </Typography>
+          )}
           </Paper>
         </Grid>
       </Grid>

@@ -8,8 +8,7 @@ import History from './pages/History';
 import Corrections from './pages/Corrections';
 import Employees from './pages/Employees';
 import MainLayout from './components/common/MainLayout';
-import VacationBalance from './pages/VacationRequests';
-import VacationRequests from './pages/VacationBalance';
+import VacationRequests from './pages/VacationRequests';
 import VacationApprovals from './pages/VacationApprovals';
 import VacationCalendar from './pages/VacationCalendar';
 
@@ -39,7 +38,7 @@ export default function App() {
                         </ProtectedRoute>
                       }
                     />
-                    <Route path="/vacations" element={<VacationBalance/>} />
+                    
                     <Route path="/vacations/requests" element={<VacationRequests/>} />
                     <Route 
                       path="/vacations/approvals" 

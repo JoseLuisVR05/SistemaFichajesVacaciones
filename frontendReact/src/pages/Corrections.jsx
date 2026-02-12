@@ -81,15 +81,13 @@ export default function Corrections() {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.state?.fromEntry) {
-      const entry = location.state.fromEntry;
-      setNewCorrection(prev => ({
-        ...prev,
-        date: entry.date || prev.date,
-      }));
-      setCreateOpen(true);
-    }
-  }, [location.state]);
+    if (location.state?.openNew) {
+    // Abre el diálogo de nueva corrección y pre-rellena los datos
+    setCreateOpen(true);
+    if (location.state.date) setNewCorrection(prev => ({ ...prev, date: location.state.date }));
+    if (location.state.entryId) setNewCorrection(prev => ({ ...prev, timeEntryId: location.state.entryId }));
+  }
+}, [location.state])
 
   useEffect(() => {
     if (canViewEmployees() && activeTab === 1) {

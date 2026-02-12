@@ -3,7 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../hooks/useRole';
 import { getCorrections } from '../../services/correctionsService'
-import {Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Badge, patch } from '@mui/material';
+import { getVacationRequests } from '../../services/vacationsService';
+import {
+  Box, Drawer, AppBar, Toolbar, List, Typography, 
+  Divider, IconButton, ListItem, ListItemButton, 
+  ListItemIcon, ListItemText, Avatar, Menu, MenuItem, 
+  Badge, Collapse, InputBase } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
   AccessTime as AccessTimeIcon,
@@ -15,7 +20,15 @@ import {
   Menu as MenuIcon,
   AccountCircle,
   Notifications,
-  Settings
+  Settings,
+  BeachAccess as BeachIcon,
+  ExpandLess,
+  ExpandMore,
+  CalendarMonth,
+  RequestPage,
+  ThumbUpAlt,
+  AccountBalanceWallet,
+  Search as SearchIcon
 } from '@mui/icons-material'; 
 
 const drawerWidth = 260;
@@ -28,9 +41,17 @@ export default function MainLayout({ children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const { hasRole } = useRole();
 
+  const [vacationsOpen, setVacationsOpen] = useState( 
+    location.pathname.startsWith('/vacations')
+  );
+
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
+
+  // Buscador
+
+  const [SearchText, setSearchText] = useState('');
 
   useEffect(() => {
   loadNotifications();
@@ -38,98 +59,131 @@ export default function MainLayout({ children }) {
   return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (location.pathname.startsWith('/vacations')) {
+      setVacationsOpen(true);
+    }
+  }, [location.pathname]);
+
   const loadNotifications = async () => {
-    try {
+  try {
+    const readIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+    let allNotifs = [];
 
-      const readIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
-      let allNotifs = [];
+    if (hasRole(['ADMIN', 'RRHH', 'MANAGER'])) {
+      // Correcciones pendientes de aprobar
+      const pendingCorrections = await getCorrections({ status: 'PENDING' });
+      const correctionsForMe = pendingCorrections.filter(c => c.employeeId !== user?.employeeId);
 
-      // Para MANAGER/ADMIN/RRHH: correcciones pendientes de aprobar
-      if (hasRole(['ADMIN', 'RRHH', 'MANAGER'])) {
-        const pendingToApprove = await getCorrections({ status: 'PENDING' });
-        // Filtrar las que NO son mías (son de subordinados/empleados)
-        const forMe = pendingToApprove.filter(c => c.employeeId !== user?.employeeId);
-      
-        // Para EMPLOYEE: mis correcciones recién aprobadas/rechazadas (últimas 24h)
-        const myRecent = await getCorrections({ 
-          includeOwn: true,
-          from: new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0]
-        });
-        const myResolved = myRecent.filter(c => 
-          (c.status === 'APPROVED' || c.status === 'REJECTED') &&
-          new Date(c.approvedAt) > new Date(Date.now() - 24*60*60*1000)
-        );
-      
-        const pendingNotifs = forMe.map(c => ({
-        id: `pending-${c.correctionId}`,
-        type: 'PENDING', // Importante para identificarla luego
+      const correctionNotifs = correctionsForMe.map(c => ({
+        id: `pending-correction-${c.correctionId}`,
+        type: 'PENDING_CORRECTION',
         title: 'Corrección pendiente',
         message: `${c.employeeName} solicita corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
-        date: c.createdAt
-        }));
+        date: c.createdAt,
+        navigateTo: '/corrections'
+      }));
 
-        const resolvedNotifs = myResolved.map(c => ({
-          id: `resolved-${c.correctionId}`,
-          type: 'RESOLVED',
-          title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
-          message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
-          date: c.approvedAt
-        }));
+      // ✅ NUEVO: Vacaciones pendientes de aprobar
+      const pendingVacations = await getVacationRequests({ status: 'SUBMITTED' });
+      const vacationNotifs = (pendingVacations || []).map(v => ({
+        id: `pending-vacation-${v.requestId}`,
+        type: 'PENDING_VACATION',
+        title: 'Vacaciones pendientes',
+        message: `${v.employeeName} solicita vacaciones del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
+        date: v.createdAt,
+        navigateTo: '/vacations/approvals'
+      }));
 
-        // Filtramos SOLO las resueltas. Las PENDING se quedan siempre que existan en la DB.
-        const filteredResolved = resolvedNotifs.filter(n => !readIds.includes(n.id));
-        allNotifs = [...pendingNotifs, ...filteredResolved];
+      // Mis correcciones resueltas (últimas 24h)
+      const myRecent = await getCorrections({
+        includeOwn: true,
+        from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      });
+      const myResolved = myRecent.filter(c =>
+        (c.status === 'APPROVED' || c.status === 'REJECTED') &&
+        new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
 
-      } else {
-        // Solo EMPLOYEE: mis correcciones resueltas recientemente
-        const myRecent = await getCorrections({ 
-          includeOwn: true,
-          from: new Date(Date.now() - 24*60*60*1000).toISOString().split('T')[0]
-        });
-        const myResolved = myRecent.filter(c => 
-          (c.status === 'APPROVED' || c.status === 'REJECTED') &&
-          c.approvedAt &&
-          new Date(c.approvedAt) > new Date(Date.now() - 24*60*60*1000)
-        );
-      
-        const notifs = myResolved.map(c => ({
-          id: `resolved-${c.correctionId}`,
-          type: c.status,
-          title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
-          message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
-          date: c.approvedAt
-        }));
-      
-        allNotifs = notifs.filter( n => !readIds.includes(n.id));
-      }
+      const resolvedNotifs = myResolved.map(c => ({
+        id: `resolved-${c.correctionId}`,
+        type: 'RESOLVED',
+        title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
+        message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
+        date: c.approvedAt,
+        navigateTo: '/corrections'
+      }));
 
-      setNotifications(allNotifs);
-      setUnreadCount(allNotifs.length);
+      const filteredResolved = resolvedNotifs.filter(n => !readIds.includes(n.id));
+      allNotifs = [...correctionNotifs, ...vacationNotifs, ...filteredResolved];
 
-    } catch (err) {
-      console.error('Error cargando notificaciones:', err);
+    } else {
+      // EMPLOYEE: mis correcciones resueltas
+      const myRecent = await getCorrections({
+        includeOwn: true,
+        from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      });
+      const myResolved = myRecent.filter(c =>
+        (c.status === 'APPROVED' || c.status === 'REJECTED') &&
+        c.approvedAt &&
+        new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
+
+      const correctionsNotifs = myResolved.map(c => ({
+        id: `resolved-correction-${c.correctionId}`,
+        type: 'RESOLVED',
+        title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
+        message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
+        date: c.approvedAt,
+        navigateTo: '/corrections'
+      }));
+
+      // ✅ NUEVO: Mis vacaciones resueltas (últimas 24h)
+      const myVacations = await getVacationRequests({});
+      const myResolvedVacations = (myVacations || []).filter(v =>
+        (v.status === 'APPROVED' || v.status === 'REJECTED') &&
+        v.updatedAt &&
+        new Date(v.updatedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
+
+      const vacationNotifs = myResolvedVacations.map(v => ({
+        id: `resolved-vacation-${v.requestId}`,
+        type: 'RESOLVED',
+        title: v.status === 'APPROVED' ? '✅ Vacaciones aprobadas' : '❌ Vacaciones rechazadas',
+        message: `Tu solicitud del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
+        date: v.updatedAt,
+        navigateTo: '/vacations/requests'
+      }));
+
+      allNotifs = [...correctionNotifs, ...vacationNotifs].filter(n => !readIds.includes(n.id));
     }
-  };
+
+    setNotifications(allNotifs);
+    setUnreadCount(allNotifs.length);
+  } catch (err) {
+    console.error('Error cargando notificaciones:', err);
+  }
+};
 
   // Handlers para el menú
   const handleNotificationClick = (event) => {
-    setNotificationAnchor(event.currentTarget);
+  setNotificationAnchor(event.currentTarget);
 
-    // 1. Identificar cuáles de las notificaciones actuales son "Avisos" (ya resueltas)
+  // Marcar como leídas las RESOLVED
   const resolvedIds = notifications
     .filter(n => n.type === 'RESOLVED')
     .map(n => n.id);
-  
+
   if (resolvedIds.length > 0) {
     const oldReadIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
     const updatedReadIds = [...new Set([...oldReadIds, ...resolvedIds])];
     localStorage.setItem('readNotifications', JSON.stringify(updatedReadIds));
-    
-    // 2. Actualizar el contador: solo quedan las PENDING
-    const pendingCount = notifications.filter(n => n.type === 'PENDING').length;
-    setUnreadCount(pendingCount);
   }
-  };
+
+  // El contador solo cuenta las pendientes (no las ya leídas)
+  const pendingCount = notifications.filter(n => n.type !== 'RESOLVED').length;
+  setUnreadCount(pendingCount);
+};
 
   const handleNotificationClose = () => {
   setNotificationAnchor(null);
@@ -153,7 +207,7 @@ export default function MainLayout({ children }) {
   };
 
   // Navegación principal
- const menuItems = [
+ const mainMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', color:'#667eea' },
     { text: 'Fichajes', icon: <AccessTimeIcon />, path: '/timeclock', color:'#f093fb' },
     { text: 'Histórico', icon: <HistoryIcon />, path: '/history', color:'#4facfe' },
@@ -163,18 +217,50 @@ export default function MainLayout({ children }) {
       ? [{ text: 'Empleados', icon: <PeopleIcon />, path: '/employees', color: '#43e97b' }]
       : []
     ),
+  ];
+
+  const vacationsMenuItems = [
     
-    { text: 'Mi saldo', icon: <EventIcon />, path: '/vacations', color: '#ff9a9e' },
-    { text: 'Solicitudes', icon: <EventIcon />, path: '/vacations/requests', color: '#a18cd1'},
+    
+    { text: 'Solicitudes', icon: <RequestPage />, path: '/vacations/requests', color: '#a18cd1'},
 
     ...(hasRole(['ADMIN', 'RRHH', 'MANAGER'])
-      ?[{text: 'Aprobaciones', icon: <EventIcon/>, path: '/vacations/approvals', color: '#fbc2eb'}]
+      ?[{text: 'Aprobaciones', icon: <ThumbUpAlt/>, path: '/vacations/approvals', color: '#fbc2eb'}]
       : []
     ),
 
-    { text: 'Calenario', icon: <EventIcon/>, path: '/vacations/calendar', color: '#84fab0'},
+    { text: 'Calendario', icon: <CalendarMonth/>, path: '/vacations/calendar', color: '#84fab0'},
 
   ];
+
+  const renderMenuItem = (item) => (
+    <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+      <ListItemButton
+        selected={location.pathname === item.path}
+        onClick={() => !item.disabled && navigate(item.path)}
+        disabled={item.disabled}
+        sx={{
+          borderRadius: 2,
+          '&.Mui-selected': {
+            background: `linear-gradient(135deg, ${item.color}22 0%, ${item.color}11 100%)`,
+            borderLeft: `4px solid ${item.color}`,
+            '&:hover': {
+              background: `linear-gradient(135deg, ${item.color}33 0%, ${item.color}22 100%)`,
+            }
+          },
+          '&:hover': { bgcolor: 'grey.100' }
+        }}
+      >
+        <ListItemIcon sx={{ color: location.pathname === item.path ? item.color : 'inherit', minWidth: 40 }}>
+          {item.icon}
+        </ListItemIcon>
+        <ListItemText
+          primary={item.text}
+          primaryTypographyProps={{ fontWeight: location.pathname === item.path ? 600 : 400, fontSize: '0.9rem' }}
+        />
+      </ListItemButton>
+    </ListItem>
+  );
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -196,38 +282,36 @@ export default function MainLayout({ children }) {
 
       {/* Menú de navegación */}
       <List sx={{ flex: 1, p: 2 }}>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => !item.disabled && navigate(item.path)}
-              disabled={item.disabled}
-              sx={{
-                borderRadius: 2,
-                '&.Mui-selected': {
-                  background: `linear-gradient(135deg, ${item.color}22 0%, ${item.color}11 100%)`,
-                  borderLeft: `4px solid ${item.color}`,
-                  '&:hover': {
-                    background: `linear-gradient(135deg, ${item.color}33 0%, ${item.color}22 100%)`,
-                  }
-                },
-                '&:hover': {
-                  bgcolor: 'grey.100',
-                }
+        {/*Items principales*/}
+        {mainMenuItems.map(renderMenuItem)}
+        
+        <Divider sx={{ my: 1.5 }} />
+
+        {/* ✅ Sección Vacaciones colapsable (como pide el mockup del sidebar) */}
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            onClick={() => setVacationsOpen(!vacationsOpen)}
+            sx={{ borderRadius: 2, '&:hover': { bgcolor: 'grey.100' } }}
+          >
+            <ListItemIcon sx={{ color: location.pathname.startsWith('/vacations') ? '#ff9a9e' : 'inherit', minWidth: 40 }}>
+              <BeachIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary="Vacaciones"
+              primaryTypographyProps={{
+                fontWeight: location.pathname.startsWith('/vacations') ? 600 : 400,
+                fontSize: '0.9rem'
               }}
-            >
-              <ListItemIcon sx={{ color: location.pathname === item.path ? item.color : 'inherit' }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                primaryTypographyProps={{
-                  fontWeight: location.pathname === item.path ? 600 : 400
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+            />
+            {vacationsOpen ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+        </ListItem>
+
+        <Collapse in={vacationsOpen} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding sx={{ pl: 1.5 }}>
+            {vacationsMenuItems.map(renderMenuItem)}
+          </List>
+        </Collapse>
       </List>
     </Box>
   );
@@ -253,6 +337,25 @@ export default function MainLayout({ children }) {
           >
             <MenuIcon/>
           </IconButton>
+
+          {/*Buscador en topbar */}
+          <Box sx={{
+            display: 'flex', alignItems: 'center', bgcolor: 'rgba(255,255,255,0.15)',
+            borderRadius: 2, px: 1.5, py: 0.5, mr: 2, flex: { xs: 1, md: 'none' },
+            minWidth: { md: 250 }, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }
+          }}>
+            <SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', mr: 1 }} />
+            <InputBase
+              placeholder="Buscar…"
+              value={SearchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              sx={{ color: 'white', fontSize: '0.9rem', flex: 1,
+                '& ::placeholder': { color: 'rgba(255,255,255,0.6)' }
+              }}
+            />
+          </Box>
+
+          <Box sx={{ flexGrow: 1 }} />
 
           <Box sx={{ flexGrow: 1 }} />
 
@@ -286,12 +389,21 @@ export default function MainLayout({ children }) {
             ) : (
               notifications.map((notif) => (
                 <MenuItem
-                  key =  {notif.id}
+                  key={notif.id}
                   onClick={() => {
+                    // Marcar como leída
+                    const readIds = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+                    if (!readIds.includes(notif.id)) {
+                      localStorage.setItem('readNotifications', JSON.stringify([...readIds, notif.id]));
+                    }
+                    // Quitar de la lista local
+                    setNotifications(prev => prev.filter(n => n.id !== notif.id));
+                    setUnreadCount(prev => Math.max(0, prev - 1));
                     handleNotificationClose();
-                    navigate('/corrections');
+                    // Navegar al sitio correcto
+                    navigate(notif.navigateTo);
                   }}
-                  sx = {{ whiteSpace: 'normal', py: 1.5}}
+                  sx={{ whiteSpace: 'normal', py: 1.5 }}
                 >
                   <Box>
                     <Typography variant="body2" fontWeight="600">

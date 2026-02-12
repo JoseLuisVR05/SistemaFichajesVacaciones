@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip, Autocomplete } from '@mui/material';
+import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip, Autocomplete, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { Search, Visibility, Edit } from '@mui/icons-material';
 import { getEmployees } from '../services/employeesService';
@@ -20,6 +20,9 @@ export default function History() {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
+
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
   
 
   //Filtros
@@ -33,59 +36,37 @@ export default function History() {
 
   // Cargar empleados si es MANAGER/RRHH/ADMIN
   useEffect(() =>{
-    if (canViewEmployees){
-      loadEmployees();
+    if (canViewEmployees()){
+      setLoadingEmployees(true);
+      getEmployees()
+        .then(data => setEmployees(data || []))
+        .catch(err => console.error('Erros cargando empleados:', err))
+        .finally(() => setLoadingEmployees(false));
     }
   }, []);
 
-  useEffect(() => {
-
-    loadData();
-
-  }, [selectedEmployee]);
-
-   const loadEmployees = async () => {
-    setLoadingEmployees(true);
-    try {
-      const data = await getEmployees();
-      setEmployees(data);
-      console.log('Empleados cargados:', data)
-    }catch(err){
-      console.error('Error cargando empleados:', err);
-    }finally{
-      setLoadingEmployees(false);
-    }
-  };
-
-  const loadData = async () => {
+   const loadData = async () => {
     setLoading(true);
-
     try {
-      const params ={ from: fromDate, to: toDate};
+      const params = { from: fromDate, to: toDate };
+      if (typeFilter !== 'ALL') params.entryType = typeFilter;
+      if (selectedEmployee) params.employeeId = selectedEmployee.employeeId;
 
-      if(selectedEmployee){
-        params.employeeId = selectedEmployee.employeeId;
-        console.log('Buscando fichajes de:', selectedEmployee.fullName);
-      }else{
-        console.log('Buscandos mis propios fichajes');
+      let data = await getEntries(params);
+      if (typeFilter !== 'ALL') {
+        data = (data || []).filter(entry => entry.entryType === typeFilter);
       }
-
-      const data = await getEntries(params);
-      console.log('Fichajes recibidos:', data.length);
-
-      let filtered = data;
-      if(typeFilter !=='ALL'){
-        filtered = data.filter(e => e.entryType == typeFilter);
-      }
-
-      const formattedRows = filtered.map(entry => ({
-        id: entry.timeEntryId,
+      const formatted = (data || []).map((entry, idx) => ({
+        id: entry.timeEntryId || idx,
         ...entry,
-        fecha: format(new Date(entry.eventTime), 'dd/MM/yyyy', {locale: es}),
-        hora: format(new Date(entry.eventTime), 'HH:mm:ss', {locale: es})
+        dateFormatted: entry.eventTime
+          ? format(new Date(entry.eventTime), 'dd/MM/yyyy', { locale: es })
+          : '-',
+        timeFormatted: entry.eventTime
+          ? format(new Date(entry.eventTime), 'HH:mm:ss', { locale: es })
+          : '-',
       }));
-
-      setRows(formattedRows);
+      setRows(formatted);
     } catch (err) {
       console.error('Error cargando histórico:', err);
     } finally {
@@ -93,110 +74,124 @@ export default function History() {
     }
   };
 
-  const handleSearch = () =>{
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleSearch = () => {
     loadData();
   };
 
+  const handleExport = async () => {
+    try{
+      const params = { from: fromDate, to: toDate};
+      if (typeFilter !== 'ALL') params.entryType =typeFilter;
+      if (selectedEmployee) params.employeeId =selectedEmployee.employeeId;
+      await exportEntries(params);
+    } catch (err) {
+      console.error('Error exportando:', err);
+    }
+  };
+
+  const handleView = (entry) => {
+    setSelectedEntry(entry);
+    setDetailOpen(true);
+  };
+
+  // Columnas — Mockup: Fecha | Hora | Tipo | Empleado(Manager) | Acciones [Ver][Editar/Corregir]
   const columns = [
-    { field:'fecha', headerName: 'Fecha', width: 120},
-    { field:'hora', headerName: 'Hora', width: 100},
+    { field: 'dateFormatted', headerName: 'Fecha', width: 120 },
+    { field: 'timeFormatted', headerName: 'Hora', width: 100 },
     {
-      field:'entryType',
-      headerName: 'Tipo',
-      width: 100,
-      renderCell: (params) =>(
+      field: 'entryType', headerName: 'Tipo', width: 100,
+      renderCell: ({ value }) => (
         <Chip
-          label = {params.value}
-          color = {params.value === 'IN' ? 'success' : 'error'}
-          size = "small"
+          label={value === 'IN' ? 'Entrada' : 'Salida'}
+          color={value === 'IN' ? 'success' : 'error'}
+          size="small"
         />
-      )
+      ),
     },
-    {field: 'source', headerName: 'Origen', width: 100},
-    {field: 'comment', headerName: 'Comentario', width: 100},
+    ...(canViewEmployees()
+      ? [{ field: 'employeeName', headerName: 'Empleado', flex: 1, minWidth: 180 }]
+      : []
+    ),
     {
-      field: 'acciones',
-      headerName: 'Acciones',
-      width: 120,
-      sortable: false,
-      renderCell: (params) => (
+      field: 'source', headerName: 'Origen', width: 110,
+      renderCell: ({ value }) => (
+        <Chip
+          label={value === 'WEB' ? 'Web' : value === 'MOBILE' ? 'Móvil' : value || 'Web'}
+          size="small" variant="outlined"
+        />
+      ),
+    },
+    {
+      field: 'acciones', headerName: 'Acciones', width: 140, sortable: false,
+      renderCell: ({ row }) => (
         <Box>
-          <IconButton 
-          size = "small" 
-          title = "Solicitar corección"
-          onClick = { () => navigate('/corrections',{
-            state: {
-              fromEntry: {
-                date: params.row.eventTime?.split('T')[0],
-                entryType: params.row.entryType,
-                source: params.row.source,
-                timeEntryId: params.row.id
-              }
-            }
-          })}>
-            <Edit fontSize = "small" />
+          {/* ✅ NUEVO: Botón "Ver" (Visibility icon) — Mockup lo pide */}
+          <IconButton size="small" onClick={() => handleView(row)} title="Ver detalle">
+            <Visibility fontSize="small" />
+          </IconButton>
+          {/* Botón Editar / Solicitar corrección */}
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => navigate('/corrections', { state: { 
+              entryId: row.id, 
+              date: row.eventTime ? format(new Date(row.eventTime), 'yyyy-MM-dd') : row.dateFormatted,
+              openNew: true } })}
+            title="Solicitar corrección"
+          >
+            <Edit fontSize="small" />
           </IconButton>
         </Box>
-      )
-    }
+      ),
+    },
   ];
 
   return (
-     <Box
-      sx={{width: '75vw', height: '100vh'}}
-    >
-      <Typography variant="h4" gutterBottom textAlign='center'>
+    <Box sx={{ width: '75vw' }}>
+      <Typography variant="h4" textAlign="center" gutterBottom>
         Histórico de Fichajes
       </Typography>
-      
-      {/* Filtros */}
-      <Paper sx={{ p: 2, mb: 3, mt: 2 }}>
+
+      {/* Filtros — Mockup: [Desde] [Hasta] [Tipo] [Empleado (Manager/RRHH)] [Buscar] */}
+      <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <TextField
-            label="Desde"
-            type="date"
-            value={fromDate}
+            label="Desde" type="date" value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            size="small"
+            InputLabelProps={{ shrink: true }} size="small"
           />
           <TextField
-            label="Hasta"
-            type="date"
-            value={toDate}
+            label="Hasta" type="date" value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            size="small"
+            InputLabelProps={{ shrink: true }} size="small"
           />
           <TextField
-            select
-            label="Tipo"
-            value={typeFilter}
+            select label="Tipo" value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            size="small"
-            sx={{ minWidth: 120 }}
+            size="small" sx={{ minWidth: 130 }}
           >
             <MenuItem value="ALL">Todos</MenuItem>
             <MenuItem value="IN">Entrada</MenuItem>
             <MenuItem value="OUT">Salida</MenuItem>
           </TextField>
 
-          {canViewEmployees() &&(
-           <Autocomplete
+          {/* Selector de empleado para Manager/RRHH */}
+          {canViewEmployees() && (
+            <Autocomplete
               options={employees}
-              getOptionLabel={(option) =>
-                `${option.fullName} (${option.employeeCode})`
-              }
+              getOptionLabel={(option) => `${option.fullName} (${option.employeeCode})`}
               value={selectedEmployee}
               onChange={(_, newValue) => setSelectedEmployee(newValue)}
               loading={loadingEmployees}
               size="small"
-              sx={{ minWidth: 300 }}
+              sx={{ minWidth: 250 }}
               renderInput={(params) => (
                 <TextField
-                  {...params}
-                  label={isManager() ? "Buscar Subordinado":"Buscar empleado"}
-                  placeholder="Nombre, código, email..."
+                  {...params} label="Empleado" placeholder="Buscar empleado..."
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: (
@@ -208,44 +203,15 @@ export default function History() {
                   }}
                 />
               )}
-              renderOption={(props, option) => (
-                <li {...props} key={option.employeeId}>
-                  <Box>
-                    <Typography variant="body2">
-                      <strong>{option.fullName}</strong>
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.employeeCode} • {option.email} • {option.department || 'Sin departamento'}
-                    </Typography>
-                  </Box>
-                </li>
-              )}
-              noOptionsText={isManager() ? "NO tienes subordinados o no se encontraron": "No se encontraron empleados"}
               clearText="Limpiar"
-              isOptionEqualToValue={(option, value) =>
-                option.employeeId === value.employeeId
-              }
             />
           )}
-          
-          <Button 
-            variant="contained" 
-            startIcon={<Search />}
-            onClick={handleSearch}
-          >
+
+          <Button variant="contained" startIcon={<Search />} onClick={handleSearch}>
             Buscar
           </Button>
-          <Button
-            variant='outlined'
-            onClick={async () =>{
-              try {
-                await exportEntries({ from: fromDate, to: toDate});
-              } catch (err){
-                console.error('Error exportando', err);
-              }
-            }}
-          >
-            Exportar CSV
+          <Button variant="outlined" onClick={handleExport}>
+            Exportar
           </Button>
         </Box>
       </Paper>
@@ -257,17 +223,51 @@ export default function History() {
             <CircularProgress />
           </Box>
         ) : (
-          <DataGrid 
+          <DataGrid
             rows={rows} 
             columns={columns}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
-            }}
-            pageSizeOptions ={[10, 25, 50]}
+            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
+            pageSizeOptions={[10, 25, 50]}
             disableRowSelectionOnClick
           />
         )}
       </Paper>
+
+      {/* ✅ NUEVO: Dialog de detalle ("Ver") */}
+      <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Detalle del fichaje</DialogTitle>
+        <DialogContent>
+          {selectedEntry && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+              <Typography><strong>Fecha:</strong> {selectedEntry.dateFormatted}</Typography>
+              <Typography><strong>Hora:</strong> {selectedEntry.timeFormatted}</Typography>
+              <Typography>
+                <strong>Tipo:</strong>{' '}
+                <Chip
+                  label={selectedEntry.entryType === 'IN' ? 'Entrada' : 'Salida'}
+                  color={selectedEntry.entryType === 'IN' ? 'success' : 'error'}
+                  size="small"
+                />
+              </Typography>
+              {selectedEntry.employeeName && (
+                <Typography><strong>Empleado:</strong> {selectedEntry.employeeName}</Typography>
+              )}
+              <Typography><strong>Origen:</strong> {selectedEntry.source || 'Web'}</Typography>
+              {selectedEntry.ipAddress && (
+                <Typography><strong>IP:</strong> {selectedEntry.ipAddress}</Typography>
+              )}
+              {selectedEntry.notes && (
+                <Typography><strong>Notas:</strong> {selectedEntry.notes}</Typography>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
+
+  

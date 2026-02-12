@@ -1,49 +1,68 @@
 import { useState, useEffect } from 'react';
 import {
-  Box, Typography, Paper, CircularProgress, Chip, Grid
+  Box, Typography, Paper, CircularProgress, Chip, Grid,
+  TextField, MenuItem
 } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 import { useRole } from '../hooks/useRole';
 import { getVacationRequests } from '../services/vacationsService';
+import { getEmployees } from '../services/employeesService';
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, format,
-  addMonths, subMonths, isSameMonth, isWeekend, isSameDay
+  addMonths, subMonths, isWeekend, isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 /**
- * VacationCalendar - Vista de calendario mensual de ausencias del equipo
+ * VacationCalendar - Calendario de ausencias
  * 
- * Muestra un calendario con las vacaciones APROBADAS de todos los
- * empleados visibles según el rol del usuario:
- * - EMPLOYEE: solo sus propias vacaciones
- * - MANAGER: las de sus subordinados + propias
- * - ADMIN/RRHH: todas
- * 
- * Cada día que tiene ausencias muestra chips con el nombre del empleado.
- * Los fines de semana se muestran en gris claro.
+ * Mockup "Calendario de ausencias" (pág. 6):
+ * - Controles: [Mes] [Departamento] [Equipo] Leyenda: Vacaciones | Otros
+ * - Calendario mensual (tiles por día con chips de ausencias)
  */
 export default function VacationCalendar() {
   const { canViewEmployees } = useRole();
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [absences, setAbsences] = useState([]);  // Solicitudes aprobadas
+  const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ─── Carga de datos ───────────────────────────────────
+  // ✅ NUEVO: Filtros según mockup
+  const [departments, setDepartments] = useState([]);
+  const [departmentFilter, setDepartmentFilter] = useState('ALL');
+  const [teamFilter, setTeamFilter] = useState('ALL');
+  const [teams, setTeams] = useState([]);  // Lista de managers/equipos
+
+  // ─── Cargar empleados para filtros ────────────────────
+  useEffect(() => {
+    loadFilters();
+  }, []);
+
+  const loadFilters = async () => {
+    try {
+      const data = await getEmployees();
+      if (data) {
+        const depts = [...new Set(data.map(e => e.department).filter(Boolean))];
+        setDepartments(depts);
+        // Equipos = managers únicos (si el backend tiene managerId o similar)
+        const mgrs = [...new Set(data.map(e => e.managerId).filter(Boolean))];
+        // Simplificamos: usamos departamentos como "equipos" si no hay managerId explícito
+        setTeams(depts);
+      }
+    } catch (err) {
+      console.error('Error cargando filtros:', err);
+    }
+  };
+
+  // ─── Carga de ausencias ───────────────────────────────
   useEffect(() => {
     loadAbsences();
-  }, [currentMonth]);
+  }, [currentMonth, departmentFilter, teamFilter]);
 
-  /**
-   * Carga las solicitudes APROBADAS del mes actual.
-   * El backend filtra según permisos del usuario.
-   */
   const loadAbsences = async () => {
     setLoading(true);
     try {
-      // Rango del mes actual
       const monthStart = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
       const monthEnd = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
 
@@ -52,7 +71,15 @@ export default function VacationCalendar() {
         from: monthStart,
         to: monthEnd
       });
-      setAbsences(data || []);
+
+      let filtered = data || [];
+
+      // Filtrar por departamento localmente
+      if (departmentFilter !== 'ALL') {
+        filtered = filtered.filter(a => a.department === departmentFilter);
+      }
+
+      setAbsences(filtered);
     } catch (err) {
       console.error('Error cargando calendario:', err);
     } finally {
@@ -60,10 +87,6 @@ export default function VacationCalendar() {
     }
   };
 
-  /**
-   * Para un día dado, devuelve las solicitudes que incluyen ese día.
-   * Comprueba si el día está dentro del rango [startDate, endDate].
-   */
   const getAbsencesForDay = (day) => {
     return absences.filter(a => {
       const start = new Date(a.startDate);
@@ -72,16 +95,14 @@ export default function VacationCalendar() {
     });
   };
 
-  // ─── Generar días del mes ─────────────────────────────
+  // Generar días del mes
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  // Calcular día de la semana del primer día (Lunes=0, Domingo=6)
-  const firstDayOfWeek = (monthStart.getDay() + 6) % 7; // Ajuste para empezar en Lunes
+  const firstDayOfWeek = (monthStart.getDay() + 6) % 7;
   const emptyDays = Array(firstDayOfWeek).fill(null);
 
-  // ─── Colores para empleados ───────────────────────────
+  // Colores por empleado
   const employeeColors = {};
   const colorPalette = [
     '#667eea', '#f093fb', '#43e97b', '#f5576c', '#4facfe',
@@ -97,108 +118,129 @@ export default function VacationCalendar() {
     return employeeColors[employeeId];
   };
 
-  // ─── Render ───────────────────────────────────────────
+  // ✅ NUEVO: Determinar tipos únicos para la leyenda
+  const absenceTypes = [...new Set(absences.map(a => a.type || 'VACATION'))];
+
   return (
     <Box sx={{ width: '75vw' }}>
       <Typography variant="h4" textAlign="center" gutterBottom>
         Calendario de Ausencias
       </Typography>
 
-      {/* Navegación del mes */}
-      <Box display="flex" alignItems="center" justifyContent="center" mb={3} gap={2}>
-        <IconButton onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-          <ChevronLeft />
-        </IconButton>
-        <Typography variant="h5" fontWeight="600" sx={{ minWidth: 200, textAlign: 'center' }}>
-          {format(currentMonth, 'MMMM yyyy', { locale: es })}
-        </Typography>
-        <IconButton onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-          <ChevronRight />
-        </IconButton>
-      </Box>
+      {/* ✅ Controles — Mockup: [Mes] [Departamento] [Equipo] Leyenda */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Navegación del mes */}
+          <Box display="flex" alignItems="center" gap={1}>
+            <IconButton onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} size="small">
+              <ChevronLeft />
+            </IconButton>
+            <Typography variant="subtitle1" fontWeight="600" sx={{ minWidth: 160, textAlign: 'center' }}>
+              {format(currentMonth, 'MMMM yyyy', { locale: es })}
+            </Typography>
+            <IconButton onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} size="small">
+              <ChevronRight />
+            </IconButton>
+          </Box>
+
+          {/* ✅ NUEVO: Filtro Departamento */}
+          <TextField select label="Departamento" value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+            size="small" sx={{ minWidth: 160 }}>
+            <MenuItem value="ALL">Todos</MenuItem>
+            {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+          </TextField>
+
+          {/* ✅ NUEVO: Filtro Equipo */}
+          <TextField select label="Equipo" value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+            size="small" sx={{ minWidth: 160 }}>
+            <MenuItem value="ALL">Todos</MenuItem>
+            {teams.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+          </TextField>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* ✅ NUEVO: Leyenda (mockup la pide) */}
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <Typography variant="caption" color="text.secondary" fontWeight="600">Leyenda:</Typography>
+            <Chip label="Vacaciones" size="small" sx={{ bgcolor: '#667eea', color: 'white', height: 22, fontSize: '0.7rem' }} />
+            <Chip label="Personal" size="small" sx={{ bgcolor: '#f5576c', color: 'white', height: 22, fontSize: '0.7rem' }} />
+            <Chip label="Otro" size="small" sx={{ bgcolor: '#ffa726', color: 'white', height: 22, fontSize: '0.7rem' }} />
+          </Box>
+        </Box>
+      </Paper>
 
       {loading ? (
-        <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress />
+        <Box display="flex" justifyContent="center" py={4}><CircularProgress />
         </Box>
       ) : (
         <Paper sx={{ p: 2 }}>
           {/* Cabecera: días de la semana */}
-          <Grid container>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
             {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => (
-              <Grid item key={day} xs={12/7}>
-                <Box sx={{
-                  textAlign: 'center', py: 1, fontWeight: 600,
-                  color: (day === 'Sáb' || day === 'Dom') ? 'text.secondary' : 'text.primary'
-                }}>
-                  <Typography variant="subtitle2">{day}</Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
+              <Box key={day} sx={{
+                textAlign: 'center', py: 1.5, fontWeight: 700, fontSize: '0.85rem',
+                color: (day === 'Sáb' || day === 'Dom') ? 'text.disabled' : 'text.primary',
+                borderBottom: '2px solid #e0e0e0'
+            }}>
+            {day}
+          </Box>
+          ))}
+        </Box>
 
           {/* Días del mes */}
-          <Grid container>
-            {/* Espacios vacíos antes del primer día */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
             {emptyDays.map((_, i) => (
-              <Grid item key={`empty-${i}`} xs={12/7}>
-                <Box sx={{ minHeight: 80, borderTop: '1px solid #f0f0f0' }} />
-              </Grid>
+              <Box key={`empty-${i}`} sx={{ minHeight: 110, border: '1px solid #f0f0f0' }} />
             ))}
 
-            {/* Días reales */}
             {daysInMonth.map(day => {
               const dayAbsences = getAbsencesForDay(day);
               const isWE = isWeekend(day);
               const isToday = isSameDay(day, new Date());
 
               return (
-                <Grid item key={day.toISOString()} xs={12/7}>
-                  <Box sx={{
-                    minHeight: 80,
-                    borderTop: '1px solid #f0f0f0',
-                    bgcolor: isWE ? '#fafafa' : isToday ? '#e3f2fd' : 'white',
-                    p: 0.5
-                  }}>
-                    {/* Número del día */}
-                    <Typography
-                      variant="caption"
-                      fontWeight={isToday ? 700 : 400}
-                      color={isWE ? 'text.secondary' : 'text.primary'}
-                      sx={{
-                        display: 'inline-block',
-                        ...(isToday && {
-                          bgcolor: 'primary.main', color: 'white',
-                          borderRadius: '50%', width: 24, height: 24,
-                          lineHeight: '24px', textAlign: 'center'
-                        })
-                      }}
-                    >
-                      {format(day, 'd')}
-                    </Typography>
+                <Box key={day.toISOString()} sx={{
+                  minHeight: 110, border: '1px solid #f0f0f0',
+                  bgcolor: isWE ? '#fafafa' : isToday ? '#e8f4fd' : 'white',
+                  p: 1, display: 'flex', flexDirection: 'column'
+                }}>
+                  <Typography variant="body2" fontWeight={isToday ? 700 : 400}
+                    color={isWE ? 'text.disabled' : 'text.primary'}
+                    sx={{
+                      mb: 0.5,
+                      ...(isToday && {
+                      bgcolor: 'primary.main', color: 'white', borderRadius: '50%',
+                      width: 28, height: 28, lineHeight: '28px', textAlign: 'center',
+                      ontSize: '0.85rem'
+                      })
+                    }}>
+                    {format(day, 'd')}
+                  </Typography>
 
-                    {/* Chips de ausencias */}
-                    {dayAbsences.map(a => (
-                      <Chip
-                        key={a.requestId}
-                        label={a.employeeName?.split(' ')[0]} // Solo primer nombre
-                        size="small"
-                        sx={{
-                          mt: 0.25,
-                          height: 20,
-                          fontSize: '0.65rem',
-                          bgcolor: getEmployeeColor(a.employeeId),
-                          color: 'white',
-                          display: 'block',
-                          mb: 0.25
-                        }}
-                      />
-                    ))}
+                  <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                    {dayAbsences.map(a => {
+                      const typeColor = a.type === 'PERSONAL' ? '#f5576c'
+                        : a.type === 'OTHER' ? '#ffa726'
+                        : getEmployeeColor(a.employeeId);
+                      return (
+                        <Chip key={a.requestId}
+                          label={a.employeeName?.split(' ')[0]}
+                          size="small"
+                          sx={{
+                            height: 22, fontSize: '0.7rem', mb: 0.5,
+                            bgcolor: typeColor, color: 'white',
+                            display: 'flex', width: '100%',
+                            '& .MuiChip-label': { px: 0.5 }
+                          }} />
+                      );
+                    })}
                   </Box>
-                </Grid>
+                </Box>
               );
             })}
-          </Grid>
+          </Box>
         </Paper>
       )}
     </Box>

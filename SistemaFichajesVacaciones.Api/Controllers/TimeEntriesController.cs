@@ -153,7 +153,9 @@ public class TimeEntriesController : ControllerBase
                 e.EntryType,
                 e.EventTime,
                 e.Source,
-                e.Comment
+                e.Comment,
+                EmployeeName = e.Employee.FullName
+               
             })
 
             .ToListAsync();
