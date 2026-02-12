@@ -8,6 +8,7 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { CheckCircle, Cancel, Visibility, Search } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { useRole } from '../hooks/useRole'
 import {
   getVacationRequests, approveVacationRequest, rejectVacationRequest
 } from '../services/vacationsService';
@@ -30,6 +31,7 @@ const STATUS_CONFIG = {
  */
 export default function VacationApprovals() {
   const { user } = useAuth();
+  const { hasRole } = useRole();
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +85,10 @@ export default function VacationApprovals() {
       if (toDate) params.to = toDate;
 
       let data = await getVacationRequests(params);
+
+      if (data && hasRole(['MANAGER']) && !hasRole(['ADMIN', 'RRHH'])) {
+        data = data.filter(r => r.employeeId !== user?.employeeId);
+      }
 
       // Filtro local de departamento (si el backend no lo soporta)
       if (departmentFilter !== 'ALL' && data) {

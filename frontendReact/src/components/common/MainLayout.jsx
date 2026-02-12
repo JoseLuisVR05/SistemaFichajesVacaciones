@@ -71,7 +71,7 @@ export default function MainLayout({ children }) {
     let allNotifs = [];
 
     if (hasRole(['ADMIN', 'RRHH', 'MANAGER'])) {
-      // Correcciones pendientes de aprobar
+      // 1. Correcciones pendientes de aprobar (solo de subordinados, NO las propias)
       const pendingCorrections = await getCorrections({ status: 'PENDING' });
       const correctionsForMe = pendingCorrections.filter(c => c.employeeId !== user?.employeeId);
 
@@ -84,9 +84,11 @@ export default function MainLayout({ children }) {
         navigateTo: '/corrections'
       }));
 
-      // ✅ NUEVO: Vacaciones pendientes de aprobar
+      // 2. Vacaciones pendientes de aprobar (solo de subordinados, NO las propias)
       const pendingVacations = await getVacationRequests({ status: 'SUBMITTED' });
-      const vacationNotifs = (pendingVacations || []).map(v => ({
+      const vacationsForMe = (pendingVacations || []).filter(v => v.employeeId !== user?.employeeId);
+
+      const vacationPendingNotifs = vacationsForMe.map(v => ({
         id: `pending-vacation-${v.requestId}`,
         type: 'PENDING_VACATION',
         title: 'Vacaciones pendientes',
@@ -95,41 +97,18 @@ export default function MainLayout({ children }) {
         navigateTo: '/vacations/approvals'
       }));
 
-      // Mis correcciones resueltas (últimas 24h)
-      const myRecent = await getCorrections({
+      // 3. Mis correcciones resueltas (últimas 24h)
+      const myRecentCorrections = await getCorrections({
         includeOwn: true,
         from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
-      const myResolved = myRecent.filter(c =>
-        (c.status === 'APPROVED' || c.status === 'REJECTED') &&
-        new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
-      );
-
-      const resolvedNotifs = myResolved.map(c => ({
-        id: `resolved-${c.correctionId}`,
-        type: 'RESOLVED',
-        title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
-        message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
-        date: c.approvedAt,
-        navigateTo: '/corrections'
-      }));
-
-      const filteredResolved = resolvedNotifs.filter(n => !readIds.includes(n.id));
-      allNotifs = [...correctionNotifs, ...vacationNotifs, ...filteredResolved];
-
-    } else {
-      // EMPLOYEE: mis correcciones resueltas
-      const myRecent = await getCorrections({
-        includeOwn: true,
-        from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-      const myResolved = myRecent.filter(c =>
+      const myResolvedCorrections = myRecentCorrections.filter(c =>
         (c.status === 'APPROVED' || c.status === 'REJECTED') &&
         c.approvedAt &&
         new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
       );
 
-      const correctionsNotifs = myResolved.map(c => ({
+      const resolvedCorrectionNotifs = myResolvedCorrections.map(c => ({
         id: `resolved-correction-${c.correctionId}`,
         type: 'RESOLVED',
         title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
@@ -138,12 +117,58 @@ export default function MainLayout({ children }) {
         navigateTo: '/corrections'
       }));
 
-      // ✅ NUEVO: Mis vacaciones resueltas (últimas 24h)
+      // 4. Mis vacaciones resueltas (últimas 24h)
+      const myVacations = await getVacationRequests({});
+      const myResolvedVacations = (myVacations || []).filter(v =>
+        v.employeeId === user?.employeeId &&
+        (v.status === 'APPROVED' || v.status === 'REJECTED') &&
+        v.decisionAt &&
+        new Date(v.decisionAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
+
+      const resolvedVacationNotifs = myResolvedVacations.map(v => ({
+        id: `resolved-vacation-${v.requestId}`,
+        type: 'RESOLVED',
+        title: v.status === 'APPROVED' ? '✅ Vacaciones aprobadas' : '❌ Vacaciones rechazadas',
+        message: `Tu solicitud del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
+        date: v.decisionAt,
+        navigateTo: '/vacations/requests'
+      }));
+
+      const allResolved = [...resolvedCorrectionNotifs, ...resolvedVacationNotifs];
+      const filteredResolved = allResolved.filter(n => !readIds.includes(n.id));
+
+      allNotifs = [...correctionNotifs, ...vacationPendingNotifs, ...filteredResolved];
+
+    } else {
+      // EMPLOYEE: solo notificaciones de sus correcciones y vacaciones resueltas
+
+      // Correcciones resueltas
+      const myRecentCorrections = await getCorrections({
+        includeOwn: true,
+        from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      });
+      const myResolvedCorrections = myRecentCorrections.filter(c =>
+        (c.status === 'APPROVED' || c.status === 'REJECTED') &&
+        c.approvedAt &&
+        new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      );
+
+      const correctionNotifs = myResolvedCorrections.map(c => ({
+        id: `resolved-correction-${c.correctionId}`,
+        type: 'RESOLVED',
+        title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
+        message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
+        date: c.approvedAt,
+        navigateTo: '/corrections'
+      }));
+
+      // Vacaciones resueltas
       const myVacations = await getVacationRequests({});
       const myResolvedVacations = (myVacations || []).filter(v =>
         (v.status === 'APPROVED' || v.status === 'REJECTED') &&
-        v.updatedAt &&
-        new Date(v.updatedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+        v.decisionAt &&
+        new Date(v.decisionAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const vacationNotifs = myResolvedVacations.map(v => ({
@@ -151,7 +176,7 @@ export default function MainLayout({ children }) {
         type: 'RESOLVED',
         title: v.status === 'APPROVED' ? '✅ Vacaciones aprobadas' : '❌ Vacaciones rechazadas',
         message: `Tu solicitud del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
-        date: v.updatedAt,
+        date: v.decisionAt,
         navigateTo: '/vacations/requests'
       }));
 

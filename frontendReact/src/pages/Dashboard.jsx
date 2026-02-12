@@ -70,16 +70,17 @@ export default function Dashboard() {
         setPendingCorrections(0);
       }
 
-      // Aprobaciones de vacaciones pendientes
-      if(hasRole(['ADMIN', 'RRHH', 'MANAGER', ])) {
-        
-        try{
-          const pendingVac = await getVacationRequests({ status: 'SUBMITED'});
-          setpPendingApprovals(Array.isArray(pendingVac)?pendingVac.length: 0);
-        } catch{
-          setpPendingApprovals(0);
-        }
+      // Aprobaciones de vacaciones pendientes del usuario logeado
+      try {
+        const myPendingVac = await getVacationRequests({ status: 'SUBMITTED' });
+        // Filtrar solo las propias del usuario logueado
+        const myOwn = (Array.isArray(myPendingVac) ? myPendingVac : [])
+          .filter(v => v.employeeId === user?.employeeId);
+        setpPendingApprovals(myOwn.length);
+      } catch {
+        setpPendingApprovals(0);
       }
+      
 
       try {
         const balance = await getBalance();
@@ -260,7 +261,7 @@ export default function Dashboard() {
             <Box sx={{ mt: 2 }}>
               <Box sx = {{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
               <Typography variant="body2">
-                • Correcciones Pendientes
+                • Mis correcciones pendientes
               </Typography>
               <Chip
               label = {pendingCorrections}
@@ -272,7 +273,7 @@ export default function Dashboard() {
               
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Typography variant="body2">
-                   • Aprobaciones de vacaciones pendientes
+                   • Mis aprobaciones de vacaciones pendientes
                   </Typography>
                   <Chip 
                   label={pendingApprovals} 

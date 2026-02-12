@@ -18,7 +18,7 @@ export default function History() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   const [detailOpen, setDetailOpen] = useState(false);
@@ -45,18 +45,30 @@ export default function History() {
     }
   }, []);
 
-   const loadData = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const params = { from: fromDate, to: toDate };
-      if (typeFilter !== 'ALL') params.entryType = typeFilter;
-      if (selectedEmployee) params.employeeId = selectedEmployee.employeeId;
+      const baseParams = { from: fromDate, to: toDate };
 
-      let data = await getEntries(params);
-      if (typeFilter !== 'ALL') {
-        data = (data || []).filter(entry => entry.entryType === typeFilter);
+      let allData = [];
+
+      if (selectedEmployees.length > 0) {
+        // Pedir fichajes de cada empleado seleccionado
+        const promises = selectedEmployees.map(emp =>
+          getEntries({ ...baseParams, employeeId: emp.employeeId })
+        );
+        const results = await Promise.all(promises);
+        allData = results.flat();
+      } else {
+        allData = await getEntries(baseParams);
       }
-      const formatted = (data || []).map((entry, idx) => ({
+
+      // Filtro local por tipo
+      if (typeFilter !== 'ALL') {
+        allData = (allData || []).filter(entry => entry.entryType === typeFilter);
+      }
+
+      const formatted = (allData || []).map((entry, idx) => ({
         id: entry.timeEntryId || idx,
         ...entry,
         dateFormatted: entry.eventTime
@@ -86,7 +98,7 @@ export default function History() {
     try{
       const params = { from: fromDate, to: toDate};
       if (typeFilter !== 'ALL') params.entryType =typeFilter;
-      if (selectedEmployee) params.employeeId =selectedEmployee.employeeId;
+      if (selectedEmployees.length ===1) params.employeeId =selectedEmployees[0].employeeId;
       await exportEntries(params);
     } catch (err) {
       console.error('Error exportando:', err);
@@ -182,16 +194,17 @@ export default function History() {
           {/* Selector de empleado para Manager/RRHH */}
           {canViewEmployees() && (
             <Autocomplete
+              multiple
               options={employees}
               getOptionLabel={(option) => `${option.fullName} (${option.employeeCode})`}
-              value={selectedEmployee}
-              onChange={(_, newValue) => setSelectedEmployee(newValue)}
+              value={selectedEmployees}
+              onChange={(_, newValue) => setSelectedEmployees(newValue)}
               loading={loadingEmployees}
               size="small"
-              sx={{ minWidth: 250 }}
+              sx={{ minWidth: 350 }}
               renderInput={(params) => (
                 <TextField
-                  {...params} label="Empleado" placeholder="Buscar empleado..."
+                  {...params} label="Empleados" placeholder="Buscar empleados..."
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: (
@@ -204,6 +217,8 @@ export default function History() {
                 />
               )}
               clearText="Limpiar"
+              limitTags={2}
+              isOptionEqualToValue={(option, value) => option.employeeId === value.employeeId}
             />
           )}
 
