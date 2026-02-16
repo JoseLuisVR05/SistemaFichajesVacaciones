@@ -7,7 +7,7 @@ import { getCorrections } from '../services/correctionsService';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, tr } from 'date-fns/locale';
 import { getBalance, getVacationRequests } from '../services/vacationsService';
 
 export default function Dashboard() {
@@ -62,10 +62,13 @@ export default function Dashboard() {
         setWeekBalance(Math.round(totalBalance * 100) /100);
       }
 
-      // Correcciones pendientes
+      // Correcciones pendientes del usuario logeado
       try{
-        const corrections = await getCorrections({status: 'PENDING'});
-        setPendingCorrections(Array.isArray(corrections)?corrections.length: 0);
+        const myCorrections = await getCorrections({status: 'PENDING', includeOwn: true});
+        // Filtrar solo las propias del usuario logueado
+        const myOwn = (Array.isArray(myCorrections) ? myCorrections : [])
+          .filter(v => v.employeeId === user?.employeeId);
+        setPendingCorrections(myOwn.length);
       }catch{
         setPendingCorrections(0);
       }
@@ -356,7 +359,7 @@ export default function Dashboard() {
                           label={req.status}
                           size="small"
                           variant="outlined"
-                          color={req.status === 'APROVED' ? 'success' : req.status === 'REJECTED' ? 'error' : 'default'}
+                          color={req.status === 'APPROVED' ? 'success' : req.status === 'REJECTED' ? 'error' : 'default'}
                         />
                     </Box>                        
                 ))}

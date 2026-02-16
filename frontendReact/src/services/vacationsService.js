@@ -80,7 +80,7 @@ export const getVacationRequests = async (params = {}) => {
     if (params.employeeId) query.employeeId = params.employeeId;
     if (params.status && params.status !=='ALL') query.status = params.status;
     if (params.from) query.from = params.from;
-    if (params.top) query.to = params.to;
+    if (params.to) query.to = params.to;
     const { data } = await api.get('/vacation/requests', { params: query});
     return data;
 };

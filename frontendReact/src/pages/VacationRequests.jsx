@@ -29,8 +29,6 @@ const STATUS_CONFIG = {
 
 /**
  * VacationRequests - Página de solicitudes de vacaciones
- * 
- * Mockup "Solicitud de vacaciones" (pág. 5 del PDF):
  * - Saldo arriba: Asignados | Usados | Restantes
  * - Formulario: Fecha inicio | Fecha fin | Tipo | Comentario
  * - Botones: [Enviar] [Guardar borrador] [Cancelar]
@@ -45,7 +43,7 @@ export default function VacationRequests() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  // ✅ NUEVO: Saldo del usuario (mockup lo pide arriba)
+  // Saldo del usuario 
   const [myBalance, setMyBalance] = useState(null);
 
   // Diálogo de creación
@@ -63,7 +61,7 @@ export default function VacationRequests() {
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  // ─── Cargar saldo ─────────────────────────────────────
+  // Cargar saldo
   useEffect(() => {
     loadBalance();
   }, []);
@@ -77,7 +75,7 @@ export default function VacationRequests() {
     }
   };
 
-  // ─── Carga de solicitudes ─────────────────────────────
+  // Carga de solicitudes 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -100,7 +98,7 @@ export default function VacationRequests() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ─── Validar fechas ───────────────────────────────────
+  // Validar fechas
   const handleValidateDates = async () => {
     if (!newRequest.startDate || !newRequest.endDate) return;
     setValidating(true);
@@ -126,7 +124,7 @@ export default function VacationRequests() {
     }
   }, [newRequest.startDate, newRequest.endDate]);
 
-  // ─── Crear solicitud (y opcionalmente enviar) ─────────
+  // Crear solicitud (y opcionalmente enviar)
   const handleCreate = async (autoSubmit = false) => {
     if (!validation?.isValid) return;
     setCreating(true);
@@ -138,7 +136,7 @@ export default function VacationRequests() {
         comment: newRequest.comment
       });
 
-      // ✅ Si autoSubmit=true, enviamos directamente para aprobación
+      // Si autoSubmit=true, enviamos directamente para aprobación
       if (autoSubmit && result?.requestId) {
         try {
           await submitVacationRequest(result.requestId);
@@ -199,7 +197,7 @@ export default function VacationRequests() {
     }
   };
 
-  // ─── Columnas ─────────────────────────────────────────
+  // Columnas
   const columns = [
     { field: 'startFormatted', headerName: 'Desde', width: 110 },
     { field: 'endFormatted', headerName: 'Hasta', width: 110 },
@@ -293,7 +291,7 @@ export default function VacationRequests() {
         </Grid>
       )}
 
-      {/* ── Layout principal: Formulario + Cálculo + Calendario ── */}
+      {/* Layout principal: Formulario + Cálculo + Calendario */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         
         {/* Columna izquierda: Formulario */}
@@ -361,12 +359,12 @@ export default function VacationRequests() {
                   <Typography variant="body2">Días solicitados:</Typography>
                   <Typography variant="body2" fontWeight="600">{validation.workingDays}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                {/*<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2">Festivos/fines de semana:</Typography>
                   <Typography variant="body2" fontWeight="600" color="text.secondary">
                     {validation.totalDays ? validation.totalDays - validation.workingDays : '-'}
                   </Typography>
-                </Box>
+                </Box>*/}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2">Días disponibles:</Typography>
                   <Typography variant="body2" fontWeight="600">{validation.availableDays}</Typography>

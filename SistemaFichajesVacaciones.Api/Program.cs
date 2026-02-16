@@ -13,7 +13,7 @@ using SistemaFichajesVacaciones.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 🔹 AQUÍ se añaden los servicios
+// Aqui se añaden los servicios
 builder.Services.AddControllers()
 .AddJsonOptions(options =>
     {
@@ -67,13 +67,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
     
-    // Opcional: incluir comentarios XML
-    // var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    // var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    // if (File.Exists(xmlPath))
-    // {
-    //     c.IncludeXmlComments(xmlPath);
-    // }
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -97,7 +90,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
 builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();
 
-//Configuracion JWT
+// Configuracion JWT
 var key = builder.Configuration["Jwt:Key"] ?? 
           builder.Configuration["Jwt:key"] ?? 
           throw new Exception("JWT Key no configurada");
@@ -127,7 +120,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-//Congiguracion CORS para poder comsumir Api
+// Congiguracion CORS para poder comsumir Api
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -139,10 +132,10 @@ builder.Services.AddCors(options =>
         });
 });
 
-// 🔹 AQUÍ se construye la app
+// Aqui se construye la app
 var app = builder.Build();
 
-// 🔹 Middleware
+// Middleware
 
 if  (app.Environment.IsDevelopment())
 {
@@ -167,7 +160,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// ----- START Seeder invocation (solo en Development) -----
+// Iniciar Seeder invocation (solo en desarrollo) 
 if (app.Environment.IsDevelopment())
 {
     using (var scope = app.Services.CreateScope())
@@ -186,5 +179,5 @@ if (app.Environment.IsDevelopment())
         }   
     }
 }
-// ----- END Seeder invocation -----
+
 app.Run();

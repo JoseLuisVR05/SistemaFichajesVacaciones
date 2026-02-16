@@ -49,7 +49,7 @@ export default function App() {
                       }
                     />
                     <Route path="/vacations/calendar" element={<VacationCalendar/>} />
-                    <Route path="*" element={<Navigate to="/dashboard" />} />
+                    <Route path="*" element={<Navigate to="/login" />} />
                   </Routes>
                 </MainLayout>
               </ProtectedRoute>

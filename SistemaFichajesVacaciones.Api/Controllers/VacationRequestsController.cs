@@ -409,7 +409,7 @@ public class VacationRequestsController : ControllerBase
     }
 
     /// <summary>
-    /// Valida un rango de fechas sin crear la solicitud (preview)
+    /// Valida un rango de fechas sin crear la solicitud 
     /// </summary>
     [HttpPost("validate")]
     public async Task<IActionResult> ValidateDates([FromBody] ValidateVacationDatesDto dto)

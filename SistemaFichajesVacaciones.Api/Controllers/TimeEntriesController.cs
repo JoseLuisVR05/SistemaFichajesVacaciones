@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
-using System.Security.Claims;
+
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -47,7 +47,7 @@ public class TimeEntriesController : ControllerBase
             return BadRequest(new { message = "EntryType debe ser IN o OUT" });
 
         // Obtener último registro del día
-        var today = DateTime.UtcNow.Date;
+        var today = DateTime.Now.Date;
         var lastEntry = await _db.TimeEntries
             .Where(e => e.EmployeeId == employeeId && e.EventTime.Date == today)
             .OrderByDescending(e => e.EventTime)
@@ -216,8 +216,8 @@ public class TimeEntriesController : ControllerBase
             targetEmployeeId = user.EmployeeId.Value;
         }
 
-        var fromDate = from ?? DateTime.UtcNow.AddDays(-30).Date;
-        var toDate = to ?? DateTime.UtcNow.Date;
+        var fromDate = from ?? DateTime.Now.AddDays(-30).Date;
+        var toDate = to ?? DateTime.Now.Date;
 
         // Calcular resúmenes para cada día del rango
         var summaries = new List<object>();

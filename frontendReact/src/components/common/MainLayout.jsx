@@ -312,7 +312,7 @@ export default function MainLayout({ children }) {
         
         <Divider sx={{ my: 1.5 }} />
 
-        {/* ✅ Sección Vacaciones colapsable (como pide el mockup del sidebar) */}
+        {/* Sección Vacaciones colapsable  */}
         <ListItem disablePadding sx={{ mb: 0.5 }}>
           <ListItemButton
             onClick={() => setVacationsOpen(!vacationsOpen)}
@@ -472,15 +472,6 @@ export default function MainLayout({ children }) {
                   {user?.email}
                 </Typography>
               </Box>
-              <Divider sx={{ my: 1 }} />
-              <MenuItem onClick={handleClose}>
-                <AccountCircle fontSize="small" sx={{ mr: 1 }} />
-                Mi Perfil
-              </MenuItem>
-              <MenuItem onClick={handleClose}>
-                <Settings fontSize="small" sx={{ mr: 1 }} />
-                Configuración
-              </MenuItem>
               <Divider sx={{ my: 1 }} />
               <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
                 <LogoutIcon fontSize="small" sx={{ mr: 1 }} />

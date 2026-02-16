@@ -26,7 +26,7 @@ public class AbsenceCalendarController : ControllerBase
         if (!string.IsNullOrEmpty(department))
             query = query.Where(a => a.Employee.Department == department);
 
-        // Filtrar según rol (similar a otros controllers)
+        // Filtrar según rol 
         var userId = int.Parse(User.FindFirst("userId")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
         var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");

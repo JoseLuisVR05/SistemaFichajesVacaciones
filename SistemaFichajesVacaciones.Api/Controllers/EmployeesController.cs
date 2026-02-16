@@ -46,7 +46,7 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
                 }
                 else
                 {
-                    // ✅ EMPLOYEE no puede ver esta página
+                    // EMPLOYEE no puede ver la página de empleados
                     return Forbid();
                 }
             }
