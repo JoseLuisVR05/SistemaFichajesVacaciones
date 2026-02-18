@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
-using System.Security.Claims;
 
 // Api/Controllers/TimeCorrectionsController.cs
 [ApiController]

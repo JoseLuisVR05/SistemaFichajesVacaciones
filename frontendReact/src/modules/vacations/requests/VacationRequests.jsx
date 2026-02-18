@@ -10,12 +10,12 @@ import {
   Add, Send, Cancel, Visibility, CheckCircle,
   AccountBalanceWallet, EventBusy, EventAvailable
 } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../hooks/useRole';
+import { useAuth } from '../../../context/AuthContext';
+import { useRole } from '../../../hooks/useRole';
 import {
   getVacationRequests, createVacationRequest, submitVacationRequest,
   cancelVacationRequest, validateVacationDates, getBalance
-} from '../services/vacationsService';
+} from '../../../services/vacationsService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

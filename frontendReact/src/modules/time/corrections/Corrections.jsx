@@ -10,16 +10,16 @@ import {
   Add, CheckCircle, Cancel, Visibility,
   Search
 } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import {
   getCorrections, createCorrection,
   approveCorrection, rejectCorrection
-} from '../services/correctionsService';
-import { getEmployees } from '../services/employeesService'
+} from '../../../services/correctionsService';
+import { getEmployees } from '../../../services/employeesService'
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useLocation } from 'react-router-dom';
-import { useRole } from '../hooks/useRole';
+import { useRole } from '../../../hooks/useRole';
 
 // ─── Constantes ──────────────────────────────────────────────
 const STATUS_CONFIG = {

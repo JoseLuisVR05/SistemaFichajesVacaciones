@@ -5,9 +5,9 @@ import {
 } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
-import { useRole } from '../hooks/useRole';
-import { getVacationRequests } from '../services/vacationsService';
-import { getEmployees } from '../services/employeesService';
+import { useRole } from '../../../hooks/useRole';
+import { getVacationRequests } from '../../../services/vacationsService';
+import { getEmployees } from '../../../services/employeesService';
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, format,
   addMonths, subMonths, isWeekend, isSameDay

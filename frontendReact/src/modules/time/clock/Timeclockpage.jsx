@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Box, Button, Typography, Alert, CircularProgress, Paper } from '@mui/material';
 import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
-import { registerEntry, getEntries } from '../services/timeService';
-import { useAuth } from '../context/AuthContext';
+import { registerEntry, getEntries } from '../../../services/timeService';
+import { useAuth } from '../../../context/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

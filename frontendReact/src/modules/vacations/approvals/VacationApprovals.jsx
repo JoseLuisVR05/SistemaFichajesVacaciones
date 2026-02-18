@@ -7,12 +7,12 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { CheckCircle, Cancel, Visibility, Search } from '@mui/icons-material';
-import { useAuth } from '../context/AuthContext';
-import { useRole } from '../hooks/useRole'
+import { useAuth } from '../../../context/AuthContext';
+import { useRole } from '../../../hooks/useRole'
 import {
   getVacationRequests, approveVacationRequest, rejectVacationRequest
-} from '../services/vacationsService';
-import { getEmployees } from '../services/employeesService';
+} from '../../../services/vacationsService';
+import { getEmployees } from '../../../services/employeesService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 

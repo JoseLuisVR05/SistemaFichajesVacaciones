@@ -3,14 +3,14 @@ import{ AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import TimeClockPage from './pages/Timeclockpage';
-import History from './pages/History';
-import Corrections from './pages/Corrections';
-import Employees from './pages/Employees';
+import TimeClockPage from './modules/time/clock/Timeclockpage';
+import History from './modules/time/history/History';
+import Corrections from './modules/time/corrections/Corrections';
+import Employees from './modules/employees/detail/Employees';
 import MainLayout from './components/common/MainLayout';
-import VacationRequests from './pages/VacationRequests';
-import VacationApprovals from './pages/VacationApprovals';
-import VacationCalendar from './pages/VacationCalendar';
+import VacationRequests from './modules/vacations/requests/VacationRequests';
+import VacationApprovals from './modules/vacations/approvals/VacationApprovals';
+import VacationCalendar from './modules/vacations/calendar/VacationCalendar';
 
 
 export default function App() {

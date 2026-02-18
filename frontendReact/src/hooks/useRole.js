@@ -9,11 +9,11 @@ export const useRole = () => {
       return false;
     }
     
-    // ✅ Normalizar: convertir a array si no lo es
+    // Normalizar: convertir a array si no lo es
     const userRoles = Array.isArray(user.role) ? user.role : [user.role];
     const rolesToCheckArray = Array.isArray(rolesToCheck) ? rolesToCheck : [rolesToCheck];
     
-    // ✅ Verificar si el usuario tiene alguno de los roles requeridos
+    // Verifica si el usuario tiene alguno de los roles requeridos
     return rolesToCheckArray.some(role => userRoles.includes(role));
   };
   

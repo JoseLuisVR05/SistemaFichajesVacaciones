@@ -6,7 +6,7 @@ import {
     Icon} from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { Search, Visibility, Business, Email } from '@mui/icons-material';
-import { getEmployees, getEmployee } from "../services/employeesService";
+import { getEmployees, getEmployee } from "../../../services/employeesService";
 
 export default function Employees(){
     const [ rows, setRows ] = useState([]);

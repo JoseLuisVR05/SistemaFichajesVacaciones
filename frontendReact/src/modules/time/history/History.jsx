@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, CircularProgress, TextField, MenuItem, Button, IconButton, Chip, Autocomplete, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { Search, Visibility, Edit } from '@mui/icons-material';
-import { getEmployees } from '../services/employeesService';
-import { getEntries, exportEntries } from '../services/timeService';
+import { getEmployees } from '../../../services/employeesService';
+import { getEntries, exportEntries } from '../../../services/timeService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { useRole } from '../hooks/useRole';
+import { useRole } from '../../../hooks/useRole';
 
 export default function History() {
   const { user } = useAuth();

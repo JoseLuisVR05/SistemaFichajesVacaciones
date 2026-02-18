@@ -19,3 +19,4 @@ Migrations/
 ## Others
 *.log
 appsettings.Development.json
+appsettings.Production.json
