@@ -101,12 +101,11 @@ export default function MainLayout({ children }) {
       // 3. Mis correcciones resueltas (últimas 24h)
       const myRecentCorrections = await getCorrections({
         includeOwn: true,
-        from: toLocalDate(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
       const myResolvedCorrections = myRecentCorrections.filter(c =>
         (c.status === 'APPROVED' || c.status === 'REJECTED') &&
         c.approvedAt &&
-        toLocalDate (c.approvedAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate (c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const resolvedCorrectionNotifs = myResolvedCorrections.map(c => ({
@@ -124,7 +123,7 @@ export default function MainLayout({ children }) {
         v.employeeId === user?.employeeId &&
         (v.status === 'APPROVED' || v.status === 'REJECTED') &&
         v.decisionAt &&
-        toLocalDate(v.decisionAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate(v.decisionAt) > new Date (Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const resolvedVacationNotifs = myResolvedVacations.map(v => ({
@@ -147,12 +146,11 @@ export default function MainLayout({ children }) {
       // Correcciones resueltas
       const myRecentCorrections = await getCorrections({
         includeOwn: true,
-        from: toLocalDate(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
       const myResolvedCorrections = myRecentCorrections.filter(c =>
         (c.status === 'APPROVED' || c.status === 'REJECTED') &&
         c.approvedAt &&
-        toLocalDate(c.approvedAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const correctionNotifs = myResolvedCorrections.map(c => ({
@@ -169,7 +167,7 @@ export default function MainLayout({ children }) {
       const myResolvedVacations = (myVacations || []).filter(v =>
         (v.status === 'APPROVED' || v.status === 'REJECTED') &&
         v.decisionAt &&
-        toLocalDate(v.decisionAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate(v.decisionAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const vacationNotifs = myResolvedVacations.map(v => ({

@@ -157,7 +157,7 @@ export default function VacationRequests() {
         setSnackbar({
           open: true,
           message: `Borrador guardado (${result.requestedDays} días). Recuerda enviarlo para aprobación.`,
-          severity: 'success'
+          severity: 'info'
         });
       }
 
@@ -396,6 +396,22 @@ export default function VacationRequests() {
           </Paper>
         </Grid>
       </Grid>
+      {/* Snackbar de notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
