@@ -47,7 +47,7 @@ public class TimeEntriesController : ControllerBase
             return BadRequest(new { message = "EntryType debe ser IN o OUT" });
 
         // Obtener último registro del día
-        var today = DateTime.Now.Date;
+        var today = DateTime.UtcNow.Date;
         var lastEntry = await _db.TimeEntries
             .Where(e => e.EmployeeId == employeeId && e.EventTime.Date == today)
             .OrderByDescending(e => e.EventTime)
@@ -64,7 +64,7 @@ public class TimeEntriesController : ControllerBase
         {
             EmployeeId = employeeId,
             EntryType = dto.EntryType,
-            EventTime = DateTime.Now,
+            EventTime = DateTime.UtcNow,
             Source = "WEB",
             Comment = dto.Comment,
             CreatedByUserId = userId
@@ -216,8 +216,8 @@ public class TimeEntriesController : ControllerBase
             targetEmployeeId = user.EmployeeId.Value;
         }
 
-        var fromDate = from ?? DateTime.Now.AddDays(-30).Date;
-        var toDate = to ?? DateTime.Now.Date;
+        var fromDate = from ?? DateTime.UtcNow.AddDays(-30).Date;
+        var toDate = to ?? DateTime.UtcNow.Date;
 
         // Calcular resúmenes para cada día del rango
         var summaries = new List<object>();

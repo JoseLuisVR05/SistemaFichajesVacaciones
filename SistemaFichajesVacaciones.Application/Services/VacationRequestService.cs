@@ -120,7 +120,7 @@ public class VacationRequestService : IVacationRequestService
         // VALIDACIÓN 2: No solicitar en el pasado
         // ──────────────────────────────────────────────────
         // Margen de 1 día para permitir correcciones inmediatas
-        if (startDate.Date < DateTime.Now.Date.AddDays(-1))
+        if (startDate.Date < DateTime.UtcNow.Date.AddDays(-1))
         {
             result.Errors.Add("No se pueden solicitar vacaciones en fechas pasadas");
             return result;

@@ -32,12 +32,12 @@ public static class SeedData
             var defaultPolicy = new VacationPolicies
             {
                 Name = "Estándar España",
-                Year = DateTime.Now.Year,
+                Year = DateTime.UtcNow.Year,
                 AccrualType = "ANNUAL",
                 TotalDaysPerYear = 22,        // 22 días laborables (estándar España)
                 CarryOverMaxDays = 5,          // Máximo 5 días de arrastre
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             context.VacationPolicies.Add(defaultPolicy);
@@ -66,9 +66,9 @@ public static class SeedData
                 BusinessUnit = "IT",
                 Department = "Administración",
                 IsActive = true,
-                StartDate = DateTime.Now,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                StartDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             context.Employees.Add(adminEmployee);
@@ -79,13 +79,13 @@ public static class SeedData
             var defaultSchedule = new Employee_WorkSchedule
             {
                 EmployeeId = adminEmployee.EmployeeId,
-                ValidFrom = DateTime.Now.Date,
+                ValidFrom = DateTime.UtcNow.Date,
                 ExpectedStartTime = new TimeSpan(9, 0, 0), //09:00 AM
                 ExpectedEndTime = new TimeSpan(18, 0, 0), //18:00 PM
                 BreakMinutes = 60, //1 hora de descanso
                 Notes = "Horario por defecto para administrador",
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
                 
             };
 
@@ -111,7 +111,7 @@ public static class SeedData
                 PasswordHash = hash,
                 EmployeeId = adminEmployee.EmployeeId,
                 IsEnabled = true,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             context.Users.Add(adminUser);
@@ -174,7 +174,7 @@ public static class SeedData
     }
      private static async Task InitializeCalendarDays(AppDbContext context)
     {
-        var today = DateTime.Now.Date;
+        var today = DateTime.UtcNow.Date;
         
         // Crear días para los próximos 6 meses (incluyendo el mes actual)
         var startDate = new DateTime(today.Year, today.Month, 1);

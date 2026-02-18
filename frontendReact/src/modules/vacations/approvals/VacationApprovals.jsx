@@ -15,6 +15,7 @@ import {
 import { getEmployees } from '../../../services/employeesService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 
 const STATUS_CONFIG = {
   SUBMITTED: { label: 'Pendiente', color: 'warning' },
@@ -98,9 +99,9 @@ export default function VacationApprovals() {
       const formatted = (data || []).map(r => ({
         id: r.requestId,
         ...r,
-        startFormatted: r.startDate ? format(new Date(r.startDate), 'dd/MM/yyyy', { locale: es }) : '-',
-        endFormatted: r.endDate ? format(new Date(r.endDate), 'dd/MM/yyyy', { locale: es }) : '-',
-        createdFormatted: r.createdAt ? format(new Date(r.createdAt), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
+        startFormatted: r.startDate ? format(toLocalDate (r.startDate), 'dd/MM/yyyy', { locale: es }) : '-',
+        endFormatted: r.endDate ? format(toLocalDate(r.endDate), 'dd/MM/yyyy', { locale: es }) : '-',
+        createdFormatted: r.createdAt ? format(toLocalDate(r.createdAt), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
       }));
       setRows(formatted);
     } catch (err) {

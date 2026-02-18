@@ -37,7 +37,7 @@ public class VacationBalanceController : ControllerBase
         [FromQuery] int? year)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
-        var currentYear = year ?? DateTime.Now.Year;
+        var currentYear = year ?? DateTime.UtcNow.Year;
 
         int targetEmployeeId;
 

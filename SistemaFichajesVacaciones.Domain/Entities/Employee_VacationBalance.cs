@@ -8,7 +8,7 @@ public class Employee_VacationBalance
     public decimal AllocatedDays { get; set; }
     public decimal UsedDays { get; set; } = 0;
     public decimal RemainingDays { get; set; }
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
     public Employee Employee { get; set; } = null!;

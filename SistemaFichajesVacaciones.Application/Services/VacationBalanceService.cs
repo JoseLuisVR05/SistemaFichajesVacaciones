@@ -82,7 +82,7 @@ public class VacationBalanceService : IVacationBalanceService
             AllocatedDays = policy.TotalDaysPerYear + carryOver,
             UsedDays = 0,  // Inicialmente no ha usado nada
             RemainingDays = policy.TotalDaysPerYear + carryOver,  // Disponibles = Allocated
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.UtcNow
         };
 
         _db.EmployeeVacationBalances.Add(balance);
@@ -132,7 +132,7 @@ public class VacationBalanceService : IVacationBalanceService
         // 3. Actualizar campos calculados
         balance.UsedDays = usedDays;
         balance.RemainingDays = balance.AllocatedDays - usedDays;
-        balance.UpdatedAt = DateTime.Now;
+        balance.UpdatedAt = DateTime.UtcNow;
 
         // 4. Guardar cambios
         await _db.SaveChangesAsync();
@@ -206,7 +206,7 @@ public class VacationBalanceService : IVacationBalanceService
                 AllocatedDays = policy.TotalDaysPerYear + carryOver,
                 UsedDays = 0,
                 RemainingDays = policy.TotalDaysPerYear + carryOver,
-                UpdatedAt = DateTime.Now
+                UpdatedAt = DateTime.UtcNow
             });
         }
 

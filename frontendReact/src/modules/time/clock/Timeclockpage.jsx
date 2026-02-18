@@ -4,6 +4,7 @@ import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import { registerEntry, getEntries } from '../../../services/timeService';
 import { useAuth } from '../../../context/AuthContext';
 import { format } from 'date-fns';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { es } from 'date-fns/locale';
 
 export default function TimeClockPage() {
@@ -85,7 +86,7 @@ export default function TimeClockPage() {
             <Typography variant="body2" color="text.secondary">Último fichaje</Typography>
             <Typography variant="h6" fontWeight="600">
               {lastEntry 
-                ? `${lastEntry.entryType} - ${format(new Date(lastEntry.eventTime), "HH:mm", { locale: es })}`
+                ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.eventTime), "HH:mm", { locale: es })}`
                 : 'Sin fichajes hoy'
               }
             </Typography>

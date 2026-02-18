@@ -18,6 +18,7 @@ import {
 import { getEmployees } from '../../../services/employeesService'
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { useLocation } from 'react-router-dom';
 import { useRole } from '../../../hooks/useRole';
 
@@ -137,10 +138,10 @@ export default function Corrections() {
         id: c.correctionId,
         ...c,
         fechaFormateada: c.date
-          ? format(new Date(c.date), 'dd/MM/yyyy', { locale: es })
+          ? format(toLocalDate(c.date), 'dd/MM/yyyy', { locale: es })
           : '-',
         creadoFormateado: c.createdAt
-          ? format(new Date(c.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })
+          ? format(toLocalDate(c.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })
           : '-',
           
       }));

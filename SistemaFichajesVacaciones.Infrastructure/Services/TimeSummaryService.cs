@@ -106,9 +106,9 @@ public class TimeSummaryService : ITimeSummaryService
         {
             hasOpenEntry = true;
             // Si es el mismo dia y todavia no termino el dia, calcular tiempo hasta ahora
-            if(dateOnly == DateTime.Now.Date && DateTime.Now <nextDay)
+            if(dateOnly == DateTime.UtcNow.Date && DateTime.UtcNow <nextDay)
             {
-                var span = DateTime.Now - lastIn.EventTime;
+                var span = DateTime.UtcNow - lastIn.EventTime;
                 totalMinutes += (int)span.TotalMinutes;
             }
         }
@@ -125,7 +125,7 @@ public class TimeSummaryService : ITimeSummaryService
                     Date = dateOnly,
                     ExpectedMinutes = expectedMinutes,
                     WorkedMinutes = totalMinutes,
-                    LastCalculatedAt = DateTime.Now
+                    LastCalculatedAt = DateTime.UtcNow
                 };
 
                 _db.TimeDailySummaries.Add(summary); 
@@ -134,7 +134,7 @@ public class TimeSummaryService : ITimeSummaryService
             {
                 summary.ExpectedMinutes = expectedMinutes; 
                 summary.WorkedMinutes = totalMinutes;
-                summary.LastCalculatedAt = DateTime.Now;
+                summary.LastCalculatedAt = DateTime.UtcNow;
             }
 
             await _db.SaveChangesAsync();

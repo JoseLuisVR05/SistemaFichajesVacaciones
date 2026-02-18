@@ -30,6 +30,7 @@ import {
   AccountBalanceWallet,
   Search as SearchIcon
 } from '@mui/icons-material'; 
+import { toLocalDate } from '../../utils/helpers/dateUtils';
 
 const drawerWidth = 260;
 
@@ -79,7 +80,7 @@ export default function MainLayout({ children }) {
         id: `pending-correction-${c.correctionId}`,
         type: 'PENDING_CORRECTION',
         title: 'Corrección pendiente',
-        message: `${c.employeeName} solicita corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
+        message: `${c.employeeName} solicita corrección del ${toLocalDate(c.date).toLocaleDateString('es-ES')}`,
         date: c.createdAt,
         navigateTo: '/corrections'
       }));
@@ -92,7 +93,7 @@ export default function MainLayout({ children }) {
         id: `pending-vacation-${v.requestId}`,
         type: 'PENDING_VACATION',
         title: 'Vacaciones pendientes',
-        message: `${v.employeeName} solicita vacaciones del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
+        message: `${v.employeeName} solicita vacaciones del ${toLocalDate(v.startDate).toLocaleDateString('es-ES')} al ${toLocalDate(v.endDate).toLocaleDateString('es-ES')}`,
         date: v.createdAt,
         navigateTo: '/vacations/approvals'
       }));
@@ -100,19 +101,19 @@ export default function MainLayout({ children }) {
       // 3. Mis correcciones resueltas (últimas 24h)
       const myRecentCorrections = await getCorrections({
         includeOwn: true,
-        from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        from: toLocalDate(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
       const myResolvedCorrections = myRecentCorrections.filter(c =>
         (c.status === 'APPROVED' || c.status === 'REJECTED') &&
         c.approvedAt &&
-        new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate (c.approvedAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const resolvedCorrectionNotifs = myResolvedCorrections.map(c => ({
         id: `resolved-correction-${c.correctionId}`,
         type: 'RESOLVED',
         title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
-        message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
+        message: `Tu corrección del ${toLocalDate(c.date).toLocaleDateString('es-ES')}`,
         date: c.approvedAt,
         navigateTo: '/corrections'
       }));
@@ -123,14 +124,14 @@ export default function MainLayout({ children }) {
         v.employeeId === user?.employeeId &&
         (v.status === 'APPROVED' || v.status === 'REJECTED') &&
         v.decisionAt &&
-        new Date(v.decisionAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate(v.decisionAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const resolvedVacationNotifs = myResolvedVacations.map(v => ({
         id: `resolved-vacation-${v.requestId}`,
         type: 'RESOLVED',
         title: v.status === 'APPROVED' ? '✅ Vacaciones aprobadas' : '❌ Vacaciones rechazadas',
-        message: `Tu solicitud del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
+        message: `Tu solicitud del ${toLocalDate(v.startDate).toLocaleDateString('es-ES')} al ${toLocalDate(v.endDate).toLocaleDateString('es-ES')}`,
         date: v.decisionAt,
         navigateTo: '/vacations/requests'
       }));
@@ -146,19 +147,19 @@ export default function MainLayout({ children }) {
       // Correcciones resueltas
       const myRecentCorrections = await getCorrections({
         includeOwn: true,
-        from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        from: toLocalDate(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
       const myResolvedCorrections = myRecentCorrections.filter(c =>
         (c.status === 'APPROVED' || c.status === 'REJECTED') &&
         c.approvedAt &&
-        new Date(c.approvedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate(c.approvedAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const correctionNotifs = myResolvedCorrections.map(c => ({
         id: `resolved-correction-${c.correctionId}`,
         type: 'RESOLVED',
         title: c.status === 'APPROVED' ? '✅ Corrección aprobada' : '❌ Corrección rechazada',
-        message: `Tu corrección del ${new Date(c.date).toLocaleDateString('es-ES')}`,
+        message: `Tu corrección del ${toLocalDate(c.date).toLocaleDateString('es-ES')}`,
         date: c.approvedAt,
         navigateTo: '/corrections'
       }));
@@ -168,14 +169,14 @@ export default function MainLayout({ children }) {
       const myResolvedVacations = (myVacations || []).filter(v =>
         (v.status === 'APPROVED' || v.status === 'REJECTED') &&
         v.decisionAt &&
-        new Date(v.decisionAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+        toLocalDate(v.decisionAt) > toLocalDate(Date.now() - 24 * 60 * 60 * 1000)
       );
 
       const vacationNotifs = myResolvedVacations.map(v => ({
         id: `resolved-vacation-${v.requestId}`,
         type: 'RESOLVED',
         title: v.status === 'APPROVED' ? '✅ Vacaciones aprobadas' : '❌ Vacaciones rechazadas',
-        message: `Tu solicitud del ${new Date(v.startDate).toLocaleDateString('es-ES')} al ${new Date(v.endDate).toLocaleDateString('es-ES')}`,
+        message: `Tu solicitud del ${toLocalDate(v.startDate).toLocaleDateString('es-ES')} al ${toLocalDate(v.endDate).toLocaleDateString('es-ES')}`,
         date: v.decisionAt,
         navigateTo: '/vacations/requests'
       }));

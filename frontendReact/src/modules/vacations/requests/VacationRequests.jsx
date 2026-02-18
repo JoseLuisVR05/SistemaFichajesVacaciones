@@ -18,6 +18,7 @@ import {
 } from '../../../services/vacationsService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 
 const STATUS_CONFIG = {
   DRAFT:     { label: 'Borrador',   color: 'default' },
@@ -85,8 +86,8 @@ export default function VacationRequests() {
       const formatted = (data || []).map(r => ({
         id: r.requestId,
         ...r,
-        startFormatted: r.startDate ? format(new Date(r.startDate), 'dd/MM/yyyy', { locale: es }) : '-',
-        endFormatted: r.endDate ? format(new Date(r.endDate), 'dd/MM/yyyy', { locale: es }) : '-',
+        startFormatted: r.startDate ? format(toLocalDate(r.startDate), 'dd/MM/yyyy', { locale: es }) : '-',
+        endFormatted: r.endDate ? format(toLocalDate(r.endDate), 'dd/MM/yyyy', { locale: es }) : '-',
       }));
       setRows(formatted);
     } catch (err) {

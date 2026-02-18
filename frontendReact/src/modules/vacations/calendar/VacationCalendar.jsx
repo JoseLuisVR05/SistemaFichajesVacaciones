@@ -13,14 +13,9 @@ import {
   addMonths, subMonths, isWeekend, isSameDay
 } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 
-/**
- * VacationCalendar - Calendario de ausencias
- * 
- * Mockup "Calendario de ausencias" (pág. 6):
- * - Controles: [Mes] [Departamento] [Equipo] Leyenda: Vacaciones | Otros
- * - Calendario mensual (tiles por día con chips de ausencias)
- */
+
 export default function VacationCalendar() {
   const { canViewEmployees } = useRole();
 
@@ -28,13 +23,13 @@ export default function VacationCalendar() {
   const [absences, setAbsences] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ NUEVO: Filtros según mockup
+
   const [departments, setDepartments] = useState([]);
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
   const [teamFilter, setTeamFilter] = useState('ALL');
   const [teams, setTeams] = useState([]);  // Lista de managers/equipos
 
-  // ─── Cargar empleados para filtros ────────────────────
+  //  Cargar empleados para filtros 
   useEffect(() => {
     loadFilters();
   }, []);
@@ -55,7 +50,7 @@ export default function VacationCalendar() {
     }
   };
 
-  // ─── Carga de ausencias ───────────────────────────────
+  // Carga de ausencias 
   useEffect(() => {
     loadAbsences();
   }, [currentMonth, departmentFilter, teamFilter]);
@@ -89,8 +84,8 @@ export default function VacationCalendar() {
 
   const getAbsencesForDay = (day) => {
     return absences.filter(a => {
-      const start = new Date(a.startDate);
-      const end = new Date(a.endDate);
+      const start = toLocalDate(a.startDate);
+      const end = toLocalDate(a.endDate);
       return day >= start && day <= end;
     });
   };

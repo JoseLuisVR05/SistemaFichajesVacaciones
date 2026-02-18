@@ -10,7 +10,7 @@ public class TimeEntry
     public string? GeoLocation { get; set; }
     public string? DeviceId { get; set; }
     public string? Comment { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public int CreatedByUserId { get; set; }
 
     // Navegación

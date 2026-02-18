@@ -7,6 +7,7 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { Search, Visibility, Business, Email } from '@mui/icons-material';
 import { getEmployees, getEmployee } from "../../../services/employeesService";
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 
 export default function Employees(){
     const [ rows, setRows ] = useState([]);
@@ -204,13 +205,13 @@ return(
                     <Typography>
                         <strong>Fecha de alta:</strong>{''}
                         {selectedEmployee.startDate
-                        ? new Date(selectedEmployee.startDate).toLocaleDateString('es-ES')
+                        ? toLocalDate(selectedEmployee.startDate).toLocaleDateString('es-ES')
                         :'-'}
                     </Typography>
                      {selectedEmployee.endDate &&(
                     <Typography>
                         <strong>Fecha de baja:</strong>{''}
-                        {new Date(selectedEmployee.endDate).toLocaleDateString('es-ES')}
+                        {toLocalDate(selectedEmployee.endDate).toLocaleDateString('es-ES')}
                     </Typography>
                     )}
                     

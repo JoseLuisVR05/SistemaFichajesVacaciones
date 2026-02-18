@@ -68,8 +68,8 @@ public class VacationRequestsController : ControllerBase
             RequestedDays = validation.WorkingDays,
             Type = dto.Type ?? "VACATION",
             Status = "DRAFT",
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _db.VacationRequests.Add(request);
@@ -148,8 +148,8 @@ public class VacationRequestsController : ControllerBase
         var oldValue = new { request.Status };
 
         request.Status = "SUBMITTED";
-        request.SubmittedAt = DateTime.Now;
-        request.UpdatedAt = DateTime.Now;
+        request.SubmittedAt = DateTime.UtcNow;
+        request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("VacationRequest", id, "SUBMIT", 
@@ -191,8 +191,8 @@ public class VacationRequestsController : ControllerBase
         request.Status = "APPROVED";
         request.ApproverEmployeeId = (await _db.Users.SingleAsync(u => u.UserId == userId)).EmployeeId;
         request.ApproverComment = dto?.Comment;
-        request.DecisionAt = DateTime.Now;
-        request.UpdatedAt = DateTime.Now;
+        request.DecisionAt = DateTime.UtcNow;
+        request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
 
@@ -250,8 +250,8 @@ public class VacationRequestsController : ControllerBase
         request.Status = "REJECTED";
         request.ApproverEmployeeId = (await _db.Users.SingleAsync(u => u.UserId == userId)).EmployeeId;
         request.ApproverComment = dto.Comment;
-        request.DecisionAt = DateTime.Now;
-        request.UpdatedAt = DateTime.Now;
+        request.DecisionAt = DateTime.UtcNow;
+        request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("VacationRequest", id, "REJECT", 
@@ -295,14 +295,14 @@ public class VacationRequestsController : ControllerBase
         var oldValue = new { request.Status };
 
         request.Status = "CANCELLED";
-        request.UpdatedAt = DateTime.Now;
+        request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("VacationRequest", id, "CANCEL", 
             oldValue, 
             new 
             { 
-                request.Status, CancelledAt = DateTime.Now }, 
+                request.Status, CancelledAt = DateTime.UtcNow }, 
                 userId);
 
         return Ok(new { message = "Solicitud cancelada" });

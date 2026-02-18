@@ -6,6 +6,7 @@ import { getEmployees } from '../../../services/employeesService';
 import { getEntries, exportEntries } from '../../../services/timeService';
 import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useRole } from '../../../hooks/useRole';
@@ -72,10 +73,10 @@ export default function History() {
         id: entry.timeEntryId || idx,
         ...entry,
         dateFormatted: entry.eventTime
-          ? format(new Date(entry.eventTime), 'dd/MM/yyyy', { locale: es })
+          ? format(toLocalDate(entry.eventTime), 'dd/MM/yyyy', { locale: es })
           : '-',
         timeFormatted: entry.eventTime
-          ? format(new Date(entry.eventTime), 'HH:mm:ss', { locale: es })
+          ? format(toLocalDate(entry.eventTime), 'HH:mm:ss', { locale: es })
           : '-',
       }));
       setRows(formatted);
@@ -151,7 +152,7 @@ export default function History() {
             color="primary"
             onClick={() => navigate('/corrections', { state: { 
               entryId: row.id, 
-              date: row.eventTime ? format(new Date(row.eventTime), 'yyyy-MM-dd') : row.dateFormatted,
+              date: row.eventTime ? format(toLocalDate(row.eventTime), 'yyyy-MM-dd') : row.dateFormatted,
               openNew: true } })}
             title="Solicitar corrección"
           >

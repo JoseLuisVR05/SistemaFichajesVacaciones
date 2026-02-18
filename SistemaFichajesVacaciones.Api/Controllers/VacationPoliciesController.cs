@@ -97,8 +97,8 @@ public class VacationPoliciesController : ControllerBase
             AccrualType = dto.AccrualType?.ToUpper() ?? "ANNUAL",
             TotalDaysPerYear = dto.TotalDaysPerYear,
             CarryOverMaxDays = dto.CarryOverMaxDays,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         _db.VacationPolicies.Add(policy);
@@ -166,7 +166,7 @@ public class VacationPoliciesController : ControllerBase
             policy.CarryOverMaxDays = dto.CarryOverMaxDays.Value;
         }
 
-        policy.UpdatedAt = DateTime.Now;
+        policy.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         await _audit.LogAsync("VacationPolicies", id, "UPDATE", oldValue,
