@@ -59,7 +59,7 @@ export default function Dashboard() {
 
       const weekData = await getDailySummary({from: mondayStr, to: today});
       if( weekData && weekData.length > 0){
-        const totalBalance = weekData.reduce(( acc, day ) => acc +(day.balanceHours || 0), 0);
+        const totalBalance = weekData.reduce(( acc, day ) => acc +(day.balanceHours ?? 0), 0);
         setWeekBalance(Math.round(totalBalance * 100) /100);
       }
 

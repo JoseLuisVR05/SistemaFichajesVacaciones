@@ -7,7 +7,7 @@ public class TimeDailySummary
     public DateTime Date { get; set; } // Solo fecha (sin hora)
     public int WorkedMinutes { get; set; } // Minutos trabajados
     public int ExpectedMinutes { get; set; } = 480; // 8 horas por defecto
-    public int BalanceMinutes { get; private set; } 
+    public int BalanceMinutes { get; set; } 
     public DateTime LastCalculatedAt { get; set; } = DateTime.UtcNow;
 
     // Navegación
