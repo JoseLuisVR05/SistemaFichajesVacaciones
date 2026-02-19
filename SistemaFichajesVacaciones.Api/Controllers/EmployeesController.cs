@@ -60,17 +60,54 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
     [HttpGet("{id}")]
         public async Task<ActionResult<Employee>> GetEmployee(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
+            // Extramos el usuario actual para verificar permisos
+            // y asi nadie ve el perfil de otro adivinando su ID
 
-            if (employee == null)
+            var userIdClaim = User.FindFirst("userID")?.Value;
+            if(userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
+                return Unauthorized();
+            
+            var requistingUser = await _context.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync( u => u.UserId ==userId);
+
+            if(requistingUser == null) return Unauthorized();
+
+            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+
+            // ADMIN Y RRHH pueden ver cualquier empleado
+            if(!isAdminOrRrhh)
             {
-                return NotFound(new { message = "Empleado no encontrado" });
+                if(User.IsInRole("MANAGER"))
+                {
+                    //MANAGER solo puede ver sus subordinador directos
+                    var isSubordinate =  await _context.Employees
+                        .AnyAsync(e => e.EmployeeId ==id
+                                    && e.ManagerEmployeeId == requistingUser.EmployeeId);
+                    
+                    // un MANAGER tambien puede ver su propio perfil
+                    var isSelf = requistingUser.EmployeeId == id;
+
+                    if(!isSubordinate && !isSelf)
+                    return Forbid();
+                }
+                else
+                {
+                    // EMPLOYEE solo puede ver su propio perfil
+                    if (requistingUser.EmployeeId != id)
+                    return Forbid();    
+                }
             }
 
-            return Ok(employee);
+            var employee = await _context.Employees
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e=> e.EmployeeId == id);
+
+            return employee == null
+                ? NotFound(new { messag = "Empleado no encontrado"})
+                : Ok(employee);
         }
 
-   
     [HttpPost("import")]
         public async Task<IActionResult> ImportEmployees(IFormFile file)
         {

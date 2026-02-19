@@ -35,7 +35,11 @@ public class AbsenceCalendarController : ControllerBase
         {
             var subIds = await _db.Employees
                 .Where(e => e.ManagerEmployeeId == user.EmployeeId)
-                .Select(e => e.EmployeeId).ToListAsync();
+                .Select(e => e.EmployeeId)
+                .ToListAsync();
+            // El MANAGER tambien puede ver las suyas
+            if(user.EmployeeId.HasValue)
+                subIds.Add(user.EmployeeId.Value);
             query = query.Where(a => subIds.Contains(a.EmployeeId));
         }
         else if (!isAdminOrRrhh)

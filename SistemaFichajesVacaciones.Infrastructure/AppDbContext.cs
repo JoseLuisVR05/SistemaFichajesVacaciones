@@ -167,6 +167,11 @@ public class AppDbContext : DbContext
             entity.HasKey(e => e.SummaryId);
             entity.HasIndex(e => new { e.EmployeeId, e.Date })
             .IsUnique();
+
+            // Esta columna es calculada por SQL Server
+            // "stored: true" significa que el valor se guarda fisicamente, no se recalcula en cada lectura
+            entity.Property(e => e.BalanceMinutes)
+                .HasComputedColumnSql("[WorkedMinutes] - [ExpectedMinutes]", stored: true);
     
             entity.HasOne(e => e.Employee)
                 .WithMany()

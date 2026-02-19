@@ -10,7 +10,6 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/vacation/policies")]
 [Authorize]
-[RequireRole("ADMIN", "RRHH")]
 public class VacationPoliciesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -26,7 +25,6 @@ public class VacationPoliciesController : ControllerBase
     /// Listar todas las políticas, opcionalmente filtradas por año
     /// </summary>
     [HttpGet]
-    [AllowAnonymous] // Cualquier usuario autenticado puede consultar políticas
     public async Task<IActionResult> GetPolicies([FromQuery] int? year)
     {
         var query = _db.VacationPolicies.AsQueryable();
@@ -57,7 +55,6 @@ public class VacationPoliciesController : ControllerBase
     /// Obtener una política por su ID
     /// </summary>
     [HttpGet("{id}")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetPolicy(int id)
     {
         var policy = await _db.VacationPolicies.FindAsync(id);
@@ -72,6 +69,7 @@ public class VacationPoliciesController : ControllerBase
     /// Crear una nueva política de vacaciones
     /// </summary>
     [HttpPost]
+    [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> CreatePolicy([FromBody] CreatePolicyDto dto)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
@@ -117,6 +115,7 @@ public class VacationPoliciesController : ControllerBase
     /// Actualizar una política existente
     /// </summary>
     [HttpPut("{id}")]
+    [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> UpdatePolicy(int id, [FromBody] UpdatePolicyDto dto)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
@@ -180,6 +179,7 @@ public class VacationPoliciesController : ControllerBase
     /// Eliminar una política (solo si no tiene saldos asociados)
     /// </summary>
     [HttpDelete("{id}")]
+    [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> DeletePolicy(int id)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);

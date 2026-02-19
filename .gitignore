@@ -13,9 +13,6 @@ x86/
 [Bb]in/
 [Oo]bj/
 
-## Entity Framework
-Migrations/
-
 ## Others
 *.log
 appsettings.Development.json

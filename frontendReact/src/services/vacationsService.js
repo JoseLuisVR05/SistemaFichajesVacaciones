@@ -22,7 +22,7 @@ export const createPolicy = async (policyData) => {
 
 /* Actualiza una politica de vacaciones(Solo ADMIN y RRHH)*/
 export const updatePolicy = async (id, policyData) => {
-    const { data } = await api.post (`/vacation/policies/${id}`, policyData);
+    const { data } = await api.put (`/vacation/policies/${id}`, policyData);
     return data;
 };
 
@@ -113,4 +113,25 @@ export const cancelVacationRequest = async (requestId) => {
 export const validateVacationDates = async (startDate, endDate) => {
     const { data } = await api.post ('/vacation/requests/validate', {startDate, endDate});
         return data;
+};
+
+/**
+ * Obtiene el calendario de ausencias para un rango de fechas.
+ * Usa GET /api/vacation/absence-calendar
+ 
+ * El backend aplica control de acceso automáticamente:
+ * - ADMIN/RRHH: ven todos
+ * - MANAGER: solo su equipo
+ * - EMPLOYEE: solo las propias
+ * 
+ * @param {string} from - Fecha inicio (yyyy-MM-dd)
+ * @param {string} to - Fecha fin (yyyy-MM-dd)
+ * @param {string} [department] - Filtro opcional de departamento
+ */
+export const getAbsenceCalendar = async ({ from, to, department } = {}) => {
+    const params = { from, to };
+    if (department && department !== 'ALL') params.department = department;
+    
+    const { data } = await api.get('/vacation/absence-calendar', { params });
+    return data;
 };

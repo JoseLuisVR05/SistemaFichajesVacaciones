@@ -1,0 +1,19 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=SistemaFichajes_Dev;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "REEMPLAZA_ESTO_CON_UNA_CLAVE_DE_MINIMO_32_CARACTERES_EN_PRODUCCION",
+    "Issuer": "SistemaFichajes",
+    "Audience": "SistemaFichajesClients",
+    "ExpiresMinutes": "60"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Information"
+    }
+  }
+}
+
+dotnet user-secrets list para listar la clave que tengo protegida

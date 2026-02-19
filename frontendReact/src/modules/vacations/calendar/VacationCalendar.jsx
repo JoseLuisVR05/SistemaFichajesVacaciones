@@ -14,6 +14,7 @@ import {
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { getAbsenceCalendar } from '../../../services/vacationsService';
 
 
 export default function VacationCalendar() {
@@ -61,22 +62,16 @@ export default function VacationCalendar() {
       const monthStart = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
       const monthEnd = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
 
-      const data = await getVacationRequests({
-        status: 'APPROVED',
+      const data = await getAbsenceCalendar({
         from: monthStart,
-        to: monthEnd
+        to: monthEnd,
+        department: departmentFilter
       });
 
-      let filtered = data || [];
-
-      // Filtrar por departamento localmente
-      if (departmentFilter !== 'ALL') {
-        filtered = filtered.filter(a => a.department === departmentFilter);
-      }
-
-      setAbsences(filtered);
+      setAbsences(data || []);      
     } catch (err) {
-      console.error('Error cargando calendario:', err);
+      console.error('Error cargando calendario de ausencias', err);
+      setAbsences([]);
     } finally {
       setLoading(false);
     }
@@ -84,9 +79,7 @@ export default function VacationCalendar() {
 
   const getAbsencesForDay = (day) => {
     return absences.filter(a => {
-      const start = toLocalDate(a.startDate);
-      const end = toLocalDate(a.endDate);
-      return day >= start && day <= end;
+      return isSameDay(toLocalDate(a.date), day);
     });
   };
 
@@ -113,7 +106,7 @@ export default function VacationCalendar() {
     return employeeColors[employeeId];
   };
 
-  // ✅ NUEVO: Determinar tipos únicos para la leyenda
+  // Determinar tipos únicos para la leyenda
   const absenceTypes = [...new Set(absences.map(a => a.type || 'VACATION'))];
 
   return (
@@ -122,7 +115,7 @@ export default function VacationCalendar() {
         Calendario de Ausencias
       </Typography>
 
-      {/* ✅ Controles — Mockup: [Mes] [Departamento] [Equipo] Leyenda */}
+      {/* Controles: [Mes] [Departamento] [Equipo] Leyenda */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Navegación del mes */}
@@ -138,7 +131,7 @@ export default function VacationCalendar() {
             </IconButton>
           </Box>
 
-          {/* ✅ NUEVO: Filtro Departamento */}
+          {/* Filtro Departamento */}
           <TextField select label="Departamento" value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
             size="small" sx={{ minWidth: 160 }}>
@@ -146,7 +139,7 @@ export default function VacationCalendar() {
             {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
           </TextField>
 
-          {/* ✅ NUEVO: Filtro Equipo */}
+          {/* Filtro Equipo */}
           <TextField select label="Equipo" value={teamFilter}
             onChange={(e) => setTeamFilter(e.target.value)}
             size="small" sx={{ minWidth: 160 }}>
