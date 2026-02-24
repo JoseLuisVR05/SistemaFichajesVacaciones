@@ -267,6 +267,34 @@ public class EmployeeImportService : IEmployeeImportService
 
         await _db.SaveChangesAsync(cancellationToken);
 
+        // ─── AÑADIR después de la lógica de managers, antes de actualizar importRun ───
+
+        // Req #2: Marcar como INACTIVOS los empleados que NO están en el CSV
+        // Solo aplica si el CSV tiene filas válidas para evitar desactivaciones accidentales
+        if (stagingData.Any())
+        {
+            var csvCodes = stagingData
+                .Where(s => !string.IsNullOrEmpty(s.EmployeeCode))
+                .Select(s => s.EmployeeCode!)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var toDeactivate = await _db.Employees
+                .Where(e => e.IsActive && !csvCodes.Contains(e.EmployeeCode))
+                .ToListAsync(cancellationToken);
+
+            foreach (var emp in toDeactivate)
+            {
+                emp.IsActive   = false;
+                emp.UpdatedAt  = DateTime.UtcNow;
+            }
+
+            if (toDeactivate.Any())
+            {
+                await _db.SaveChangesAsync(cancellationToken);
+                Console.WriteLine($"⚠️ {toDeactivate.Count} empleados marcados como inactivos (no presentes en el CSV).");
+            }
+        }
+
         // Actualiza counters del importRun
         importRun.TotalRows = success + errors;
         importRun.SuccessRows = success;

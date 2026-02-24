@@ -9,8 +9,6 @@ using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.Services;
 
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Aqui se añaden los servicios

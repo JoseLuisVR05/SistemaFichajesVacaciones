@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Box, Button, Typography, Alert, CircularProgress, Paper } from '@mui/material';
-import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
-import { registerEntry, getEntries } from '../../../services/timeService';
+import { Login as LoginIcon, Logout as LogoutIcon, Warning } from '@mui/icons-material';
+import { registerEntry, getEntries, getDailySummary } from '../../../services/timeService';
+import { getCorrections } from '../../../services/correctionsService';
 import { useAuth } from '../../../context/AuthContext';
-import { format } from 'date-fns';
+import { format, subDays, isWeekend } from 'date-fns';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { es } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 export default function TimeClockPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [lastEntry, setLastEntry] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [incident, setIncident] = useState(null);
 
   useEffect(() => {
     loadLastEntry();
+    checkYesterdayIncident();
     // Actualizar hora cada segundo
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -30,6 +36,37 @@ export default function TimeClockPage() {
     } catch (err) {
       console.error('Error cargando último fichaje:', err);
     }
+  };
+  // ── Req #4: detectar incidencia del día anterior ──────────────────────
+  const checkYesterdayIncident = async () => {
+    try {
+      const yesterday = subDays(new Date(), 1);
+
+      // Solo comprobar días laborables (lun-vie)
+      if (isWeekend(yesterday)) return;
+
+      const yesterdayStr = format(yesterday, 'yyyy-MM-dd');
+
+      // 1. Obtener resumen del día anterior
+      const summaries = await getDailySummary({ from: yesterdayStr, to: yesterdayStr });
+      const summary = summaries?.[0];
+
+      // Si no hay resumen o trabajó algo, no hay incidencia
+      if (summary?.workedHours > 0) return;
+
+      // 2. Verificar que no exista ya una corrección para esa fecha (evita mostrar la incidencia si ya la gestionó)
+      const corrections = await getCorrections({ includeOwn: true, from: yesterdayStr, to: yesterdayStr });
+      const alreadyHandled = (corrections || []).some(c =>
+        c.date?.startsWith(yesterdayStr)
+      );
+
+      if (!alreadyHandled) {
+        setIncident({
+          date: yesterdayStr,
+          dateFormatted: format(yesterday, "EEEE d 'de' MMMM", { locale: es })
+        });
+      }
+    } catch {/* No hacer nada en caso de error, simplemente no mostrar la incidencia */}
   };
 
   const handleEntry = async (type) => {
@@ -59,6 +96,31 @@ export default function TimeClockPage() {
         Registro de fichaje
       </Typography>
        </Box>
+
+      {/* ── Req #4: Banner de incidencia ─────────────────────────────── */}
+      {incident && (
+        <Alert
+          severity="warning"
+          icon={<Warning />}
+          sx={{ mb: 3 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={() => navigate('/corrections', {
+                state: { openNew: true, date: incident.date }
+              })}
+            >
+              Crear corrección
+            </Button>
+          }
+          onClose={() => setIncident(null)}
+        >
+          <strong>Incidencia detectada:</strong> El {incident.dateFormatted} no se registró tiempo
+          trabajado. Si fue un error de fichaje, puedes solicitar una corrección.
+        </Alert>
+      )}
 
       {/* Tarjeta de estado */}
       <Paper sx={{ p: 3, mb: 3, mt: 3 }}>

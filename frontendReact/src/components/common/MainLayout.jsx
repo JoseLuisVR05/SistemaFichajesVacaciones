@@ -18,6 +18,7 @@ import {
   People as PeopleIcon,
   Logout as LogoutIcon,
   Menu as MenuIcon,
+  AdminPanelSettings,
   AccountCircle,
   Notifications,
   Settings,
@@ -241,6 +242,10 @@ export default function MainLayout({ children }) {
       ? [{ text: 'Empleados', icon: <PeopleIcon />, path: '/employees', color: '#43e97b' }]
       : []
     ),
+    ...(hasRole(['ADMIN', 'RRHH'])
+      ? [{ text: 'Administración', icon: <AdminPanelSettings />, path: '/admin', color: '#ff9800' }]
+      : []
+    )
   ];
 
   const vacationsMenuItems = [

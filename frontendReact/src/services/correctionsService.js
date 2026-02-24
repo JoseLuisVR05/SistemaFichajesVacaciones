@@ -39,3 +39,15 @@ export const rejectCorrection = async (correctionId, reason) => {
   });
   return res.data;
 };
+
+// Req #5 – Editar corrección propia pendiente
+export const updateCorrection = async (id, { correctedMinutes, reason }) => {
+  const res = await api.put(`/time-corrections/${id}`, { correctedMinutes, reason });
+  return res.data;
+};
+
+// Req #5 – Cancelar/eliminar corrección propia pendiente
+export const deleteCorrection = async (id) => {
+  const res = await api.delete(`/time-corrections/${id}`);
+  return res.data;
+};

@@ -1,9 +1,11 @@
 SELECT * FROM __EFMigrationsHistory;
+SELECT * FROM AbsenceCalendar;
 SELECT * FROM AuditLog;
 SELECT * FROM Calendar_Days;
 SELECT * FROM EmployeesStaging;
 SELECT * FROM Employee_WorkSchedules;
 SELECT * FROM Employees;
+SELECT * FROM EmployeeVacationBalances;
 SELECT * FROM ImportRuns;
 SELECT * FROM ImportErrors;
 SELECT * FROM Roles;
@@ -12,6 +14,9 @@ SELECT * FROM TimeDailySummaries;
 SELECT * FROM TimeEntries;
 SELECT * FROM UserRoles;
 SELECT * FROM Users;
+SELECT * FROM VacationPolicies;
+SELECT * FROM VacationRequestDays;
+SELECT * FROM VacationRequests;
 
 DELETE FROM TimeDailySummaries;
 DBCC CHECKIDENT ('TimeDailySummaries', RESEED, 0);

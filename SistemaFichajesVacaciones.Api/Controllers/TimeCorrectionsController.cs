@@ -292,7 +292,75 @@ public class TimeCorrectionsController : ControllerBase
 
         return Ok(corrections);
     }
-}
 
+    // ─── AÑADIR en TimeCorrectionsController ─────────────────────────────
+
+    /// <summary>
+    /// Editar corrección propia pendiente (solo el empleado dueño)
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCorrection(int id, [FromBody] UpdateCorrectionDto dto)
+    {
+        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
+
+        var correction = await _db.TimeCorrections
+            .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
+
+        if (correction == null)
+            return NotFound(new { message = "Corrección no encontrada" });
+
+        // Solo el empleado dueño puede editar
+        if (correction.EmployeeId != user.EmployeeId)
+            return Forbid();
+
+        if (correction.Status != "PENDING")
+            return BadRequest(new { message = "Solo se pueden editar correcciones pendientes" });
+
+        var oldValue = new { correction.CorrectedMinutes, correction.Reason };
+
+        correction.CorrectedMinutes = dto.CorrectedMinutes;
+        correction.Reason           = dto.Reason;
+        correction.UpdatedAt        = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        await _audit.LogAsync("TimeCorrection", id, "UPDATE",
+            oldValue,
+            new { correction.CorrectedMinutes, correction.Reason },
+            userId);
+
+        return Ok(new { message = "Corrección actualizada" });
+    }
+
+    /// <summary>
+    /// Cancelar (eliminar) corrección propia pendiente (solo el empleado dueño)
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCorrection(int id)
+    {
+        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
+
+        var correction = await _db.TimeCorrections
+            .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
+
+        if (correction == null)
+            return NotFound(new { message = "Corrección no encontrada" });
+
+        if (correction.EmployeeId != user.EmployeeId)
+            return Forbid();
+
+        if (correction.Status != "PENDING")
+            return BadRequest(new { message = "Solo se pueden cancelar correcciones pendientes" });
+
+        _db.TimeCorrections.Remove(correction);
+        await _db.SaveChangesAsync();
+        await _audit.LogAsync("TimeCorrection", id, "DELETE", correction, null, userId);
+
+        return Ok(new { message = "Corrección cancelada y eliminada" });
+    }
+
+}
+public record UpdateCorrectionDto(int CorrectedMinutes, string Reason);
 public record CreateCorrectionDto(DateTime Date, int CorrectedMinutes, string Reason);
 public record RejectCorrectionDto(string RejectionReason);

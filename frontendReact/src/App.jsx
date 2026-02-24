@@ -11,6 +11,7 @@ import MainLayout from './components/common/MainLayout';
 import VacationRequests from './modules/vacations/requests/VacationRequests';
 import VacationApprovals from './modules/vacations/approvals/VacationApprovals';
 import VacationCalendar from './modules/vacations/calendar/VacationCalendar';
+import AdminPanel from './modules/admin/AdminPanel';
 
 
 export default function App() {
@@ -49,6 +50,14 @@ export default function App() {
                       }
                     />
                     <Route path="/vacations/calendar" element={<VacationCalendar/>} />
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute roles={['ADMIN', 'RRHH']}>
+                          <AdminPanel />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="*" element={<Navigate to="/login" />} />
                   </Routes>
                 </MainLayout>

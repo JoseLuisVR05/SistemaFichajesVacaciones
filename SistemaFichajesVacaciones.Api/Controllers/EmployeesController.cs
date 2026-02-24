@@ -108,6 +108,27 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
                 : Ok(employee);
         }
 
+    // ─── AÑADIR en EmployeesController, después de GetEmployee ───────────
+    [HttpPatch("{id}/toggle-active")]
+    [RequireRole("ADMIN", "RRHH")]
+    public async Task<IActionResult> ToggleActive(int id)
+    {
+        var employee = await _context.Employees.FindAsync(id);
+        if (employee == null)
+            return NotFound(new { message = "Empleado no encontrado" });
+
+        employee.IsActive  = !employee.IsActive;
+        employee.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message  = $"Empleado {(employee.IsActive ? "activado" : "desactivado")} correctamente",
+            isActive = employee.IsActive
+        });
+    }
+
     [HttpPost("import")]
         public async Task<IActionResult> ImportEmployees(IFormFile file)
         {
