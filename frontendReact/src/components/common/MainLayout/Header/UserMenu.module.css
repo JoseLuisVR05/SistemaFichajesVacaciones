@@ -1,0 +1,77 @@
+/* ============================================
+   TRIGGER BUTTON
+   ============================================ */
+.trigger {
+  background: none;
+  border: none;
+  padding: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  
+}
+
+.trigger:hover {
+  transform: scale(1.1);
+}
+
+.trigger:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   MENU
+   ============================================ */
+.menu {
+  min-width: 280px !important;
+  border-radius: var(--border-radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  margin-top: var(--spacing-sm) !important;
+}
+
+/* ============================================
+   USER HEADER
+   ============================================ */
+.userHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+}
+
+.userInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.userName {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.userEmail {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   LOGOUT ITEM
+   ============================================ */
+.logout {
+  color: var(--color-error) !important;
+}
+
+.logout:hover {
+  background-color: rgba(198, 40, 40, 0.08) !important;
+}

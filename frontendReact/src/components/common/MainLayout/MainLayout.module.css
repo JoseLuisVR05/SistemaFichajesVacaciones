@@ -1,0 +1,74 @@
+/* ============================================
+   MAIN LAYOUT
+   ============================================ */
+.mainLayout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  position: relative;
+}
+
+/* ============================================
+   SIDEBAR CONTAINER
+   ============================================ */
+.sidebarContainer {
+  flex-shrink: 0;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ============================================
+   MAIN (Contenido actual)
+   ============================================ */
+.main {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+}
+
+/* ============================================
+   OVERLAY (Mobile)
+   ============================================ */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .mainLayout {
+    flex-direction: column;
+  }
+
+  .sidebarContainer {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+  }
+
+  .main {
+    padding: var(--spacing-md);
+  }
+
+  .overlay {
+    display: block;
+  }
+}

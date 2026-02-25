@@ -7,7 +7,7 @@ import TimeClockPage from './modules/time/clock/Timeclockpage';
 import History from './modules/time/history/History';
 import Corrections from './modules/time/corrections/Corrections';
 import Employees from './modules/employees/detail/Employees';
-import MainLayout from './components/common/MainLayout';
+import { MainLayout } from './components/common/MainLayout';
 import VacationRequests from './modules/vacations/requests/VacationRequests';
 import VacationApprovals from './modules/vacations/approvals/VacationApprovals';
 import VacationCalendar from './modules/vacations/calendar/VacationCalendar';
