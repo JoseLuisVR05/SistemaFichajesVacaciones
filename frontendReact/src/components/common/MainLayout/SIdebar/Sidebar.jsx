@@ -14,6 +14,8 @@ import {
   People as PeopleIcon,
   AdminPanelSettings,
   BeachAccess as BeachIcon,
+  Menu as MenuIcon,
+  ChevronLeft as ChevronLeftIcon,
   ExpandLess,
   ExpandMore,
   CalendarMonth,
@@ -29,7 +31,7 @@ import styles from './Sidebar.module.css';
  * Sidebar Component
  * Navegación principal de la aplicación
  */
-export function Sidebar() {
+export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose }) {
   const { user } = useAuth();
   const { hasRole } = useRole();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export function Sidebar() {
 
   // Estado para submenús
   const [vacationsOpen, setVacationsOpen] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  
 
   // Notificaciones
   const [pendingCorrections, setPendingCorrections] = useState(0);
@@ -68,20 +70,30 @@ export function Sidebar() {
 
   // Cerrar sidebar al navegar en mobile
   const handleNavClick = () => {
-    setMobileOpen(false);
+    onMobileClose?.();
   };
 
   return (
     <aside
-      className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''}`}
+      className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''} ${collapsed ? styles.collapsed : ''}`}
       role="navigation"
       aria-label="Navegación principal"
     >
       {/* Header del Sidebar */}
       <div className={styles.header}>
-        <div className={styles.logo}>
-          <img src={logo} alt="Logo" className={styles.logoImage} />
-        </div>
+        <button
+          
+          onClick={onToggleCollapse}
+          aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+        >
+          {collapsed ? <MenuIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+        </button>
+
+        {!collapsed && (
+          <div className={styles.logo}>
+            <img src={logo} alt="Logo" className={styles.logoImage} />
+          </div>
+        )}
       </div>
 
       {/* Navegación */}
@@ -92,18 +104,21 @@ export function Sidebar() {
           icon={<DashboardIcon />}
           label="Dashboard"
           onClick={handleNavClick}
+          collapsed={collapsed}
         />
         <NavItem
           to="/timeclock"
           icon={<AccessTimeIcon />}
           label="Fichaje"
           onClick={handleNavClick}
+          collapsed={collapsed}
         />
         <NavItem
           to="/history"
           icon={<HistoryIcon />}
           label="Historial"
           onClick={handleNavClick}
+          collapsed={collapsed}
         />
         <NavItem
           to="/corrections"
@@ -111,6 +126,7 @@ export function Sidebar() {
           label="Correcciones"
           badge={pendingCorrections}
           onClick={handleNavClick}
+          collapsed={collapsed}
         />
 
         {/* Sección Vacaciones (Colapsable) */}
@@ -118,14 +134,16 @@ export function Sidebar() {
           icon={<BeachIcon />}
           label="Vacaciones"
           submenu
-          isOpen={vacationsOpen}
-          onClick={() => setVacationsOpen(!vacationsOpen)}
+          isOpen={vacationsOpen && !collapsed}
+          onClick={() => !collapsed && setVacationsOpen(!vacationsOpen)}
+          collapsed={collapsed}
         >
           <NavItem
             to="/vacations/requests"
             icon={<RequestPage style={{ fontSize: 18 }} />}
             label="Mis solicitudes"
             onClick={handleNavClick}
+            collapsed={collapsed}
           />
           {hasRole(['ADMIN', 'RRHH', 'MANAGER']) && (
             <NavItem
@@ -134,6 +152,7 @@ export function Sidebar() {
               label="Aprobaciones"
               badge={pendingApprovals}
               onClick={handleNavClick}
+              collapsed={collapsed}
             />
           )}
           <NavItem
@@ -141,6 +160,7 @@ export function Sidebar() {
             icon={<CalendarMonth style={{ fontSize: 18 }} />}
             label="Calendario"
             onClick={handleNavClick}
+            collapsed={collapsed}
           />
         </NavItem>
 
@@ -152,6 +172,7 @@ export function Sidebar() {
               /*icon={<People />}*/
               label="Empleados"
               onClick={handleNavClick}
+              collapsed={collapsed}
             />
           </>
         )}
@@ -162,6 +183,7 @@ export function Sidebar() {
             icon={<AdminPanelSettings />}
             label="Admin"
             onClick={handleNavClick}
+            collapsed={collapsed} 
           />
         )}
       </nav>

@@ -129,3 +129,13 @@
     transform: translateX(0);
   }
 }
+.sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+  transition: width var(--transition-normal);
+}
+
+.sidebar {
+  transition: width var(--transition-normal);
+}

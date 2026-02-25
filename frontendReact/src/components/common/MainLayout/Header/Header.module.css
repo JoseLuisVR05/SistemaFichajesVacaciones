@@ -59,3 +59,26 @@
     display: block;
   }
 }
+
+.desktopToggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-fast);
+}
+
+.desktopToggleButton:hover {
+  background-color: var(--color-background-hover);
+}
+
+@media (max-width: 768px) {
+  .desktopToggleButton {
+    display: none;
+  }
+}

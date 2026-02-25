@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sidebar } from './Sidebar/Sidebar';
+import { Sidebar } from './SIdebar/Sidebar';
 import { Header } from './Header/Header';
 import styles from './MainLayout.module.css';
 
@@ -10,13 +10,14 @@ import styles from './MainLayout.module.css';
  */
 export function MainLayout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleMobileMenuClick = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
   return (
-    <div className={styles.mainLayout}>
+    <div className={`${styles.mainLayout} ${collapsed ? styles.sidebarCollapsed : ''}`}>
       {/* Overlay para cerrar sidebar en mobile */}
       {mobileMenuOpen && (
         <div
@@ -27,13 +28,18 @@ export function MainLayout({ children }) {
 
       {/* Sidebar */}
       <div className={styles.sidebarContainer}>
-        <Sidebar />
+        <Sidebar
+          collapsed={collapsed}                    // 👈
+          onToggleCollapse={() => setCollapsed(!collapsed)} // 👈
+          mobileOpen={mobileMenuOpen}              // 👈 pasa el estado real
+          onMobileClose={() => setMobileMenuOpen(false)} // 👈
+        />
       </div>
 
       {/* Contenido principal */}
       <div className={styles.mainContent}>
         {/* Header */}
-        <Header onMenuClick={handleMobileMenuClick} />
+        <Header onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Página actual */}
         <main className={styles.main}>

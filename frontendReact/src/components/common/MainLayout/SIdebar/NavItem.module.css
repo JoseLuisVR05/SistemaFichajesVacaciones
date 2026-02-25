@@ -142,3 +142,9 @@
     font-size: var(--font-size-sm);
   }
 }
+
+/* Icono centrado cuando está colapsado */
+:global(.collapsed) .navItem {
+  justify-content: center;
+  padding: var(--spacing-md) var(--spacing-sm);
+}
