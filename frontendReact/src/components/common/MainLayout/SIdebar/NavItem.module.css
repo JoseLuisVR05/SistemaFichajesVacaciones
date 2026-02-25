@@ -23,15 +23,17 @@
 .navItem:hover {
   background-color: rgba(0, 0, 0, 0.04);
   color: var(--color-text-primary);
+  transform: translateY(-2px);
+  text-decoration: none;
 }
 
 /* ============================================
    ACTIVE STATE
    ============================================ */
 .navItem.active {
-  background-color: rgba(25, 118, 210, 0.1);
-  color: var(--color-primary);
-  font-weight: var(--font-weight-medium);
+  background-color: rgba(219, 225, 232, 0.1);
+  font-weight: var(--font-weight-bold); /* 👈 más negrita al estar activo */
+  color: var(--color-text-primary);     /* 👈 letra más oscura */
 }
 
 .navItem.active::before {
@@ -41,7 +43,6 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: var(--color-primary);
   border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
 }
 

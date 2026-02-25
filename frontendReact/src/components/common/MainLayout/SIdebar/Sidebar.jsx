@@ -81,19 +81,9 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
     >
       {/* Header del Sidebar */}
       <div className={styles.header}>
-        <button
-          
-          onClick={onToggleCollapse}
-          aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-        >
-          {collapsed ? <MenuIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
-        </button>
-
-        {!collapsed && (
           <div className={styles.logo}>
             <img src={logo} alt="Logo" className={styles.logoImage} />
-          </div>
-        )}
+          </div>       
       </div>
 
       {/* Navegación */}

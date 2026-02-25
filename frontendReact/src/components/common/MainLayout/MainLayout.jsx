@@ -39,7 +39,9 @@ export function MainLayout({ children }) {
       {/* Contenido principal */}
       <div className={styles.mainContent}>
         {/* Header */}
-        <Header onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} />
+        <Header 
+          onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onToggleCollapse={() => setCollapsed(!collapsed)} />
 
         {/* Página actual */}
         <main className={styles.main}>

@@ -22,14 +22,15 @@ export function NavItem({
   onClick,
   submenu = false,
   isOpen = false,
-  children = null
+  children = null,
+  collapsed = false
 }) {
   const content = (
     <>
       <span className={styles.icon}>{icon}</span>
-      <span className={styles.label}>{label}</span>
-      {badge > 0 && <span className={styles.badge}>{badge}</span>}
-      {submenu && (
+      {!collapsed && <span className={styles.label}>{label}</span>}
+      {!collapsed && badge > 0 && <span className={styles.badge}>{badge}</span>}
+      { !collapsed && submenu && (
         <span className={`${styles.chevron} ${isOpen ? styles.open : ''}`}>
           ›
         </span>
