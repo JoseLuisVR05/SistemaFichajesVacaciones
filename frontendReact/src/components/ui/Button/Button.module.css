@@ -1,0 +1,246 @@
+/* ============================================
+   BUTTON BASE
+   ============================================ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  
+  /* Evitar selección de texto */
+  user-select: none;
+  -webkit-user-select: none;
+  
+  /* Forma del botón */
+  min-height: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================
+   TAMAÑOS
+   ============================================ */
+.sm {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  min-height: 32px;
+}
+
+.md {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-md);
+  min-height: 40px;
+}
+
+.lg {
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-lg);
+  min-height: 48px;
+}
+
+/* ============================================
+   FULL WIDTH
+   ============================================ */
+.fullWidth {
+  width: 100%;
+}
+
+/* ============================================
+   DISABLED STATE
+   ============================================ */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================
+   VARIANT: CONTAINED (Relleno)
+   ============================================ */
+.contained {
+  box-shadow: var(--shadow-sm);
+}
+
+.contained:hover:not(.disabled) {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.contained:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Colores Contained */
+.contained.primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.contained.primary:hover:not(.disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.contained.success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.contained.success:hover:not(.disabled) {
+  background-color: #1b5e20;
+}
+
+.contained.error {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.contained.error:hover:not(.disabled) {
+  background-color: #b71c1c;
+}
+
+.contained.warning {
+  background-color: var(--color-warning);
+  color: white;
+}
+
+.contained.warning:hover:not(.disabled) {
+  background-color: #e65100;
+}
+
+.contained.info {
+  background-color: var(--color-info);
+  color: white;
+}
+
+.contained.info:hover:not(.disabled) {
+  background-color: #01579b;
+}
+
+/* ============================================
+   VARIANT: OUTLINED (Borde)
+   ============================================ */
+.outlined {
+  background-color: transparent;
+  border: 2px solid currentColor;
+  box-shadow: none;
+}
+
+.outlined:hover:not(.disabled) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Colores Outlined */
+.outlined.primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.outlined.primary:hover:not(.disabled) {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.outlined.success {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.outlined.success:hover:not(.disabled) {
+  background-color: rgba(46, 125, 50, 0.08);
+}
+
+.outlined.error {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.outlined.error:hover:not(.disabled) {
+  background-color: rgba(198, 40, 40, 0.08);
+}
+
+.outlined.warning {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.outlined.warning:hover:not(.disabled) {
+  background-color: rgba(245, 124, 0, 0.08);
+}
+
+.outlined.info {
+  color: var(--color-info);
+  border-color: var(--color-info);
+}
+
+.outlined.info:hover:not(.disabled) {
+  background-color: rgba(2, 136, 209, 0.08);
+}
+
+/* ============================================
+   VARIANT: TEXT (Solo texto)
+   ============================================ */
+.text {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.text:hover:not(.disabled) {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Colores Text */
+.text.primary {
+  color: var(--color-primary);
+}
+
+.text.primary:hover:not(.disabled) {
+  background-color: rgba(25, 118, 210, 0.08);
+}
+
+.text.success {
+  color: var(--color-success);
+}
+
+.text.success:hover:not(.disabled) {
+  background-color: rgba(46, 125, 50, 0.08);
+}
+
+.text.error {
+  color: var(--color-error);
+}
+
+.text.error:hover:not(.disabled) {
+  background-color: rgba(198, 40, 40, 0.08);
+}
+
+.text.warning {
+  color: var(--color-warning);
+}
+
+.text.warning:hover:not(.disabled) {
+  background-color: rgba(245, 124, 0, 0.08);
+}
+
+.text.info {
+  color: var(--color-info);
+}
+
+.text.info:hover:not(.disabled) {
+  background-color: rgba(2, 136, 209, 0.08);
+}
+
+/* ============================================
+   FOCUS STATE (Accesibilidad)
+   ============================================ */
+.button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

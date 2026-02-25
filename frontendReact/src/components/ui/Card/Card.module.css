@@ -1,0 +1,50 @@
+/* ============================================
+   CARD BASE
+   ============================================ */
+.card {
+  background-color: var(--color-background-paper);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  transition: all var(--transition-normal);
+}
+
+/* ============================================
+   VARIANT: ELEVATED (Sombra elevada)
+   ============================================ */
+.elevated {
+  box-shadow: var(--shadow-md);
+}
+
+.elevated:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+/* ============================================
+   VARIANT: FLAT (Sin sombra)
+   ============================================ */
+.flat {
+  box-shadow: none;
+  background-color: var(--color-background);
+}
+
+/* ============================================
+   VARIANT: OUTLINED (Borde)
+   ============================================ */
+.outlined {
+  box-shadow: none;
+  border: 1px solid var(--color-border);
+}
+
+.outlined:hover {
+  border-color: var(--color-border-dark);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .card {
+    padding: var(--spacing-md);
+  }
+}

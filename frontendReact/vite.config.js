@@ -14,5 +14,10 @@ export default defineConfig({
       }
 
     }
+  },
+  css: {
+    modules: {
+      localsConvention: 'camelCase', // permite usar estilos como .container en lugar de .container en los archivos CSS
+    }
   }
 })

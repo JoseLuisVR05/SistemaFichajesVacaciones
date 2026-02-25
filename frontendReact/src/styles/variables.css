@@ -1,0 +1,134 @@
+/* ============================================
+   VARIABLES CSS GLOBALES
+   Sistema de diseño consistente
+   ============================================ */
+
+:root {
+  /* ============================================
+     COLORES PRIMARIOS
+     ============================================ */
+  --color-primary: #1976d2;
+  --color-primary-light: #42a5f5;
+  --color-primary-dark: #1565c0;
+  
+  /* ============================================
+     COLORES SECUNDARIOS - STATUS
+     ============================================ */
+  --color-success: #2e7d32;
+  --color-success-light: #4caf50;
+  --color-success-lighter: #81c784;
+  
+  --color-error: #c62828;
+  --color-error-light: #ef5350;
+  --color-error-lighter: #e57373;
+  
+  --color-warning: #f57c00;
+  --color-warning-light: #ffa726;
+  --color-warning-lighter: #ffb74d;
+  
+  --color-info: #0288d1;
+  --color-info-light: #03a9f4;
+  --color-info-lighter: #4fc3f7;
+  
+  /* ============================================
+     COLORES NEUTROS - TEXTO
+     ============================================ */
+  --color-text-primary: #212121;
+  --color-text-secondary: #757575;
+  --color-text-tertiary: #9e9e9e;
+  --color-text-disabled: #bdbdbd;
+  
+  /* ============================================
+     COLORES NEUTROS - FONDOS
+     ============================================ */
+  --color-background: #fafafa;
+  --color-background-paper: #ffffff;
+  --color-background-hover: #f5f5f5;
+  
+  /* ============================================
+     COLORES NEUTROS - BORDES
+     ============================================ */
+  --color-border: #e0e0e0;
+  --color-border-light: #f0f0f0;
+  --color-border-dark: #bdbdbd;
+  
+  /* ============================================
+     ESPACIADO - Sistema 8px (Escala)
+     ============================================ */
+  --spacing-0: 0;
+  --spacing-xs: 4px;    /* Extra pequeño */
+  --spacing-sm: 8px;    /* Pequeño */
+  --spacing-md: 16px;   /* Medio */
+  --spacing-lg: 24px;   /* Grande */
+  --spacing-xl: 32px;   /* Extra grande */
+  --spacing-2xl: 48px;  /* 2x Extra grande */
+  --spacing-3xl: 64px;  /* 3x Extra grande */
+  
+  /* ============================================
+     TIPOGRAFÍA
+     ============================================ */
+  --font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'Monaco', 'Courier New', monospace;
+  
+  /* Tamaños de fuente */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;   /* Base */
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 48px;
+  
+  /* Pesos de fuente */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* ============================================
+     ALTURAS DE LÍNEA
+     ============================================ */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* ============================================
+     BORDES REDONDEADOS
+     ============================================ */
+  --border-radius-none: 0;
+  --border-radius-xs: 2px;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  --border-radius-full: 9999px;
+  
+  /* ============================================
+     SOMBRAS
+     ============================================ */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+  
+  /* ============================================
+     TRANSICIONES
+     ============================================ */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+  
+  /* ============================================
+     Z-INDEX SCALE
+     ============================================ */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}

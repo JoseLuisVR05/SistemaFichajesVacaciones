@@ -1,0 +1,159 @@
+/* ============================================
+   ALERT BASE
+   ============================================ */
+.alert {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  border-left: 4px solid;
+  background-color: var(--color-background-paper);
+  animation: slideInDown 300ms ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   ICON
+   ============================================ */
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-weight: bold;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+/* ============================================
+   CONTENIDO
+   ============================================ */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.title {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
+}
+
+.message {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* ============================================
+   CLOSE BUTTON
+   ============================================ */
+.closeButton {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  color: inherit;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   SEVERITY VARIANTS
+   ============================================ */
+.success {
+  border-color: var(--color-success);
+  background-color: rgba(46, 125, 50, 0.08);
+}
+
+.success .icon {
+  background-color: var(--color-success-light);
+  color: white;
+}
+
+.success .message {
+  color: #1b5e20;
+}
+
+/* ============================================ */
+.error {
+  border-color: var(--color-error);
+  background-color: rgba(198, 40, 40, 0.08);
+}
+
+.error .icon {
+  background-color: var(--color-error-light);
+  color: white;
+}
+
+.error .message {
+  color: #b71c1c;
+}
+
+/* ============================================ */
+.warning {
+  border-color: var(--color-warning);
+  background-color: rgba(245, 124, 0, 0.08);
+}
+
+.warning .icon {
+  background-color: var(--color-warning-light);
+  color: white;
+}
+
+.warning .message {
+  color: #e65100;
+}
+
+/* ============================================ */
+.info {
+  border-color: var(--color-info);
+  background-color: rgba(2, 136, 209, 0.08);
+}
+
+.info .icon {
+  background-color: var(--color-info-light);
+  color: white;
+}
+
+.info .message {
+  color: #01579b;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 640px) {
+  .alert {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .closeButton {
+    align-self: flex-start;
+  }
+}
