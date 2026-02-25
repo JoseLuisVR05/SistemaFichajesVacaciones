@@ -51,8 +51,26 @@ export default function TimeClockPage() {
       const summaries = await getDailySummary({ from: yesterdayStr, to: yesterdayStr });
       const summary = summaries?.[0];
 
-      // Si no hay resumen o trabajó algo, no hay incidencia
-      if (summary?.workedHours > 0) return;
+      const workedH = summary?.workedHours ?? 0;
+      const expectedH = summary?.expectedHours ?? 0;  
+      const balanceH = summary?.balanceHours ?? 0;
+
+      // Si expectedHours === 0 el empleado no tiene horario configurado ese día:
+      // no hay nada que comprobar, salir sin incidencia.
+      if (expectedH === 0) return;
+      // Determinar tipo de incidencia:
+      // 'missing'    → ningún fichaje registrado en todo el día
+      // 'incomplete' → fichajes registrados pero no alcanzó las horas esperadas
+      // Tolerancia de 0.25h (15 min) para evitar falsas alertas por redondeos.
+      let incidentType = null;
+
+      if (workedH === 0) {
+        incidentType = 'missing';
+      } else if (balanceH < -0.25) {
+        incidentType = 'incomplete';
+      }
+      
+      if (!incidentType) return; // No hay incidencia
 
       // 2. Verificar que no exista ya una corrección para esa fecha (evita mostrar la incidencia si ya la gestionó)
       const corrections = await getCorrections({ includeOwn: true, from: yesterdayStr, to: yesterdayStr });
@@ -60,12 +78,15 @@ export default function TimeClockPage() {
         c.date?.startsWith(yesterdayStr)
       );
 
-      if (!alreadyHandled) {
+      if (alreadyHandled) return; 
         setIncident({
           date: yesterdayStr,
-          dateFormatted: format(yesterday, "EEEE d 'de' MMMM", { locale: es })
+          dateFormatted: format(yesterday, "EEEE d 'de' MMMM", { locale: es }),
+          type: incidentType,
+          workedHours: workedH,
+          expectedHours: expectedH,
+          deficitHours: Math.abs(balanceH).toFixed(1)
         });
-      }
     } catch {/* No hacer nada en caso de error, simplemente no mostrar la incidencia */}
   };
 
@@ -96,31 +117,6 @@ export default function TimeClockPage() {
         Registro de fichaje
       </Typography>
        </Box>
-
-      {/* ── Req #4: Banner de incidencia ─────────────────────────────── */}
-      {incident && (
-        <Alert
-          severity="warning"
-          icon={<Warning />}
-          sx={{ mb: 3 }}
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              variant="outlined"
-              onClick={() => navigate('/corrections', {
-                state: { openNew: true, date: incident.date }
-              })}
-            >
-              Crear corrección
-            </Button>
-          }
-          onClose={() => setIncident(null)}
-        >
-          <strong>Incidencia detectada:</strong> El {incident.dateFormatted} no se registró tiempo
-          trabajado. Si fue un error de fichaje, puedes solicitar una corrección.
-        </Alert>
-      )}
 
       {/* Tarjeta de estado */}
       <Paper sx={{ p: 3, mb: 3, mt: 3 }}>
@@ -214,6 +210,42 @@ export default function TimeClockPage() {
             {message}
           </Alert>
         )}
+        {/* ── Req #4: Banner de incidencia ─────────────────────────────── */}
+         {incident && (
+        <Alert
+          severity="warning"
+          icon={<Warning />}
+          sx={{ mb: 3 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={() => navigate('/corrections', {
+                state: { openNew: true, date: incident.date }
+              })}
+            >
+              Crear corrección
+            </Button>
+          }
+          onClose={() => setIncident(null)}
+        >
+          {incident.type === 'missing' ? (
+            <>
+              <strong>Incidencia detectada:</strong> El {incident.dateFormatted} no se registró
+              ningún fichaje. Si fue un error, puedes solicitar una corrección.
+            </>
+          ) : (
+            <>
+              <strong>Jornada incompleta:</strong> El {incident.dateFormatted} se registraron{' '}
+              <strong>{incident.workedHours}h</strong> de las{' '}
+              <strong>{incident.expectedHours}h</strong> esperadas
+              {incident.deficitHours && ` (faltan ${incident.deficitHours}h)`}.
+              Si fue un error de fichaje, puedes solicitar una corrección.
+            </>
+          )}
+        </Alert>
+      )}
       </Paper>
     </Box>
   );

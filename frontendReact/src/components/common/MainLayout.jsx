@@ -297,14 +297,13 @@ export default function MainLayout({ children }) {
       <Box
         sx={{
           p: 1,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white'
+          background: '#aa182c',
         }}
       >
-        <Typography variant="h6" fontWeight="700" gutterBottom>
+        <Typography variant="h6" fontWeight="700" gutterBottom color='#fff'>
           Sistema de Fichajes
         </Typography>
-        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+        <Typography variant="caption" color='#fff' sx={{ opacity: 0.9 }}>
           Versión de prueba
         </Typography>
       </Box>
@@ -354,7 +353,7 @@ export default function MainLayout({ children }) {
           p: 1,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          background: '#FBFBFB'
         }}
       >
         <Toolbar>
@@ -369,17 +368,17 @@ export default function MainLayout({ children }) {
 
           {/*Buscador en topbar */}
           <Box sx={{
-            display: 'flex', alignItems: 'center', bgcolor: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', bgcolor: 'rgba(22,26,31,0.6)',
             borderRadius: 2, px: 1.5, py: 0.5, mr: 2, flex: { xs: 1, md: 'none' },
-            minWidth: { md: 250 }, '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' }
+            minWidth: { md: 250 }, '&:hover': { bgcolor: 'rgba(22,26,31,0.6)' }
           }}>
-            <SearchIcon sx={{ color: 'rgba(255,255,255,0.7)', mr: 1 }} />
+            <SearchIcon sx={{ color: '#161a1f', mr: 1 }} />
             <InputBase
               placeholder="Buscar…"
               value={SearchText}
               onChange={(e) => setSearchText(e.target.value)}
-              sx={{ color: 'white', fontSize: '0.9rem', flex: 1,
-                '& ::placeholder': { color: 'rgba(255,255,255,0.6)' }
+              sx={{ color: '#161a1f', fontSize: '0.9rem', flex: 1,
+                '& ::placeholder': { color: 'rgba(22,26,31,0.6)' }
               }}
             />
           </Box>
@@ -389,7 +388,7 @@ export default function MainLayout({ children }) {
           <Box sx={{ flexGrow: 1 }} />
 
           {/* Notificaciones */}
-          <IconButton color="inherit" sx={{ mr: 1 }} onClick={handleNotificationClick}>
+          <IconButton sx={{ mr: 1 }} onClick={handleNotificationClick}>
             <Badge badgeContent = {unreadCount} color="error">
               <Notifications />
             </Badge>
@@ -449,13 +448,13 @@ export default function MainLayout({ children }) {
           {/* Usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ display: { xs: 'none', md: 'block' }, textAlign: 'right' }}>
-              <Typography variant="body2" fontWeight="600">
+              <Typography variant="body2" fontWeight="600" color='#161a1f'>
                 {user?.employeeName}
               </Typography>
             </Box>
             <IconButton onClick={handleMenu} sx={{ p: 0 }}>
               <Avatar
-                sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}
+                sx={{ bgcolor: '#aa182c', width: 40, height: 40 }}
               >
                 {user?.employeeName?.charAt(0) || 'U'}
               </Avatar>
@@ -472,7 +471,7 @@ export default function MainLayout({ children }) {
                 <Typography variant="body2" fontWeight="600">
                   {user?.employeeName}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" >
                   {user?.email}
                 </Typography>
               </Box>

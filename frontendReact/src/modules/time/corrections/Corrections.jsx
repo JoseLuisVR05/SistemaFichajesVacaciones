@@ -235,7 +235,7 @@ export default function Corrections() {
     }
   ];
 
-  // Tab 1 — "Gestión": managers ven y aprueban/rechazan, NO crean en nombre de otros
+  // Tab 1 — "Gestión": managers ven y aprueban/rechazan
   const managementColumns = [
     { field: 'employeeName', headerName: 'Empleado', width: 180 },
     ...baseColumns,
@@ -293,14 +293,6 @@ export default function Corrections() {
           <Tab label="Mis solicitudes" />
           <Tab label="Gestión (equipo)" />
         </Tabs>
-      )}
-
-      {/* Aviso contextual en tab de gestión */}
-      {activeTab === 1 && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Vista de gestión: puedes aprobar o rechazar solicitudes de tu equipo.
-          Las correcciones solo pueden crearlas los propios empleados.
-        </Alert>
       )}
 
       {/* ── Filtros ── */}

@@ -97,8 +97,11 @@ export default function Dashboard() {
       // Ultimas solicitudes de vacaciones
       try{
         const requests = await getVacationRequests({});
-        setLastRequests(Array.isArray(requests) ? requests.slice( 0, 3) : []);
-      } catch{
+        // Filtrar solo las propias del usuario logueado
+        const myOwn = (Array.isArray(requests) ? requests : [])
+          .filter(v => v.employeeId === user?.employeeId);
+        setLastRequests(myOwn.slice(0, 3));
+      } catch(err) {
         setLastRequests([]);
       }
     } catch (err) {
