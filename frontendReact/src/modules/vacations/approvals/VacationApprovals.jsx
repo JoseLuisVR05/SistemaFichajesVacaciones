@@ -194,7 +194,7 @@ export default function VacationApprovals() {
   ];
 
   return (
-    <Box sx={{ width: '75vw' }}>
+    <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
         Bandeja de Aprobaciones
       </Typography>

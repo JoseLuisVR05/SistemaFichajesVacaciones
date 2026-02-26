@@ -7,7 +7,7 @@ import { getCorrections } from '../services/correctionsService';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { format } from 'date-fns';
-import { es, tr } from 'date-fns/locale';
+import { es } from 'date-fns/locale';
 import { toLocalDate } from '../utils/helpers/dateUtils';
 import { getBalance, getVacationRequests } from '../services/vacationsService';
 
@@ -131,7 +131,6 @@ export default function Dashboard() {
 
   return (
     <Box
-      sx={{width: '75vw', height: '100vh'}}
     >
       {/* Saludo y fecha actual */}
       <Box sx={{ mb:4, textAlign:"center", ml:20}}>              

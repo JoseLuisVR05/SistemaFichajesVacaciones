@@ -164,7 +164,7 @@ export default function History() {
   ];
 
   return (
-    <Box sx={{ width: '75vw' }}>
+    <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
         Histórico de Fichajes
       </Typography>

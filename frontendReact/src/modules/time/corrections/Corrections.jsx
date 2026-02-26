@@ -270,7 +270,7 @@ export default function Corrections() {
 
   // ─── Render ────────────────────────────────────────────────────────────
   return (
-    <Box sx={{ width: '75vw', height: '100vh' }}>
+    <Box>
       <Box display="flex" alignItems="center" justifyContent="space-between">
         <Box width={140} visibility="hidden">
           <Button variant="contained" startIcon={<Add />}>Nueva</Button>

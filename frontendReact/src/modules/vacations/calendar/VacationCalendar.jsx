@@ -217,7 +217,7 @@ export default function VacationCalendar() {
   );
 
   return (
-    <Box sx={{ width: '75vw' }}>
+    <Box >
       <Typography variant="h4" textAlign="center" gutterBottom>
         Calendario Anual de Ausencias
       </Typography>

@@ -8,15 +8,9 @@ import styles from './Header.module.css';
  * Header Component
  * Barra superior con notificaciones y menú de usuario
  */
-export function Header({ onMenuClick , onToggleCollapse}) {
-  const [notificationCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(true);
-
-// Función para manejar el clic y avisar al padre
-  const handleToggle = () => {
-    setIsOpen(!isOpen); // Cambia el estado local para la flecha
-    if (onToggleCollapse) onToggleCollapse(); // Avisa al componente padre para que cierre la columna
-  };
+export function Header({ onMenuClick , onToggleCollapse, isCollapsed }) {
+  const notificationCount = 0;
+  
 
   return (
     <header className={styles.header}>
@@ -25,8 +19,8 @@ export function Header({ onMenuClick , onToggleCollapse}) {
         <MenuIcon />
       </button>
       {/* Botón de colapso (desktop) */}
-      <button className={styles.desktopToggleButton} onClick={handleToggle}>
-        {isOpen ? <ChevronLeft /> : <ChevronRight />}
+      <button className={styles.desktopToggleButton} onClick={onToggleCollapse}>
+        {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
       </button>
 
       {/* Spacer para centrar contenido */}

@@ -191,7 +191,7 @@ export default function VacationRequests() {
 
   // ── Render ────────────────────────────────────────────
   return (
-    <Box sx={{ width: '75vw', height: '100vh' }}>
+    <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
         Vacaciones
       </Typography>

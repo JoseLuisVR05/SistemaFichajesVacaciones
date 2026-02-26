@@ -38,7 +38,7 @@ export default function AdminPanel() {
   const showSnack = (message, severity = 'success') => setSnackbar({ open: true, message, severity });
 
   return (
-    <Box sx={{ width: '75vw' }}>
+    <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
         Panel de Administración
       </Typography>

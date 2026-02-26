@@ -104,7 +104,7 @@ const columns = [
 
 return(
 
-    <Box sx = {{ width: '75vw', height: '100vh'}}>
+    <Box>
         <Typography variant = "h4" gutterBottom textAlign = 'center'>
             Gestión de empleados
         </Typography>

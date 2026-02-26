@@ -109,9 +109,7 @@ export default function TimeClockPage() {
   };
 
   return (
-    <Box
-        sx={{width: '75vw', height: '100vh'}}
-    >
+    <Box>
       <Box sx={{ mb:4, textAlign:"center"}}>
       <Typography variant="h4" fontWeight="600" gutterBottom>
         Registro de fichaje

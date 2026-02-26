@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Sidebar } from './SIdebar/Sidebar';
-import { Header } from './Header/Header';
+import { Sidebar } from './Sidebar/Sidebar';
+import { Header } from './Header/Header'; 
 import styles from './MainLayout.module.css';
 
 /**
@@ -41,7 +41,10 @@ export function MainLayout({ children }) {
         {/* Header */}
         <Header 
           onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          onToggleCollapse={() => setCollapsed(!collapsed)} />
+          onToggleCollapse={() => setCollapsed(!collapsed)}
+          isCollapsed={collapsed} 
+          />
+          
 
         {/* Página actual */}
         <main className={styles.main}>
