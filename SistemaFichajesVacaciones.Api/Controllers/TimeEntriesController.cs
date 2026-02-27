@@ -233,7 +233,10 @@ public class TimeEntriesController : ControllerBase
                     date = summary.Date,
                     workedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
                     expectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
-                    balanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2)
+                    balanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2),
+                    incidentType = summary.IncidentType,
+                    hasOpenEntry = summary.HasOpenEntry,
+                    proposedCorrectionMinutes = summary.ExpectedMinutes
                 });
             }
             else
