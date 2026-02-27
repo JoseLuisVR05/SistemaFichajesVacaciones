@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SistemaFichajesVacaciones.Domain.Entities;
 
 public class TimeDailySummary
@@ -12,4 +14,8 @@ public class TimeDailySummary
 
     // Navegación
     public Employee Employee { get; set; } = null!;
+
+    // No se persisten en BD — solo se usan en memoria tras el cálculo
+    [NotMapped] public string? IncidentType { get; set; } // NO_ENTRIES | UNCLOSED_ENTRY | INCOMPLETE
+    [NotMapped] public bool HasOpenEntry { get; set; }
 }

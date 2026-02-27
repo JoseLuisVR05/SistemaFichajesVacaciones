@@ -54,6 +54,8 @@ export default function TimeClockPage() {
       const workedH = summary?.workedHours ?? 0;
       const expectedH = summary?.expectedHours ?? 0;  
       const balanceH = summary?.balanceHours ?? 0;
+      const apiIncidentType = summary?.incidentType ?? null;
+      const proposedMinutes = summary?.proposedCorrectionsMinutes ?? 0;
 
       // Si expectedHours === 0 el empleado no tiene horario configurado ese día:
       // no hay nada que comprobar, salir sin incidencia.
@@ -63,8 +65,10 @@ export default function TimeClockPage() {
       // 'incomplete' → fichajes registrados pero no alcanzó las horas esperadas
       // Tolerancia de 0.25h (15 min) para evitar falsas alertas por redondeos.
       let incidentType = null;
-
-      if (workedH === 0) {
+      if(apiIncidentType) {
+        // Si la API ya detectó una incidencia, usar ese resultado (evita mostrar incidencia si ya la gestionó el empleado)
+        incidentType = apiIncidentType === 'NO_ENTRIES' ? 'missing' : 'incomplete';
+      }else if (workedH === 0) {
         incidentType = 'missing';
       } else if (balanceH < -0.25) {
         incidentType = 'incomplete';
@@ -83,9 +87,11 @@ export default function TimeClockPage() {
           date: yesterdayStr,
           dateFormatted: format(yesterday, "EEEE d 'de' MMMM", { locale: es }),
           type: incidentType,
+          apiIncidentType,
           workedHours: workedH,
           expectedHours: expectedH,
-          deficitHours: Math.abs(balanceH).toFixed(1)
+          deficitHours: Math.abs(balanceH).toFixed(1),
+          proposedMinutes
         });
     } catch {/* No hacer nada en caso de error, simplemente no mostrar la incidencia */}
   };
@@ -220,10 +226,15 @@ export default function TimeClockPage() {
               size="small"
               variant="outlined"
               onClick={() => navigate('/corrections', {
-                state: { openNew: true, date: incident.date }
+                state: { 
+                  openNew: true, 
+                  date: incident.date,
+                  proposedMinutes: incident.proposedMinutes,
+                  incidentType: incident.apiIncidentType
+                 }
               })}
             >
-              Crear corrección
+              Solicitar corrección
             </Button>
           }
           onClose={() => setIncident(null)}

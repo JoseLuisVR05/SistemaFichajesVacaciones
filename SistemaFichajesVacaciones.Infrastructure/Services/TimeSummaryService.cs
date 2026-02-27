@@ -46,13 +46,15 @@ public class TimeSummaryService : ITimeSummaryService
         .FirstOrDefaultAsync();
 
     int expectedMinutes = 0;
+    TimeSpan endTimeOfDay = new TimeSpan(18, 0, 0); // 18:00 por defecto
 
     if (isWorkingDay)
     {
         if (schedule != null)
         {
             var workDuration = schedule.ExpectedEndTime - schedule.ExpectedStartTime;
-            expectedMinutes = (int)workDuration.TotalMinutes - schedule.BreakMinutes;
+            expectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - schedule.BreakMinutes;
+            endTimeOfDay = schedule.ExpectedEndTime;
         }
         else
         {
@@ -79,14 +81,10 @@ public class TimeSummaryService : ITimeSummaryService
         {
             lastIn = entry;
         }
-        else if (entry.EntryType == "OUT")
+        else if (entry.EntryType == "OUT" && lastIn != null)
         {
-            if (lastIn != null)
-            {
-                var span = entry.EventTime - lastIn.EventTime;
-                totalMinutes += (int)span.TotalMinutes;
-                lastIn = null;
-            }
+            totalMinutes += (int)Math.Round((entry.EventTime - lastIn.EventTime).TotalMinutes);
+            lastIn = null;
         }
     }
 
@@ -98,14 +96,32 @@ public class TimeSummaryService : ITimeSummaryService
         if (dateOnly == DateTime.UtcNow.Date)
         {
             // HOY: sumar tiempo hasta ahora (balance en tiempo real)
-            var span = DateTime.UtcNow - lastIn.EventTime;
-            totalMinutes += (int)span.TotalMinutes;
+            totalMinutes += (int)Math.Round((DateTime.UtcNow - lastIn.EventTime).TotalMinutes);
         }
         else
         {
-            // DÍA PASADO con entrada sin cerrar: 0 horas trabajadas (penalización completa)
-            totalMinutes = 0;
+            // Día pasado: cortar en fin de jornada del horario
+            // Preserva los pares IN/OUT cerrados anteriores del mismo día
+            var cutoff = dateOnly.Add(endTimeOfDay);
+            if (cutoff > lastIn.EventTime)
+                totalMinutes += (int)Math.Round((cutoff - lastIn.EventTime).TotalMinutes);
+
+            // Nunca superar los minutos esperados
+            totalMinutes = Math.Min(totalMinutes, expectedMinutes);
         }
+    }
+
+    // ── Tipo de incidencia (solo días pasados laborables con horario) ─────
+    string? incidentType = null;
+
+    if (isWorkingDay && expectedMinutes > 0 && dateOnly < DateTime.UtcNow.Date)
+    {
+        if (entries.Count == 0)
+            incidentType = "NO_ENTRIES";
+        else if (hasOpenEntry)
+            incidentType = "UNCLOSED_ENTRY";
+        else if (totalMinutes < expectedMinutes)
+            incidentType = "INCOMPLETE";
     }
 
     // Calcular balance: trabajado - esperado
@@ -141,6 +157,11 @@ public class TimeSummaryService : ITimeSummaryService
     }
 
     await _db.SaveChangesAsync();
+
+    // Asignar transientes después del save
+    summary.IncidentType = incidentType;
+    summary.HasOpenEntry = hasOpenEntry;
+
     return summary;
     }
 
