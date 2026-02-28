@@ -1,7 +1,9 @@
 // AdminPanel.jsx — solo orquesta los tabs y el Snackbar
 import { useState } from 'react';
-import { Box, Typography, Tabs, Tab, Paper, Alert, Snackbar } from '@mui/material';
+import { Box, Typography, Tabs, Tab, Paper} from '@mui/material';
 import { Policy, Schedule, UploadFile, People } from '@mui/icons-material';
+import { useSnackbar } from '../../hooks/useSnackbar';
+import { SnackbarAlert } from '../../components/ui/SnackbarAlert';
 import { PoliciesTab }  from './tabs/PoliciesTab';
 import { SchedulesTab } from './tabs/SchedulesTab';
 import { ImportTab }    from './tabs/ImportTab';
@@ -13,10 +15,9 @@ function TabPanel({ children, value, index }) {
 
 export default function AdminPanel() {
   const [tab, setTab] = useState(0);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const showSnack = (message, severity = 'success') =>
-    setSnackbar({ open: true, message, severity });
+  const { snackbar, showSnack, closeSnack } = useSnackbar();
 
+  
   return (
     <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
@@ -37,20 +38,12 @@ export default function AdminPanel() {
       <TabPanel value={tab} index={2}><ImportTab    showSnack={showSnack} /></TabPanel>
       <TabPanel value={tab} index={3}><EmployeesTab showSnack={showSnack} /></TabPanel>
 
-      <Snackbar
+      <SnackbarAlert
         open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={closeSnack}
+      />
     </Box>
   );
 }

@@ -5,16 +5,16 @@ import {
   Box, Typography, Alert, CircularProgress,
   Card, CardContent, Grid,
 } from '@mui/material';
-import { useAuth } from '../context/AuthContext';
-import { useDashboard } from '../hooks/useDashboard';
-import { registerEntry } from '../services/timeService';
+import { useAuth } from '../../context/AuthContext';
+import { useDashboard } from '../../hooks/useDashboard';
+import { registerEntry } from '../../services/timeService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 // ─── Subcomponentes ────────────────────────────────────────────────────────
-import { QuickActions }  from './dashboard/QuickActions';
-import { PendingItems }  from './dashboard/PendingItems';
-import { RecentActivity } from './dashboard/RecentActivity';
+import { QuickActions }  from './components/QuickActions';
+import { PendingItems }  from './components/PendingItems';
+import { RecentActivity } from './RecentActivity';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -49,7 +49,7 @@ export default function Dashboard() {
   return (
     <Box>
       {/* Saludo */}
-      <Box sx={{ mb: 4, textAlign: 'center', ml: 20 }}>
+      <Box sx={{ mb: 4, textAlign: 'center'}}>
         <Typography variant="h4" fontWeight="600" gutterBottom>
           Bienvenido, {user?.employeeName}
         </Typography>
@@ -113,7 +113,7 @@ export default function Dashboard() {
 
       {/* Contenido principal */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6} size={6}>
           <QuickActions
             loading={loading}
             onEntry={handleEntry}
@@ -121,7 +121,7 @@ export default function Dashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} md={6} size={5.7}>
+        <Grid item xs={12} md={6} size={6}>
           <PendingItems
             pendingCorrections={pendingCorrections}
             pendingApprovals={pendingApprovals}

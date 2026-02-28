@@ -20,6 +20,7 @@ import { useRole } from '../../../hooks/useRole';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpinner';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 
 export default function History() {
@@ -54,8 +55,10 @@ export default function History() {
     {
       field: 'entryType', headerName: 'Tipo', width: 100,
       renderCell: ({ value }) => (
-        <Chip label={value === 'IN' ? 'Entrada' : 'Salida'}
-          color={value === 'IN' ? 'success' : 'error'} size="small" />
+        <Chip 
+          label={value === 'IN' ? 'Entrada' : 'Salida'}
+          color={value === 'IN' ? 'success' : 'error'} 
+          size="small" />
       ),
     },
     ...(canViewEmployees()
@@ -65,8 +68,10 @@ export default function History() {
     {
       field: 'source', headerName: 'Origen', width: 110,
       renderCell: ({ value }) => (
-        <Chip label={value === 'WEB' ? 'Web' : value === 'MOBILE' ? 'Móvil' : value || 'Web'}
-          size="small" variant="outlined" />
+        <Chip 
+          label={value === 'WEB' ? 'Web' : value === 'MOBILE' ? 'Móvil' : value || 'Web'}
+          size="small" 
+          variant="outlined" />
       ),
     },
     {
@@ -76,7 +81,15 @@ export default function History() {
           <IconButton size="small" onClick={() => handleView(row)} title="Ver detalle">
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton size="small" color="primary" title="Solicitar corrección"
+          <IconButton 
+            size="small" 
+            sx={{ 
+              color: 'var(--brand-accent-dark)', // Aquí aplicas tu token
+                '&:hover': {
+                  backgroundColor: 'rgba(183, 28, 28, 0.08)', // Un toque de rojo suave al pasar el mouse
+              }
+            }}
+            title="Solicitar corrección"
             onClick={() => navigate('/corrections', {
               state: {
                 entryId: row.id,
@@ -103,15 +116,27 @@ export default function History() {
       {/* Filtros */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <TextField label="Desde" type="date" value={fromDate}
+          <TextField 
+            label="Desde" 
+            type="date" 
+            value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            InputLabelProps={{ shrink: true }} size="small" />
-          <TextField label="Hasta" type="date" value={toDate}
+            InputLabelProps={{ shrink: true }} 
+            size="small" />
+          <TextField 
+            label="Hasta" 
+            type="date" 
+            value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            InputLabelProps={{ shrink: true }} size="small" />
-          <TextField select label="Tipo" value={typeFilter}
+            InputLabelProps={{ shrink: true }} 
+            size="small" />
+          <TextField 
+            select 
+            label="Tipo" 
+            value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            size="small" sx={{ minWidth: 130 }}>
+            size="small" 
+            sx={{ minWidth: 130 }}>
             <MenuItem value="ALL">Todos</MenuItem>
             <MenuItem value="IN">Entrada</MenuItem>
             <MenuItem value="OUT">Salida</MenuItem>
@@ -125,10 +150,15 @@ export default function History() {
               value={selectedEmployees}
               onChange={(_, newValue) => setSelectedEmployees(newValue)}
               loading={loadingEmployees}
-              size="small" sx={{ minWidth: 350 }}
+              size="small" 
+              sx={{ minWidth: 350 }}
               renderInput={(params) => (
-                <TextField {...params} label="Empleados" placeholder="Buscar empleados..."
-                  InputProps={{ ...params.InputProps,
+                <TextField 
+                  {...params} 
+                  label="Empleados" 
+                  placeholder="Buscar empleados..."
+                  InputProps={{ 
+                    ...params.InputProps,
                     endAdornment: (
                       <>
                         {loadingEmployees ? <CircularProgress size={20} /> : null}
@@ -156,13 +186,14 @@ export default function History() {
       {/* Tabla */}
       <Paper sx={{ height: 500 }}>
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <CircularProgress />
-          </Box>
+          <LoadingSpinner />
         ) : (
-          <DataGrid rows={rows} columns={columns}
+          <DataGrid 
+            rows={rows} 
+            columns={columns}
             initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-            pageSizeOptions={[10, 25, 50]} disableRowSelectionOnClick />
+            pageSizeOptions={[10, 25, 50]} 
+            disableRowSelectionOnClick />
         )}
       </Paper>
 
@@ -176,8 +207,10 @@ export default function History() {
               <Typography><strong>Hora:</strong> {selectedEntry.timeFormatted}</Typography>
               <Typography component="div">
                 <strong>Tipo:</strong>{' '}
-                <Chip label={selectedEntry.entryType === 'IN' ? 'Entrada' : 'Salida'}
-                  color={selectedEntry.entryType === 'IN' ? 'success' : 'error'} size="small" />
+                <Chip 
+                  label={selectedEntry.entryType === 'IN' ? 'Entrada' : 'Salida'}
+                  color={selectedEntry.entryType === 'IN' ? 'success' : 'error'} 
+                  size="small" />
               </Typography>
               {selectedEntry.employeeName && (
                 <Typography><strong>Empleado:</strong> {selectedEntry.employeeName}</Typography>

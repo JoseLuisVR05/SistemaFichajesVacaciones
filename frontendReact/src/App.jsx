@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import{ AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './modules/dashboard/Dashboard';
 import TimeClockPage from './modules/time/clock/Timeclockpage';
 import History from './modules/time/history/History';
 import Corrections from './modules/time/corrections/Corrections';
