@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { 
     Box, Typography, Paper, CircularProgress, TextField,
     Button, Chip, Dialog, DialogTitle, DialogContent,
-    DialogActions, IconButton, InputAdornment,
-    Icon} from '@mui/material';
+    DialogActions, IconButton, InputAdornment
+    } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { Search, Visibility, Business, Email } from '@mui/icons-material';
 import { getEmployees, getEmployee } from "../../../services/employeesService";

@@ -4,13 +4,14 @@
 import { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Tabs, Tab,
-  Button, Snackbar, Alert, Tooltip
+  Button, Tooltip
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { format, subDays } from 'date-fns';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useRole } from '../../../hooks/useRole';
+import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useCorrections } from '../../../hooks/useCorrections';
 import { useEmployees } from '../../../hooks/useEmployees';
 import { ConfirmDialog } from '../../../components/ui';
@@ -19,6 +20,7 @@ import { CorrectionTable }          from './components/CorrectionTable';
 import { CreateCorrectionDialog }   from './components/CreateCorrectionDialog';
 import { EditCorrectionDialog }     from './components/EditCorrectionDialog';
 import { RejectCorrectionDialog }   from './components/RejectCorrectionDialog';
+import { SnackbarAlert }           from '../../../components/ui/SnackbarAlert/SnackbarAlert';
 
 export default function Corrections() {
   const { user }  = useAuth();
@@ -43,9 +45,8 @@ export default function Corrections() {
   const [detailTarget, setDetailTarget] = useState(null);
 
   // ── Snackbar ──────────────────────────────────────────────────────────────
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const showSnack = (message, severity = 'success') =>
-    setSnackbar({ open: true, message, severity });
+  
+  const { snackbar, showSnack, closeSnack } = useSnackbar();
 
   // ── Parámetros del fetch ──────────────────────────────────────────────────
   const correctionParams = {
@@ -216,20 +217,7 @@ export default function Corrections() {
         confirmColor="error"
       />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <SnackbarAlert {...snackbar} onClose={closeSnack} />
     </Box>
   );
 }

@@ -10,18 +10,11 @@ import {
   AccessTime as AccessTimeIcon,
   History as HistoryIcon,
   EditNote as EditNoteIcon,
-  Event as EventIcon,
-  People as PeopleIcon,
   AdminPanelSettings,
   BeachAccess as BeachIcon,
-  Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ExpandLess,
-  ExpandMore,
   CalendarMonth,
   RequestPage,
-  ThumbUpAlt,
-  AccountBalanceWallet,
+  ThumbUpAlt
 } from '@mui/icons-material';
 
 import { NavItem } from './NavItem';
@@ -34,8 +27,6 @@ import styles from './Sidebar.module.css';
 export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose }) {
   const { user } = useAuth();
   const { hasRole } = useRole();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   // Estado para submenús
   const [vacationsOpen, setVacationsOpen] = useState(false);

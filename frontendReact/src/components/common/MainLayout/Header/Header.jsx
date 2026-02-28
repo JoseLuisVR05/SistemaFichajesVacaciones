@@ -10,7 +10,6 @@ import styles from './Header.module.css';
  */
 export function Header({ onMenuClick , onToggleCollapse, isCollapsed }) {
   const notificationCount = 0;
-  
 
   return (
     <header className={styles.header}>

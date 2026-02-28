@@ -1,197 +1,61 @@
-import { useState, useEffect, useCallback } from 'react';
+// src/modules/vacations/approvals/VacationApprovals.jsx
+import { useState } from 'react';
 import {
-  Box, Typography, Paper, CircularProgress, Button,
-  Chip, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Alert, Snackbar, IconButton, Tooltip, MenuItem,
-  Autocomplete
+  Box, Typography, Paper, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Alert,
 } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { CheckCircle, Cancel, Visibility, Search } from '@mui/icons-material';
-import { useAuth } from '../../../context/AuthContext';
-import { useRole } from '../../../hooks/useRole'
-import {
-  getVacationRequests, approveVacationRequest, rejectVacationRequest
-} from '../../../services/vacationsService';
-import { getEmployees } from '../../../services/employeesService';
-import { format, subDays } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { useVacationApprovals } from '../../../hooks/useVacationApprovals';
+import { useSnackbar } from '../../../hooks/useSnackbar';
+import { StatusChip, SnackbarAlert } from '../../../components/ui';
+import { ApprovalsFilters } from './components/ApprovalsFilters';
+import { ApprovalsTable }  from './components/ApprovalsTable';
 
-const STATUS_CONFIG = {
-  SUBMITTED: { label: 'Pendiente', color: 'warning' },
-  APPROVED:  { label: 'Aprobada',  color: 'success' },
-  REJECTED:  { label: 'Rechazada', color: 'error' },
-};
-
-/**
- * VacationApprovals - Bandeja de aprobaciones
- * 
- * Mockup "Bandeja de aprobaciones" (pág. 5):
- * - Filtros: [Empleado] [Estado] [Fechas] [Departamento] [Buscar]
- * - Tabla: Empleado | Fechas | Días | Motivo | Estado | Acciones [Aprobar][Rechazar][Ver]
- */
 export default function VacationApprovals() {
-  const { user } = useAuth();
-  const { hasRole } = useRole();
+  const {
+    rows, loading,
+    statusFilter,     setStatusFilter,
+    selectedEmployee, setSelectedEmployee,
+    fromDate,         setFromDate,
+    toDate,           setToDate,
+    departmentFilter, setDepartmentFilter,
+    employees, loadingEmployees, departments,
+    loadData, approve, reject,
+  } = useVacationApprovals();
 
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { snackbar, showSnack, closeSnack } = useSnackbar();
 
-  // ✅ NUEVO: Filtros completos según mockup
-  const [statusFilter, setStatusFilter] = useState('SUBMITTED');
-  const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [loadingEmployees, setLoadingEmployees] = useState(false);
-  const [fromDate, setFromDate] = useState(format(subDays(new Date(), 90), 'yyyy-MM-dd'));
-  const [toDate, setToDate] = useState(format(new Date(new Date().setMonth(new Date().getMonth() + 3)), 'yyyy-MM-dd'));
-  const [departmentFilter, setDepartmentFilter] = useState('ALL');
-  const [departments, setDepartments] = useState([]);
-
-  // Diálogos
-  const [rejectOpen, setRejectOpen] = useState(false);
+  // ── Estado de UI ───────────────────────────────────────
+  const [rejectOpen, setRejectOpen]       = useState(false);
   const [rejectComment, setRejectComment] = useState('');
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedRow, setSelectedRow]     = useState(null);
+  const [detailOpen, setDetailOpen]       = useState(false);
 
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
-  // ─── Cargar empleados ─────────────────────────────────
-  useEffect(() => {
-    loadEmployees();
-  }, []);
-
-  const loadEmployees = async () => {
-    setLoadingEmployees(true);
-    try {
-      const data = await getEmployees();
-      setEmployees(data || []);
-      // Extraer departamentos únicos para el filtro
-      const depts = [...new Set((data || []).map(e => e.department).filter(Boolean))];
-      setDepartments(depts);
-    } catch (err) {
-      console.error('Error cargando empleados:', err);
-    } finally {
-      setLoadingEmployees(false);
-    }
-  };
-
-  // ─── Carga de datos ───────────────────────────────────
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (statusFilter !== 'ALL') params.status = statusFilter;
-      if (selectedEmployee) params.employeeId = selectedEmployee.employeeId;
-      if (fromDate) params.from = fromDate;
-      if (toDate) params.to = toDate;
-
-      let data = await getVacationRequests(params);
-
-      if (data && hasRole(['MANAGER']) && !hasRole(['ADMIN', 'RRHH'])) {
-        data = data.filter(r => r.employeeId !== user?.employeeId);
-      }
-
-      // Filtro local de departamento (si el backend no lo soporta)
-      if (departmentFilter !== 'ALL' && data) {
-        data = data.filter(r => r.department === departmentFilter);
-      }
-
-      const formatted = (data || []).map(r => ({
-        id: r.requestId,
-        ...r,
-        startFormatted: r.startDate ? format(toLocalDate (r.startDate), 'dd/MM/yyyy', { locale: es }) : '-',
-        endFormatted: r.endDate ? format(toLocalDate(r.endDate), 'dd/MM/yyyy', { locale: es }) : '-',
-        createdFormatted: r.createdAt ? format(toLocalDate(r.createdAt), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
-      }));
-      setRows(formatted);
-    } catch (err) {
-      console.error('Error cargando aprobaciones:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, selectedEmployee, fromDate, toDate, departmentFilter]);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  // ─── Aprobar ──────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────
   const handleApprove = async (requestId) => {
     try {
-      await approveVacationRequest(requestId);
-      setSnackbar({ open: true, message: 'Solicitud aprobada correctamente', severity: 'success' });
-      loadData();
+      await approve(requestId);
+      showSnack('Solicitud aprobada correctamente');
     } catch (err) {
-      setSnackbar({ open: true, message: err.response?.data?.message || 'Error al aprobar', severity: 'error' });
+      showSnack(err.response?.data?.message || 'Error al aprobar', 'error');
     }
   };
 
-  // ─── Rechazar ─────────────────────────────────────────
   const handleReject = async () => {
     if (!rejectComment.trim()) {
-      setSnackbar({ open: true, message: 'El motivo del rechazo es obligatorio', severity: 'warning' });
+      showSnack('El motivo del rechazo es obligatorio', 'warning');
       return;
     }
     try {
-      await rejectVacationRequest(selectedRow.id, rejectComment.trim());
-      setSnackbar({ open: true, message: 'Solicitud rechazada', severity: 'info' });
+      await reject(selectedRow.id, rejectComment.trim());
+      showSnack('Solicitud rechazada', 'info');
       setRejectOpen(false);
       setRejectComment('');
       setSelectedRow(null);
-      loadData();
     } catch (err) {
-      setSnackbar({ open: true, message: err.response?.data?.message || 'Error al rechazar', severity: 'error' });
+      showSnack(err.response?.data?.message || 'Error al rechazar', 'error');
     }
   };
-
-  // ─── Columnas — Mockup: Empleado | Fechas | Días | Motivo | Estado | Acciones ─
-  const columns = [
-    { field: 'employeeName', headerName: 'Empleado', width: 180 },
-    { field: 'startFormatted', headerName: 'Desde', width: 110 },
-    { field: 'endFormatted', headerName: 'Hasta', width: 110 },
-    { field: 'requestedDays', headerName: 'Días', width: 70 },
-    // ✅ NUEVO: Columna Motivo (mockup la pide)
-    { field: 'comment', headerName: 'Motivo', flex: 1, minWidth: 150,
-      renderCell: ({ value }) => (
-        <Typography variant="body2" noWrap title={value || ''}>
-          {value || '-'}
-        </Typography>
-      )
-    },
-    {
-      field: 'status', headerName: 'Estado', width: 120,
-      renderCell: ({ value }) => {
-        const cfg = STATUS_CONFIG[value] || { label: value, color: 'default' };
-        return <Chip label={cfg.label} color={cfg.color} size="small" />;
-      }
-    },
-    {
-      field: 'acciones', headerName: 'Acciones', width: 160, sortable: false,
-      renderCell: ({ row }) => (
-        <Box>
-          <Tooltip title="Ver detalle">
-            <IconButton size="small" onClick={() => { setSelectedRow(row); setDetailOpen(true); }}>
-              <Visibility fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {row.status === 'SUBMITTED' && (
-            <>
-              <Tooltip title="Aprobar">
-                <IconButton size="small" color="success" onClick={() => handleApprove(row.id)}>
-                  <CheckCircle fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Rechazar">
-                <IconButton size="small" color="error" onClick={() => {
-                  setSelectedRow(row); setRejectOpen(true);
-                }}>
-                  <Cancel fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-        </Box>
-      )
-    }
-  ];
 
   return (
     <Box>
@@ -199,85 +63,45 @@ export default function VacationApprovals() {
         Bandeja de Aprobaciones
       </Typography>
 
-      {/* ✅ Filtros completos — Mockup: [Empleado] [Estado] [Fechas] [Departamento] [Buscar] */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Filtro empleado */}
-          <Autocomplete
-            options={employees}
-            getOptionLabel={(option) => `${option.fullName} (${option.employeeCode})`}
-            value={selectedEmployee}
-            onChange={(_, newValue) => setSelectedEmployee(newValue)}
-            loading={loadingEmployees}
-            size="small"
-            sx={{ minWidth: 250 }}
-            renderInput={(params) => (
-              <TextField {...params} label="Empleado" placeholder="Buscar empleado..."
-                InputProps={{ ...params.InputProps,
-                  endAdornment: (<>{loadingEmployees ? <CircularProgress size={20} /> : null}{params.InputProps.endAdornment}</>)
-                }} />
-            )}
-            clearText="Limpiar"
-          />
+      <ApprovalsFilters
+        statusFilter={statusFilter}         onStatusFilterChange={setStatusFilter}
+        selectedEmployee={selectedEmployee} onEmployeeChange={setSelectedEmployee}
+        fromDate={fromDate}                 onFromDateChange={setFromDate}
+        toDate={toDate}                     onToDateChange={setToDate}
+        departmentFilter={departmentFilter} onDepartmentFilterChange={setDepartmentFilter}
+        employees={employees}
+        loadingEmployees={loadingEmployees}
+        departments={departments}
+        onSearch={loadData}
+      />
 
-          {/* Filtro estado */}
-          <TextField select label="Estado" value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)} size="small" sx={{ minWidth: 140 }}>
-            <MenuItem value="ALL">Todos</MenuItem>
-            <MenuItem value="SUBMITTED">Pendientes</MenuItem>
-            <MenuItem value="APPROVED">Aprobadas</MenuItem>
-            <MenuItem value="REJECTED">Rechazadas</MenuItem>
-          </TextField>
-
-          {/* Filtro fechas */}
-          <TextField label="Desde" type="date" value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            InputLabelProps={{ shrink: true }} size="small" />
-          <TextField label="Hasta" type="date" value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            InputLabelProps={{ shrink: true }} size="small" />
-
-          {/* ✅ NUEVO: Filtro departamento (mockup lo pide) */}
-          <TextField select label="Departamento" value={departmentFilter}
-            onChange={(e) => setDepartmentFilter(e.target.value)} size="small" sx={{ minWidth: 160 }}>
-            <MenuItem value="ALL">Todos</MenuItem>
-            {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
-          </TextField>
-
-          <Button variant="contained" startIcon={<Search />} onClick={loadData}>
-            Buscar
-          </Button>
-        </Box>
-      </Paper>
-
-      {/* Tabla */}
       <Paper sx={{ height: 500 }}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <CircularProgress />
-          </Box>
-        ) : (
-          <DataGrid rows={rows} columns={columns}
-            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            pageSizeOptions={[10, 25]} disableRowSelectionOnClick />
-        )}
+        <ApprovalsTable
+          rows={rows}
+          loading={loading}
+          onView={(row) => { setSelectedRow(row); setDetailOpen(true); }}
+          onApprove={handleApprove}
+          onReject={(row) => { setSelectedRow(row); setRejectOpen(true); }}
+        />
       </Paper>
 
       {/* Dialog: Rechazar */}
       <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Rechazar solicitud</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 2, mt: 1 }}>
-            Rechazar solicitud de <strong>{selectedRow?.employeeName}</strong> del{' '}
-            {selectedRow?.startFormatted} al {selectedRow?.endFormatted}:
-          </Typography>
-          <TextField label="Motivo del rechazo" value={rejectComment}
+          <TextField
+            label="Motivo del rechazo" value={rejectComment}
             onChange={(e) => setRejectComment(e.target.value)}
-            multiline rows={3} required fullWidth autoFocus />
+            multiline rows={3} required fullWidth autoFocus sx={{ mt: 1 }}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setRejectOpen(false); setRejectComment(''); }}>Cancelar</Button>
-          <Button variant="contained" color="error" onClick={handleReject}>Confirmar rechazo</Button>
+          <Button onClick={() => { setRejectOpen(false); setRejectComment(''); }}>
+            Cancelar
+          </Button>
+          <Button variant="contained" color="error" onClick={handleReject}>
+            Confirmar rechazo
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -292,13 +116,14 @@ export default function VacationApprovals() {
               <Typography><strong>Hasta:</strong> {selectedRow.endFormatted}</Typography>
               <Typography><strong>Días:</strong> {selectedRow.requestedDays}</Typography>
               <Typography><strong>Tipo:</strong> {selectedRow.type}</Typography>
-              <Typography><strong>Motivo:</strong> {selectedRow.comment || 'Sin motivo'}</Typography>
               <Typography component="div">
                 <strong>Estado:</strong>{' '}
-                <Chip label={STATUS_CONFIG[selectedRow.status]?.label} color={STATUS_CONFIG[selectedRow.status]?.color} size="small" />
+                <StatusChip status={selectedRow.status} />
               </Typography>
               {selectedRow.approverComment && (
-                <Alert severity="info"><strong>Comentario:</strong> {selectedRow.approverComment}</Alert>
+                <Alert severity="info">
+                  <strong>Comentario:</strong> {selectedRow.approverComment}
+                </Alert>
               )}
             </Box>
           )}
@@ -308,12 +133,7 @@ export default function VacationApprovals() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
-      <Snackbar open={snackbar.open} autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
-      </Snackbar>
+      <SnackbarAlert {...snackbar} onClose={closeSnack} />
     </Box>
   );
 }
