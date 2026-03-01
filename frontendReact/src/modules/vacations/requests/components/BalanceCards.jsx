@@ -22,7 +22,7 @@ export function BalanceCards({ balance }) {
     {
       label: 'Asignados',
       value: balance.allocatedDays,
-      icon: <AccountBalanceWallet color="primary" />,
+      icon: <AccountBalanceWallet color="success" />,
       bg: '#f5f5f5',
     },
     {

@@ -28,7 +28,7 @@ export function Header({ onMenuClick , onToggleCollapse, isCollapsed }) {
       {/* Controles a la derecha */}
       <div className={styles.controls}>
         {/* Notificaciones */}
-        <IconButton>
+        <IconButton color="inherit">
           <Badge badgeContent={notificationCount} color="error">
             <NotificationsIcon />
           </Badge>

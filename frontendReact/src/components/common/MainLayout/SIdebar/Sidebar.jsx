@@ -14,7 +14,8 @@ import {
   BeachAccess as BeachIcon,
   CalendarMonth,
   RequestPage,
-  ThumbUpAlt
+  ThumbUpAlt,
+  People,
 } from '@mui/icons-material';
 
 import { NavItem } from './NavItem';
@@ -150,7 +151,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
           <>
             <NavItem
               to="/employees"
-              /*icon={<People />}*/
+              icon={<People />}
               label="Empleados"
               onClick={handleNavClick}
               collapsed={collapsed}

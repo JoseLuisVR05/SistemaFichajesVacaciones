@@ -14,7 +14,7 @@ import { es } from 'date-fns/locale';
 // ─── Subcomponentes ────────────────────────────────────────────────────────
 import { QuickActions }  from './components/QuickActions';
 import { PendingItems }  from './components/PendingItems';
-import { RecentActivity } from './RecentActivity';
+import { RecentActivity } from './components/RecentActivity';
 
 export default function Dashboard() {
   const { user } = useAuth();

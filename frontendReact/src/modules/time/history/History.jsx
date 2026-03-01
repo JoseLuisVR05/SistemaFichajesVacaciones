@@ -83,12 +83,7 @@ export default function History() {
           </IconButton>
           <IconButton 
             size="small" 
-            sx={{ 
-              color: 'var(--brand-accent-dark)', // Aquí aplicas tu token
-                '&:hover': {
-                  backgroundColor: 'rgba(183, 28, 28, 0.08)', // Un toque de rojo suave al pasar el mouse
-              }
-            }}
+            color="primary"
             title="Solicitar corrección"
             onClick={() => navigate('/corrections', {
               state: {

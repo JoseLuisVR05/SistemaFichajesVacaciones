@@ -21,7 +21,7 @@
 }
 
 .navItem:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--surface-hover);
   color: var(--color-text-primary);
   transform: translateY(-2px);
   text-decoration: none;

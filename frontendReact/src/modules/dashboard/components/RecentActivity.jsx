@@ -2,7 +2,7 @@
 import { Box, Paper, Typography, Chip, CircularProgress } from '@mui/material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { toLocalDate } from '../../utils/helpers/dateUtils';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
 
 /**
  * RecentActivity
