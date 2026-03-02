@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpinner';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 export default function History() {
   const navigate = useNavigate();
@@ -39,6 +40,9 @@ export default function History() {
     exportData,
   } = useHistory();
 
+  // ── Traducción ───────────────────────────────────────────
+  const { t } = useTranslation();
+
   // ── Estado de UI — solo pertenece al componente ────────
   const [detailOpen, setDetailOpen]     = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -50,23 +54,23 @@ export default function History() {
 
   // ── Columnas ───────────────────────────────────────────
   const columns = [
-    { field: 'dateFormatted', headerName: 'Fecha', width: 120 },
-    { field: 'timeFormatted', headerName: 'Hora',  width: 100 },
+    { field: 'dateFormatted', headerName: t('history.columns.date'), width: 120 },
+    { field: 'timeFormatted', headerName: t('history.columns.time'),  width: 100 },
     {
-      field: 'entryType', headerName: 'Tipo', width: 100,
+      field: 'entryType', headerName: t('history.columns.type'), width: 100,
       renderCell: ({ value }) => (
         <Chip 
-          label={value === 'IN' ? 'Entrada' : 'Salida'}
+          label={value === 'IN' ? t('history.filters.entry') : t('history.filters.exit')}
           color={value === 'IN' ? 'success' : 'error'} 
           size="small" />
       ),
     },
     ...(canViewEmployees()
-      ? [{ field: 'employeeName', headerName: 'Empleado', flex: 1, minWidth: 180 }]
+      ? [{ field: 'employeeName', headerName: t('history.columns.employee'), flex: 1, minWidth: 180 }]
       : []
     ),
     {
-      field: 'source', headerName: 'Origen', width: 110,
+      field: 'source', headerName: t('history.columns.source'), width: 110,
       renderCell: ({ value }) => (
         <Chip 
           label={value === 'WEB' ? 'Web' : value === 'MOBILE' ? 'Móvil' : value || 'Web'}
@@ -75,16 +79,16 @@ export default function History() {
       ),
     },
     {
-      field: 'acciones', headerName: 'Acciones', width: 140, sortable: false,
+      field: 'acciones', headerName: t('history.columns.actions'), width: 140, sortable: false,
       renderCell: ({ row }) => (
         <Box>
-          <IconButton size="small" onClick={() => handleView(row)} title="Ver detalle">
+          <IconButton size="small" onClick={() => handleView(row)} title={t('common.view')}>
             <Visibility fontSize="small" />
           </IconButton>
           <IconButton 
             size="small" 
             color="primary"
-            title="Solicitar corrección"
+            title={t('history.actions.requestCorrection')}
             onClick={() => navigate('/corrections', {
               state: {
                 entryId: row.id,
@@ -105,21 +109,21 @@ export default function History() {
   return (
     <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
-        Histórico de Fichajes
+        {t('history.title')}
       </Typography>
 
       {/* Filtros */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <TextField 
-            label="Desde" 
+            label={t('history.filters.from')} 
             type="date" 
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
             InputLabelProps={{ shrink: true }} 
             size="small" />
           <TextField 
-            label="Hasta" 
+            label={t('history.filters.to')} 
             type="date" 
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
@@ -127,14 +131,14 @@ export default function History() {
             size="small" />
           <TextField 
             select 
-            label="Tipo" 
+            label={t('history.filters.type')} 
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             size="small" 
             sx={{ minWidth: 130 }}>
-            <MenuItem value="ALL">Todos</MenuItem>
-            <MenuItem value="IN">Entrada</MenuItem>
-            <MenuItem value="OUT">Salida</MenuItem>
+            <MenuItem value="ALL">{t('history.filters.all')}</MenuItem>
+            <MenuItem value="IN">{t('history.filters.entry')}</MenuItem>
+            <MenuItem value="OUT">{t('history.filters.exit')}</MenuItem>
           </TextField>
 
           {canViewEmployees() && (
@@ -150,8 +154,8 @@ export default function History() {
               renderInput={(params) => (
                 <TextField 
                   {...params} 
-                  label="Empleados" 
-                  placeholder="Buscar empleados..."
+                  label={t('history.filters.employees')} 
+                  placeholder={t('history.filters.searchEmployees')}
                   InputProps={{ 
                     ...params.InputProps,
                     endAdornment: (
@@ -163,17 +167,17 @@ export default function History() {
                   }}
                 />
               )}
-              clearText="Limpiar"
+              clearText={t('history.filters.clear')}
               limitTags={2}
               isOptionEqualToValue={(option, value) => option.employeeId === value.employeeId}
             />
           )}
 
           <Button variant="contained" startIcon={<Search />} onClick={loadData}>
-            Buscar
+            {t('common.search')}
           </Button>
           <Button variant="outlined" onClick={exportData}>
-            Exportar
+            {t('history.export')}
           </Button>
         </Box>
       </Paper>
@@ -194,34 +198,34 @@ export default function History() {
 
       {/* Dialog de detalle */}
       <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Detalle del fichaje</DialogTitle>
+        <DialogTitle>{t('history.detail.title')}</DialogTitle>
         <DialogContent>
           {selectedEntry && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-              <Typography><strong>Fecha:</strong> {selectedEntry.dateFormatted}</Typography>
-              <Typography><strong>Hora:</strong> {selectedEntry.timeFormatted}</Typography>
+              <Typography><strong>{t('history.columns.date')}:</strong> {selectedEntry.dateFormatted}</Typography>
+              <Typography><strong>{t('history.columns.time')}:</strong> {selectedEntry.timeFormatted}</Typography>
               <Typography component="div">
-                <strong>Tipo:</strong>{' '}
+                <strong>{t('history.columns.type')}:</strong>{' '}
                 <Chip 
-                  label={selectedEntry.entryType === 'IN' ? 'Entrada' : 'Salida'}
+                  label={selectedEntry.entryType === 'IN' ? t('history.filters.entry') : t('history.columns.exit')}
                   color={selectedEntry.entryType === 'IN' ? 'success' : 'error'} 
                   size="small" />
               </Typography>
               {selectedEntry.employeeName && (
-                <Typography><strong>Empleado:</strong> {selectedEntry.employeeName}</Typography>
+                <Typography><strong>{t('history.columns.employee')}:</strong> {selectedEntry.employeeName}</Typography>
               )}
-              <Typography><strong>Origen:</strong> {selectedEntry.source || 'Web'}</Typography>
+              <Typography><strong>{t('history.detail.origin')}:</strong> {selectedEntry.source || 'Web'}</Typography>
               {selectedEntry.ipAddress && (
-                <Typography><strong>IP:</strong> {selectedEntry.ipAddress}</Typography>
+                <Typography><strong>{t('history.detail.ip')}:</strong> {selectedEntry.ipAddress}</Typography>
               )}
               {selectedEntry.notes && (
-                <Typography><strong>Notas:</strong> {selectedEntry.notes}</Typography>
+                <Typography><strong>{t('history.detail.notes')}:</strong> {selectedEntry.notes}</Typography>
               )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
+          <Button onClick={() => setDetailOpen(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
     </Box>

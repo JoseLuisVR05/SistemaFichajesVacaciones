@@ -4,6 +4,7 @@ import {
   CircularProgress, Autocomplete, Typography
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 export function CorrectionFilters({
   fromDate, onFromDateChange,
@@ -14,33 +15,36 @@ export function CorrectionFilters({
   selectedEmployee, onEmployeeChange,
   isManager,
   onSearch,
-  onClearEmployee,
+  onClearEmployee
 }) {
+
+  // traducciones para los filtros
+  const { t } = useTranslation();
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
 
         <TextField
-          label="Desde" type="date" value={fromDate}
+          label={t('history.filters.from')} type="date" value={fromDate}
           onChange={e => onFromDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
         />
 
         <TextField
-          label="Hasta" type="date" value={toDate}
+          label={t('history.filters.to')} type="date" value={toDate}
           onChange={e => onToDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
         />
 
         <TextField
-          select label="Estado" value={statusFilter}
+          select label={t('common.statusLabel')} value={statusFilter}
           onChange={e => onStatusFilterChange(e.target.value)}
           size="small" sx={{ minWidth: 140 }}
         >
-          <MenuItem value="ALL">Todos</MenuItem>
-          <MenuItem value="PENDING">Pendiente</MenuItem>
-          <MenuItem value="APPROVED">Aprobada</MenuItem>
-          <MenuItem value="REJECTED">Rechazada</MenuItem>
+          <MenuItem value="ALL">{t('history.filters.all')}</MenuItem>
+          <MenuItem value="PENDING">{t('common.status.pending')}</MenuItem>
+          <MenuItem value="APPROVED">{t('common.status.approved')}</MenuItem>
+          <MenuItem value="REJECTED">{t('common.status.rejected')}</MenuItem>
         </TextField>
 
         {showEmployeeFilter && (
@@ -54,7 +58,7 @@ export function CorrectionFilters({
             renderInput={params => (
               <TextField
                 {...params}
-                label={isManager ? 'Buscar subordinado' : 'Buscar empleado'}
+                label={isManager ? t('corrections.filters.subordinate') : t('corrections.filters.employee')}
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
@@ -73,7 +77,7 @@ export function CorrectionFilters({
                     <strong>{option.fullName}</strong>
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {option.employeeCode} • {option.department || 'Sin dept.'}
+                    {option.employeeCode} • {option.department || 'corrections.filters.noDept'}
                   </Typography>
                 </Box>
               </li>
@@ -82,24 +86,16 @@ export function CorrectionFilters({
         )}
 
         <Button variant="contained" startIcon={<Search />} onClick={onSearch}>
-          Buscar
+          {t('common.search')}
         </Button>
 
         {selectedEmployee && (
           <Button variant="outlined" onClick={onClearEmployee}>
-            Ver todas
+            {t('corrections.filters.viewAll')}
           </Button>
         )}
 
       </Box>
-
-      {selectedEmployee && (
-        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'info.light', borderRadius: 1 }}>
-          <Typography variant="body2">
-            <strong>Correcciones de:</strong> {selectedEmployee.fullName}
-          </Typography>
-        </Box>
-      )}
     </Paper>
   );
 }

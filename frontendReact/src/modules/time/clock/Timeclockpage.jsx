@@ -8,10 +8,12 @@ import { format, subDays, isWeekend } from 'date-fns';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function TimeClockPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -118,38 +120,38 @@ export default function TimeClockPage() {
     <Box>
       <Box sx={{ mb:4, textAlign:"center"}}>
       <Typography variant="h4" fontWeight="600" gutterBottom>
-        Registro de fichaje
+        {t('timeclock.title')}
       </Typography>
        </Box>
 
       {/* Tarjeta de estado */}
       <Paper sx={{ p: 3, mb: 3, mt: 3 }}>
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Tarjeta de estado
+          {t('timeclock.statusCard')}
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Box>
-            <Typography variant="body2" color="text.secondary">Empleado</Typography>
+            <Typography variant="body2" color="text.secondary">{t('timeclock.employee')}</Typography>
             <Typography variant="h6" fontWeight="600">{user?.employeeName}</Typography>
           </Box>
           <Box>
-            <Typography variant="body2" color="text.secondary">Fecha</Typography>
+            <Typography variant="body2" color="text.secondary">{t('timeclock.date')}</Typography>
             <Typography variant="h6" fontWeight="600">
               {format(currentTime, "dd/MM/yyyy", { locale: es })}
             </Typography>
           </Box>
           <Box>
-            <Typography variant="body2" color="text.secondary">Hora</Typography>
+            <Typography variant="body2" color="text.secondary">{t('timeclock.time')}</Typography>
             <Typography variant="h6" fontWeight="600" color="primary">
               {format(currentTime, "HH:mm:ss", { locale: es })}
             </Typography>
           </Box>
           <Box>
-            <Typography variant="body2" color="text.secondary">Último fichaje</Typography>
+            <Typography variant="body2" color="text.secondary">{t('timeclock.lastEntry')}</Typography>
             <Typography variant="h6" fontWeight="600">
               {lastEntry 
                 ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.eventTime), "HH:mm", { locale: es })}`
-                : 'Sin fichajes hoy'
+                : t('timeclock.noEntriesT')
               }
             </Typography>
           </Box>
@@ -159,7 +161,7 @@ export default function TimeClockPage() {
       {/* Acción principal */}
       <Paper sx={{ p: 4 }}>
         <Typography variant="h6" fontWeight="600" gutterBottom>
-          Acción principal
+          {t('timeclock.mainAction')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 3, mt: 4 }}>
           <Button
@@ -177,7 +179,7 @@ export default function TimeClockPage() {
               textTransform: 'uppercase'
             }}
           >
-            ENTRADA
+            {t('timeclock.clockIn')}
           </Button>
           
           <Button
@@ -195,7 +197,7 @@ export default function TimeClockPage() {
               textTransform: 'uppercase'
             }}
           >
-            SALIDA
+            {t('timeclock.clockOut')}
           </Button>
         </Box>
       </Paper>
@@ -203,7 +205,7 @@ export default function TimeClockPage() {
       {/* Mensajes */}
       <Paper sx={{ p: 3, mt: 3 }}>
         <Typography variant="h6" fontWeight="600" gutterBottom>
-          Mensajes
+          {t('timeclock.messages')}
         </Typography>
           {message && (
           <Alert 
@@ -234,24 +236,24 @@ export default function TimeClockPage() {
                  }
               })}
             >
-              Solicitar corrección
+              {t('timeclock.requestCorrection')}
             </Button>
           }
           onClose={() => setIncident(null)}
         >
           {incident.type === 'missing' ? (
-            <>
-              <strong>Incidencia detectada:</strong> El {incident.dateFormatted} no se registró
-              ningún fichaje. Si fue un error, puedes solicitar una corrección.
-            </>
+            <span dangerouslySetInnerHTML={{ __html: 
+              t('timeclock.incident.missing', { date: incident.dateFormatted }) 
+            }} />
           ) : (
-            <>
-              <strong>Jornada incompleta:</strong> El {incident.dateFormatted} se registraron{' '}
-              <strong>{incident.workedHours}h</strong> de las{' '}
-              <strong>{incident.expectedHours}h</strong> esperadas
-              {incident.deficitHours && ` (faltan ${incident.deficitHours}h)`}.
-              Si fue un error de fichaje, puedes solicitar una corrección.
-            </>
+            <span dangerouslySetInnerHTML={{ __html: 
+              t('timeclock.incident.incomplete', { 
+                date: incident.dateFormatted, 
+                deficit: incident.workedHours,
+                expected: incident.expectedHours,
+                proposed: incident.deficitHours ? `(faltan ${incident.deficitHours}h)` : '' 
+              })
+             }} />
           )}
         </Alert>
       )}

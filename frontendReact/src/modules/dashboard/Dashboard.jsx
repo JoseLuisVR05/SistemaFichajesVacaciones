@@ -10,6 +10,7 @@ import { useDashboard } from '../../hooks/useDashboard';
 import { registerEntry } from '../../services/timeService';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 // ─── Subcomponentes ────────────────────────────────────────────────────────
 import { QuickActions }  from './components/QuickActions';
@@ -19,6 +20,7 @@ import { RecentActivity } from './components/RecentActivity';
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // ── Hook de datos ──────────────────────────────────────
   const {
@@ -51,7 +53,7 @@ export default function Dashboard() {
       {/* Saludo */}
       <Box sx={{ mb: 4, textAlign: 'center'}}>
         <Typography variant="h4" fontWeight="600" gutterBottom>
-          Bienvenido, {user?.employeeName}
+          {t('dashboard.welcome', { name: user?.employeeName })}
         </Typography>
         <Typography variant="body1" color="text.secondary">
           {format(new Date(), "eeee, d 'de' MMMM 'de' yyyy", { locale: es })}
@@ -72,11 +74,11 @@ export default function Dashboard() {
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {[
           {
-            label: 'Horas hoy',
+            label: t('dashboard.metrics.hoursToday'),
             value: loadingData ? null : `${todaySummary?.workedHours || 0}h`,
           },
           {
-            label: 'Balance semana',
+            label: t('dashboard.metrics.weekBalance'),
             value: loadingData ? null : (
               weekBalance !== null
                 ? `${weekBalance >= 0 ? '+' : ''}${weekBalance}h`
@@ -87,7 +89,7 @@ export default function Dashboard() {
               : 'success.main',
           },
           {
-            label: 'Vacaciones restantes',
+            label: t('dashboard.metrics.vacationsLeft'),
             value: loadingData ? null : (
               vacationBalance ? `${vacationBalance.remainingDays} días` : '--'
             ),

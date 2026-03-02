@@ -1,22 +1,23 @@
 // src/components/ui/StatusChip/StatusChip.jsx
 import { Chip } from '@mui/material';
+import { t } from 'i18next';
 
 // ─── Mapa central de todos los estados de la aplicación ──────────────────────
 // Si el backend cambia un valor, se cambia aquí y se propaga a toda la app.
 const STATUS_CONFIG = {
   // Estados de corrección
-  PENDING:   { label: 'Pendiente',  color: 'warning' },
-  APPROVED:  { label: 'Aprobado',   color: 'success' },
-  REJECTED:  { label: 'Rechazado',  color: 'error'   },
+  PENDING:   { label: t('common.status.pending'),  color: 'warning' },
+  APPROVED:  { label: t('common.status.approved'),   color: 'success' },
+  REJECTED:  { label: t('common.status.rejected'),  color: 'error'   },
 
   // Estados de vacaciones
-  DRAFT:     { label: 'Borrador',   color: 'default' },
-  SUBMITTED: { label: 'Enviada',    color: 'info'    },
-  CANCELLED: { label: 'Cancelada',  color: 'default' },
+  DRAFT:     { label: t('common.status.draft'),   color: 'default' },
+  SUBMITTED: { label: t('common.status.submitted'),    color: 'info'    },
+  CANCELLED: { label: t('common.status.cancelled'),  color: 'default' },
 
   // Estados de empleado
-  true:      { label: 'Activo',     color: 'success' },
-  false:     { label: 'Inactivo',   color: 'default' },
+  true:      { label: t('common.status.active'),     color: 'success' },
+  false:     { label: t('common.status.inactive'),   color: 'default' },
 
   // Tipos de fichaje
   IN:        { label: 'Entrada',    color: 'success' },

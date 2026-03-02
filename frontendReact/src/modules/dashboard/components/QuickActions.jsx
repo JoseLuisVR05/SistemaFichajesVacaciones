@@ -1,6 +1,7 @@
 // src/pages/dashboard/QuickActions.jsx
 import { Box, Paper, Typography, Button, CircularProgress } from '@mui/material';
 import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 /**
  * QuickActions
@@ -11,10 +12,11 @@ import { Login as LoginIcon, Logout as LogoutIcon } from '@mui/icons-material';
  * @param {function} onVacations  - Callback al pulsar "Solicitar vacaciones"
  */
 export function QuickActions({ loading, onEntry, onVacations }) {
+  const { t } = useTranslation();
   return (
     <Paper sx={{ p: 3, height: '92%' }}>
       <Typography variant="h6" fontWeight="600" gutterBottom>
-        Acciones rápidas
+        {t('dashboard.quickActions.title')}
       </Typography>
       <Box sx={{ mt: 3 }}>
         <Button
@@ -23,7 +25,7 @@ export function QuickActions({ loading, onEntry, onVacations }) {
           startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
           sx={{ mb: 2, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
         >
-          Fichar Entrada
+          {t('dashboard.quickActions.clockIn')}
         </Button>
         <Button
           fullWidth variant="contained" color="error" size="large"
@@ -31,14 +33,14 @@ export function QuickActions({ loading, onEntry, onVacations }) {
           startIcon={loading ? <CircularProgress size={20} /> : <LogoutIcon />}
           sx={{ mb: 2, py: 1.5, textTransform: 'none', fontSize: '1rem' }}
         >
-          Fichar Salida
+          {t('dashboard.quickActions.clockOut')}
         </Button>
         <Button
           fullWidth variant="outlined" size="large"
           onClick={onVacations}
           sx={{ py: 1.5, textTransform: 'none', fontSize: '1rem' }}
         >
-          Solicitar vacaciones
+          {t('dashboard.quickActions.requestVacation')}
         </Button>
       </Box>
     </Paper>

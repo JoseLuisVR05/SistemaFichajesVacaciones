@@ -6,6 +6,7 @@ import {
   EventAvailable,
 } from '@mui/icons-material';
 import { Grid } from '@mui/material';
+import { t } from 'i18next';
 
 /**
  * BalanceCards
@@ -18,21 +19,22 @@ export function BalanceCards({ balance }) {
   // Si no hay balance configurado, no renderizamos nada
   if (!balance) return null;
 
+
   const cards = [
     {
-      label: 'Asignados',
+      label: t('vacations.balance.allocated'),
       value: balance.allocatedDays,
       icon: <AccountBalanceWallet color="success" />,
       bg: '#f5f5f5',
     },
     {
-      label: 'Usados',
+      label: t('vacations.balance.used'),
       value: balance.usedDays,
       icon: <EventBusy color="error" />,
       bg: '#fff3f0',
     },
     {
-      label: 'Restantes',
+      label: t('vacations.balance.remaining'),
       value: balance.remainingDays,
       icon: <EventAvailable color="success" />,
       bg: '#f0faf0',
@@ -59,7 +61,7 @@ export function BalanceCards({ balance }) {
                   {label}
                 </Typography>
                 <Typography variant="h5" fontWeight="700">
-                  {value} días
+                  {value} {t('vacations.table.days')}
                 </Typography>
               </Box>
             </CardContent>

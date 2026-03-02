@@ -8,6 +8,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Search, Visibility, Business, Email } from '@mui/icons-material';
 import { getEmployees, getEmployee } from "../../../services/employeesService";
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 export default function Employees(){
     const [ rows, setRows ] = useState([]);
@@ -17,7 +18,7 @@ export default function Employees(){
     const [ detailOpen, setDetailOpen ] = useState(false);
     const [ selectedEmployee, setSelectedEmployee ] = useState(null);
     const [ detailLoading, setDetailLoading ] = useState(false);
-
+    const { t } = useTranslation();
     useEffect(() =>{
         loadData();
     }, []);
@@ -72,26 +73,26 @@ const handleViewDetail = async (employeeId) => {
 };
 
 const columns = [
-    {field: 'employeeCode', headerName: 'Codigo', width: 110},
-    {field: 'fullName', headerName: 'Nombre Completo', flex: 1, minWidth: 200},
-    {field: 'email', headerName: 'Email', width: 200},
-    {field: 'department', headerName: 'Departamento', width: 150},
-    {field: 'company', headerName: 'Empresa', width: 130},
+    {field: 'employeeCode', headerName: t('employees.columns.code'), width: 110},
+    {field: 'fullName', headerName: t('employees.columns.name'), flex: 1, minWidth: 200},
+    {field: 'email', headerName: t('employees.columns.email'), width: 200},
+    {field: 'department', headerName: t('employees.columns.department'), width: 150},
+    {field: 'company', headerName: t('employees.columns.company'), width: 130},
     {
         field: 'isActive',
-        headerName: 'Estado',
-        widt: 100,
+        headerName: t('employees.columns.status'),
+        width: 100,
         renderCell: ({ value }) =>(
             <Chip
-            label = { value?'Activo':'Inactivo'}
+            label = { value?t('common.status.active'):t('common.status.inactive')}
             color = { value?'success':'default'}
             size = "small"
             />
         )
     },
     {
-        field: 'acciones',
-        headerName: 'Acciones',
+        field: t('common.actions'),
+        headerName: t('common.actions'),
         width: 80,
         sortable: false,
         renderCell:({ row }) =>(
@@ -106,15 +107,15 @@ return(
 
     <Box>
         <Typography variant = "h4" gutterBottom textAlign = 'center'>
-            Gestión de empleados
+            {t('employees.title')}
         </Typography>
 
          {/* Barra de busqueda */}
     <Paper sx ={{ p: 2, mb: 3, mt: 2}}>
         <Box sx ={{ display: 'flex', gap: 2, alignItems: 'center'}}>
             <TextField
-            label = "Buscar empleado"
-            placeholder ="Nombre, codigo, email o departamento..."
+            label = {t('employees.search')}
+            placeholder = {t('employees.searchPlaceholder')}
             value = {searchText}
             onChange ={(e) => setSearchText(e.target.value)}
             onKeyDown ={(e) => e.key === 'Enter' && handleSearch()}
@@ -129,13 +130,13 @@ return(
             }}
             />
             <Button variant = "contained" onClick = {handleSearch}>
-                Buscar
+                {t('common.search')}
             </Button>
             <Button
             variant = "outlined"
             onClick={() => {setSearchText(''); setRows(allRows);}}
             >
-                Limpiar
+                {t('common.clear')}
             </Button>
         </Box>
     </Paper>
@@ -166,7 +167,7 @@ return(
     maxWidth = "sm"
     fullWidth
     >
-        <DialogTitle>Detalle del empleado</DialogTitle>
+        <DialogTitle>{t('employees.detail.title')}</DialogTitle>
         <DialogContent>
             {detailLoading?(
                 <Box display = "flex" justifyContent = "center" py = {4}>
@@ -175,54 +176,54 @@ return(
             ): selectedEmployee?(
                 <Box sx ={{display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1}}>
                     <Typography>
-                        <strong>Código:</strong>{selectedEmployee.employeeCode}
+                        <strong>{t('employees.detail.code')}:</strong>{selectedEmployee.employeeCode}
                     </Typography>
                     <Typography>
-                        <strong>Nombre:</strong>{selectedEmployee.fullName}
+                        <strong>{t('employees.detail.name')}:</strong>{selectedEmployee.fullName}
                     </Typography>
                     <Typography>
                         <Email fontSize = "small" sx = {{verticalAlign: 'middle', mr: 0.5}}/>
-                        <strong>Email:</strong>{selectedEmployee.email}
+                        <strong>{t('employees.detail.email')}:</strong>{selectedEmployee.email}
                     </Typography>
                     <Typography>
                         <Business fontSize = "small" sx = {{verticalAlign: 'middle', mr: 0.5}}/>
-                        <strong>Empresa:</strong>{selectedEmployee.company || '-'}
+                        <strong>{t('employees.detail.company')}:</strong>{selectedEmployee.company || '-'}
                     </Typography>
                     <Typography>
-                        <strong>Unidad de negocio:</strong>{selectedEmployee.businessUnit || '-'}
+                        <strong>{t('employees.detail.businessUnit')}:</strong>{selectedEmployee.businessUnit || '-'}
                     </Typography>
                     <Typography>
-                        <strong>Departamento:</strong>{selectedEmployee.department || '-'}
+                        <strong>{t('employees.detail.department')}:</strong>{selectedEmployee.department || '-'}
                     </Typography>
                     <Typography>
-                        <strong>Estado:</strong>{''}
+                        <strong>{t('employees.columns.status')}:</strong>{''}
                         <Chip
-                        label = {selectedEmployee.isActive?'Activo' : 'Inactivo'}
+                        label = {selectedEmployee.isActive?t('common.status.active') : t('common.status.inactive')}
                         color = {selectedEmployee.isActive?'success' : 'default'}
                         size = "small"
                         />
                     </Typography>
                     <Typography>
-                        <strong>Fecha de alta:</strong>{''}
+                        <strong>{t('employees.detail.startDate')}:</strong>{''}
                         {selectedEmployee.startDate
                         ? toLocalDate(selectedEmployee.startDate).toLocaleDateString('es-ES')
                         :'-'}
                     </Typography>
                      {selectedEmployee.endDate &&(
                     <Typography>
-                        <strong>Fecha de baja:</strong>{''}
+                        <strong>{t('employees.detail.endDate')}:</strong>{''}
                         {toLocalDate(selectedEmployee.endDate).toLocaleDateString('es-ES')}
                     </Typography>
                     )}
                     
                 </Box>
             ) : (
-                <Typography>No se pudo cargar el detalle</Typography>
+                <Typography>{t('employees.detail.noDetails')}</Typography>
             )}
         </DialogContent>
         <DialogActions>
             <Button onClick = {() => { setDetailOpen(false); setSelectedEmployee(null); }}>
-                Cerrar
+                {t('common.close')}
             </Button>
         </DialogActions>
     </Dialog>

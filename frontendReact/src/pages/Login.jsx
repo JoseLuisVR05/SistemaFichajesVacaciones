@@ -2,6 +2,7 @@ import { useState } from 'react'; // manejar estado local en el componente
 import { useNavigate } from 'react-router-dom';// para redirigir al usuario después del login
 import { TextField, Button, Box, Alert, Typography } from '@mui/material';// componentes de la biblioteca MUI para construir la interfaz de usuario
 import { useAuth } from '../context/AuthContext';// para acceder al contexto de autenticación
+import { useTranslation } from 'react-i18next'; // para traducción de textos
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,13 +11,15 @@ export default function Login() {
   const { login } = useAuth();// Accede a la función de login del contexto de autenticación
   const navigate = useNavigate(); // Hook para redirigir al usuario
 
+  const { t } = useTranslation(); // Hook para traducción de textos
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await login(email, password);
       navigate('/dashboard'); // Redirige al usuario al dashboard después del login exitoso
     } catch (err) {
-      setError('Credenciales inválidas');
+      setError(t('login.error'));
     }
   };
 
@@ -64,7 +67,7 @@ export default function Login() {
               letterSpacing: 0.5
             }}
           >
-          Iniciar Sesión
+            {t('login.title')}
           </Typography>
         </Box>
 
@@ -82,7 +85,7 @@ export default function Login() {
                   fontWeight: '500',
                 }}
                 >
-                Email
+                {t('login.email')}
               </Typography> 
               <TextField
                 id = "Email"
@@ -112,7 +115,7 @@ export default function Login() {
                   fontWeight: '500',
                 }}
                 >
-                Contraseña
+                {t('login.password')}
               </Typography> 
                 <TextField
                   id='password'
@@ -146,7 +149,7 @@ export default function Login() {
                 fontWeight: 'bold'
               }}
               >
-              Entrar
+              {t('login.submit')}
             </Button>
           </form>
         </Box>

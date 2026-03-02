@@ -4,6 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Typography
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 export function RejectCorrectionDialog({ open, onClose, onSubmit, correction }) {
   const [reason, setReason] = useState('');
@@ -21,6 +22,9 @@ export function RejectCorrectionDialog({ open, onClose, onSubmit, correction }) 
     }
   };
 
+  // Traducción
+  const { t } = useTranslation();
+
   const handleClose = () => {
     setReason('');
     onClose();
@@ -32,26 +36,25 @@ export function RejectCorrectionDialog({ open, onClose, onSubmit, correction }) 
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Rechazar corrección</DialogTitle>
+      <DialogTitle>{t('corrections.reject.title')}</DialogTitle>
       <DialogContent>
         <Typography sx={{ mb: 2, mt: 1 }}>
-          Indica el motivo del rechazo para la corrección del{' '}
-          <strong>{dateFormatted}</strong>:
+          {t('corrections.reject.description', { date: dateFormatted })}
         </Typography>
         <TextField
-          label="Motivo del rechazo" value={reason}
+          label={t('corrections.reject.reason')} value={reason}
           onChange={e => setReason(e.target.value)}
           multiline rows={3} required fullWidth autoFocus
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button
           variant="contained" color="error"
           onClick={handleSubmit}
           disabled={saving || !reason.trim()}
         >
-          Confirmar rechazo
+          {t('corrections.reject.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

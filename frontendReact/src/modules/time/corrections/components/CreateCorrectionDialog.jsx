@@ -5,6 +5,7 @@ import {
   Button, TextField, Box
 } from '@mui/material';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 const EMPTY_FORM = {
   date: format(new Date(), 'yyyy-MM-dd'),
@@ -19,6 +20,9 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
     date: initialDate || EMPTY_FORM.date,
   });
   const [saving, setSaving] = useState(false);
+
+  // Traducción
+  const { t } = useTranslation();
 
   const handleSubmit = async () => {
     if (!form.reason.trim()) return;
@@ -43,43 +47,43 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Nueva solicitud de corrección</DialogTitle>
+      <DialogTitle>{t('corrections.create.title')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField
-            label="Fecha del fichaje" type="date" value={form.date}
+            label={t('corrections.create.date')} type="date" value={form.date}
             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
             InputLabelProps={{ shrink: true }} fullWidth
           />
           <TextField
-            label="Minutos originales registrados" type="number"
+            label={t('corrections.create.originalMinutes')} type="number"
             value={form.originalMinutes}
             onChange={e => setForm(f => ({ ...f, originalMinutes: e.target.value }))}
-            helperText="Minutos trabajados que figuran actualmente" fullWidth
+            helperText={t('corrections.create.originalMinutesHelper')} fullWidth
           />
           <TextField
-            label="Minutos corregidos (reales)" type="number"
+            label={t('corrections.create.correctedMinutes')} type="number"
             value={form.correctedMinutes}
             onChange={e => setForm(f => ({ ...f, correctedMinutes: e.target.value }))}
-            helperText="Minutos que deberían figurar" fullWidth
+            helperText={t('corrections.create.correctedMinutesHelper')} fullWidth
           />
           <TextField
-            label="Motivo de la corrección" value={form.reason}
+            label={t('corrections.create.reason')} value={form.reason}
             onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
             multiline rows={3} required
-            placeholder="Ej: Olvidé fichar la salida, salí a las 18:00"
+            placeholder={t('corrections.create.reasonPlaceholder')}
             fullWidth
           />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button onClick={handleClose}>{t('common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
           disabled={saving || !form.reason.trim()}
         >
-          Enviar solicitud
+          {t('corrections.create.submit')}
         </Button>
       </DialogActions>
     </Dialog>

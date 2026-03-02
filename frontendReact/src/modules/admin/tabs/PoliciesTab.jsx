@@ -8,6 +8,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { getPolicies, createPolicy, updatePolicy, deletePolicy } from '../../../services/vacationsService';
 import { ConfirmDialog, LoadingSpinner } from '../../../components/ui';
+import { useTranslation } from 'react-i18next';
 
 const EMPTY_POLICY = {
   name: '',
@@ -25,6 +26,8 @@ export function PoliciesTab({ showSnack }) {
   const [form, setForm]             = useState(EMPTY_POLICY);
   const [saving, setSaving]         = useState(false);
   const [deleteId, setDeleteId]     = useState(null);
+  
+  const { t } = useTranslation();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,21 +89,21 @@ export function PoliciesTab({ showSnack }) {
   };
 
   const columns = [
-    { field: 'name',             headerName: 'Nombre',        flex: 1 },
-    { field: 'year',             headerName: 'Año',           width: 80 },
-    { field: 'accrualType',      headerName: 'Tipo',          width: 110 },
-    { field: 'totalDaysPerYear', headerName: 'Días/Año',      width: 100 },
-    { field: 'carryOverMaxDays', headerName: 'Arrastre máx',  width: 120 },
+    { field: 'name',             headerName: t('admin.policies.columns.name'),        flex: 1 },
+    { field: 'year',             headerName: t('admin.policies.columns.year'),           width: 80 },
+    { field: 'accrualType',      headerName: t('admin.policies.columns.type'),           width: 110 },
+    { field: 'totalDaysPerYear', headerName: t('admin.policies.columns.daysPerYear'),      width: 100 },
+    { field: 'carryOverMaxDays', headerName: t('admin.policies.columns.carryOver'),  width: 120 },
     {
-      field: 'acciones', headerName: 'Acciones', width: 110, sortable: false,
+      field: 'acciones', headerName: t('common.actions'), width: 110, sortable: false,
       renderCell: ({ row }) => (
         <>
-          <Tooltip title="Editar">
+          <Tooltip title={t('common.edit')}>
             <IconButton size="small" onClick={() => openEdit(row)}>
               <Edit fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Eliminar">
+          <Tooltip title={t('common.delete')}>
             <IconButton size="small" color="error" onClick={() => setDeleteId(row.id)}>
               <Delete fontSize="small" />
             </IconButton>
@@ -114,7 +117,7 @@ export function PoliciesTab({ showSnack }) {
     <>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
-          Nueva Política
+          {t('admin.policies.new')}
         </Button>
       </Box>
 
@@ -133,38 +136,38 @@ export function PoliciesTab({ showSnack }) {
 
       {/* Dialog crear/editar */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editing ? 'Editar Política' : 'Nueva Política'}</DialogTitle>
+        <DialogTitle>{editing ? t('admin.policies.form.title_edit') : t('admin.policies.form.title_create')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="Nombre" value={form.name} fullWidth required
+              label={t('admin.policies.form.name')} value={form.name} fullWidth required
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
             />
             <TextField
-              label="Año" type="number" value={form.year} fullWidth required
+              label={t('admin.policies.form.year')} type="number" value={form.year} fullWidth required
               onChange={e => setForm(f => ({ ...f, year: +e.target.value }))}
             />
             <TextField
-              select label="Tipo devengo" value={form.accrualType} fullWidth
+              select label={t('admin.policies.form.accrualType')} value={form.accrualType} fullWidth
               onChange={e => setForm(f => ({ ...f, accrualType: e.target.value }))}
             >
-              <MenuItem value="ANNUAL">Anual</MenuItem>
-              <MenuItem value="MONTHLY">Mensual</MenuItem>
+              <MenuItem value="ANNUAL">{t('admin.policies.form.annual')}</MenuItem>
+              <MenuItem value="MONTHLY">{t('admin.policies.form.monthly')}</MenuItem>
             </TextField>
             <TextField
-              label="Días por año" type="number" value={form.totalDaysPerYear} fullWidth required
+              label={t('admin.policies.form.daysPerYear')} type="number" value={form.totalDaysPerYear} fullWidth required
               onChange={e => setForm(f => ({ ...f, totalDaysPerYear: +e.target.value }))}
             />
             <TextField
-              label="Días de arrastre máx." type="number" value={form.carryOverMaxDays} fullWidth required
+              label={t('admin.policies.form.carryOverMax')} type="number" value={form.carryOverMaxDays} fullWidth required
               onChange={e => setForm(f => ({ ...f, carryOverMaxDays: +e.target.value }))}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? <CircularProgress size={18} /> : 'Guardar'}
+            {saving ? <CircularProgress size={18} /> : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -174,9 +177,9 @@ export function PoliciesTab({ showSnack }) {
         open={Boolean(deleteId)}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Confirmar eliminación"
-        description="¿Seguro que deseas eliminar esta política? No podrá recuperarse."
-        confirmLabel="Eliminar"
+        title={t('admin.policies.delete.title')}
+        description={t('admin.policies.delete.description')}
+        confirmLabel={t('common.delete')}
         confirmColor="error"
       />
     </>

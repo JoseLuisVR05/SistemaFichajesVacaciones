@@ -3,6 +3,7 @@ import { IconButton, Badge } from '@mui/material';
 import { Menu as MenuIcon, ChevronLeft,ChevronRight, Notifications as NotificationsIcon } from '@mui/icons-material';
 import { UserMenu } from './UserMenu';
 import styles from './Header.module.css';
+import { LanguageSelector } from './LanguageSelector';
 
 /**
  * Header Component
@@ -33,9 +34,11 @@ export function Header({ onMenuClick , onToggleCollapse, isCollapsed }) {
             <NotificationsIcon />
           </Badge>
         </IconButton>
+        <LanguageSelector />
 
         {/* Menú de usuario */}
         <UserMenu />
+      
       </div>
     </header>
   );

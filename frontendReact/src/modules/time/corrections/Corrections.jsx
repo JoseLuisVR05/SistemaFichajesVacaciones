@@ -21,6 +21,7 @@ import { CreateCorrectionDialog }   from './components/CreateCorrectionDialog';
 import { EditCorrectionDialog }     from './components/EditCorrectionDialog';
 import { RejectCorrectionDialog }   from './components/RejectCorrectionDialog';
 import { SnackbarAlert }           from '../../../components/ui/SnackbarAlert/SnackbarAlert';
+import { useTranslation } from 'react-i18next';
 
 export default function Corrections() {
   const { user }  = useAuth();
@@ -35,6 +36,10 @@ export default function Corrections() {
   const [toDate, setToDate]               = useState(format(new Date(), 'yyyy-MM-dd'));
   const [statusFilter, setStatusFilter]   = useState('ALL');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  // traducción
+
+  const { t } = useTranslation();
 
   // ── Dialogs ───────────────────────────────────────────────────────────────
   const [createOpen, setCreateOpen]   = useState(false);
@@ -132,13 +137,13 @@ export default function Corrections() {
     <Box>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Box width={140} visibility="hidden">
-          <Button variant="contained" startIcon={<Add />}>Nueva</Button>
+          <Button variant="contained" startIcon={<Add />}>{t('corrections.newRequest')}</Button>
         </Box>
-        <Typography variant="h4">Correcciones de Fichajes</Typography>
+        <Typography variant="h4">{t('corrections.title')}</Typography>
         <Tooltip title={activeTab === 1 ? 'Solo puedes solicitar correcciones propias' : ''}>
           <span>
             <Button variant="contained" startIcon={<Add />} onClick={() => setCreateOpen(true)}>
-              Nueva solicitud
+              {t('corrections.newRequest')}
             </Button>
           </span>
         </Tooltip>
@@ -150,8 +155,8 @@ export default function Corrections() {
           onChange={(_, v) => setActiveTab(v)}
           sx={{ mb: 1 }}
         >
-          <Tab label="Mis solicitudes" />
-          <Tab label="Gestión (equipo)" />
+          <Tab label={t('corrections.tabs.mine')} />
+          <Tab label={t('corrections.tabs.management')} />
         </Tabs>
       )}
 

@@ -9,6 +9,8 @@ import { StatusChip, LoadingSpinner } from '../../../../components/ui';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
+import { useTranslation } from 'react-i18next';
+import { t } from 'i18next';
 
 const formatMinutes = (mins) => {
   if (mins == null) return '-';
@@ -20,27 +22,27 @@ const formatMinutes = (mins) => {
 // Columnas base compartidas entre los dos modos
 const baseColumns = [
   {
-    field: 'date', headerName: 'Fecha', width: 110,
+    field: 'date', headerName: t('corrections.columns.date'), width: 110,
     renderCell: ({ value }) =>
       value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : '-',
   },
   {
-    field: 'originalMinutes', headerName: 'Min. originales', width: 130,
+    field: 'originalMinutes', headerName: t('corrections.columns.originalMinutes'), width: 130,
     renderCell: ({ value }) => formatMinutes(value),
   },
   {
-    field: 'correctedMinutes', headerName: 'Min. corregidos', width: 130,
+    field: 'correctedMinutes', headerName: t('corrections.columns.correctedMinutes'), width: 130,
     renderCell: ({ value }) => formatMinutes(value),
   },
   {
-    field: 'reason', headerName: 'Motivo', flex: 1, minWidth: 200,
+    field: 'reason', headerName: t('corrections.columns.reason'), flex: 1, minWidth: 200,
   },
   {
-    field: 'status', headerName: 'Estado', width: 120,
+    field: 'status', headerName: t('common.statusLabel'), width: 120,
     renderCell: ({ value }) => <StatusChip status={value} />,
   },
   {
-    field: 'createdAt', headerName: 'Creado', width: 140,
+    field: 'createdAt', headerName: t('corrections.columns.created'), width: 140,
     renderCell: ({ value }) =>
       value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
   },
@@ -63,14 +65,16 @@ export function CorrectionTable({
   onApprove,
   onReject,
 }) {
+
+  const { t } = useTranslation();
   const actionsColumn = {
     field: 'acciones',
-    headerName: 'Acciones',
+    headerName: t('common.actions'),
     width: mode === 'management' ? 160 : 160,
     sortable: false,
     renderCell: ({ row }) => (
       <Box>
-        <Tooltip title="Ver detalle">
+        <Tooltip title={t('common.view')}>
           <IconButton size="small" onClick={() => onView(row)}>
             <Visibility fontSize="small" />
           </IconButton>
@@ -79,12 +83,13 @@ export function CorrectionTable({
         {/* Modo propio: editar y cancelar si está pendiente */}
         {mode === 'own' && row.status === 'PENDING' && (
           <>
-            <Tooltip title="Editar solicitud">
+            <Tooltip title={t('common.edit')}>
               <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
                 <Edit fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Cancelar solicitud">
+            <Tooltip title={t('corrections.delete.confirm')}>
+
               <IconButton size="small" color="error" onClick={() => onDelete(row)}>
                 <DeleteForever fontSize="small" />
               </IconButton>
@@ -95,12 +100,13 @@ export function CorrectionTable({
         {/* Modo gestión: aprobar y rechazar si está pendiente */}
         {mode === 'management' && row.status === 'PENDING' && (
           <>
-            <Tooltip title="Aprobar">
+            <Tooltip title={t('common.status.approved')}>
               <IconButton size="small" color="success" onClick={() => onApprove(row.id)}>
                 <CheckCircle fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Rechazar">
+            <Tooltip title={t('common.status.rejected')}>
+
               <IconButton size="small" color="error" onClick={() => onReject(row)}>
                 <Cancel fontSize="small" />
               </IconButton>
@@ -113,7 +119,7 @@ export function CorrectionTable({
 
   const columns = [
     ...(mode === 'management'
-      ? [{ field: 'employeeName', headerName: 'Empleado', width: 180 }]
+      ? [{ field: 'employeeName', headerName: t('corrections.columns.employee'), width: 180 }]
       : []
     ),
     ...baseColumns,

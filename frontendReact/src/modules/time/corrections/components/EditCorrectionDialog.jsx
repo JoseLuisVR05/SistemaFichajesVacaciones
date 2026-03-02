@@ -1,5 +1,6 @@
 // EditCorrectionDialog.jsx
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Alert
@@ -8,6 +9,9 @@ import {
 export function EditCorrectionDialog({ open, onClose, onSubmit, correction }) {
   const [form, setForm] = useState({ correctedMinutes: '', reason: '' });
   const [saving, setSaving] = useState(false);
+
+  // Traducción
+  const { t } = useTranslation();
 
   // Sincronizar form cuando cambia la corrección seleccionada
   useEffect(() => {
@@ -39,33 +43,33 @@ export function EditCorrectionDialog({ open, onClose, onSubmit, correction }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Editar solicitud de corrección</DialogTitle>
+      <DialogTitle>{t('corrections.create.title')}</DialogTitle>
       <DialogContent>
         <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
-          Editando la corrección del <strong>{dateFormatted}</strong>
+           <strong>{dateFormatted}</strong>
         </Alert>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label="Minutos corregidos (reales)" type="number"
+            label={t('corrections.edit.correctedMinutes')} type="number"
             value={form.correctedMinutes}
             onChange={e => setForm(f => ({ ...f, correctedMinutes: e.target.value }))}
-            helperText="Minutos que deberían figurar" fullWidth required
+            helperText={t('corrections.edit.correctedMinutesHelper')} fullWidth required
           />
           <TextField
-            label="Motivo actualizado" value={form.reason}
+            label={t('corrections.edit.reason')} value={form.reason}
             onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
             multiline rows={3} required fullWidth
           />
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit}
           disabled={saving || !form.reason.trim()}
         >
-          Guardar cambios
+          {t('corrections.edit.save')}
         </Button>
       </DialogActions>
     </Dialog>

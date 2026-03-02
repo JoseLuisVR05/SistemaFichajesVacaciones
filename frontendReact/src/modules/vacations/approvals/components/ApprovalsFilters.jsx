@@ -4,6 +4,7 @@ import {
   Button, CircularProgress, Autocomplete,
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 /**
  * ApprovalsFilters
@@ -18,6 +19,7 @@ export function ApprovalsFilters({
   employees, loadingEmployees, departments,
   onSearch,
 }) {
+  const { t } = useTranslation();
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -29,7 +31,7 @@ export function ApprovalsFilters({
           loading={loadingEmployees}
           size="small" sx={{ minWidth: 250 }}
           renderInput={(params) => (
-            <TextField {...params} label="Empleado" placeholder="Buscar empleado..."
+            <TextField {...params} label={t('vacations.approvals.columns.employee')} placeholder={t('employees.search')}
               InputProps={{ ...params.InputProps,
                 endAdornment: (
                   <>
@@ -42,35 +44,35 @@ export function ApprovalsFilters({
           )}
         />
         <TextField
-          select label="Estado" value={statusFilter}
+          select label={t('common.statusLabel')} value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
           size="small" sx={{ minWidth: 140 }}
         >
-          <MenuItem value="ALL">Todos</MenuItem>
-          <MenuItem value="SUBMITTED">Pendientes</MenuItem>
-          <MenuItem value="APPROVED">Aprobadas</MenuItem>
-          <MenuItem value="REJECTED">Rechazadas</MenuItem>
+          <MenuItem value="ALL">{t('common.status.all')}</MenuItem>
+          <MenuItem value="SUBMITTED">{t('common.status.submitted')}</MenuItem>
+          <MenuItem value="APPROVED">{t('common.status.approved')}</MenuItem>
+          <MenuItem value="REJECTED">{t('common.status.rejected')}</MenuItem>
         </TextField>
         <TextField
-          label="Desde" type="date" value={fromDate}
+          label={t('vacations.approvals.columns.from')} type="date" value={fromDate}
           onChange={(e) => onFromDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
         />
         <TextField
-          label="Hasta" type="date" value={toDate}
+          label={t('vacations.approvals.columns.to')} type="date" value={toDate}
           onChange={(e) => onToDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
         />
         <TextField
-          select label="Departamento" value={departmentFilter}
+          select label={t('employees.columns.department')} value={departmentFilter}
           onChange={(e) => onDepartmentFilterChange(e.target.value)}
           size="small" sx={{ minWidth: 160 }}
         >
-          <MenuItem value="ALL">Todos</MenuItem>
+          <MenuItem value="ALL">{t('common.status.all')}</MenuItem>
           {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
         </TextField>
         <Button variant="contained" startIcon={<Search />} onClick={onSearch}>
-          Buscar
+          {t('common.search')}
         </Button>
       </Box>
     </Paper>

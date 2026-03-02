@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
 import { Grid } from '@mui/material';
+import { t } from 'i18next';
 
 /**
  * RequestForm
@@ -29,6 +30,7 @@ export function RequestForm({
   onSaveDraft,
   onCancel,
 }) {
+  
   return (
     <Grid container spacing={3} sx={{ mb: 3 }}>
 
@@ -36,11 +38,11 @@ export function RequestForm({
       <Grid item xs={12} md={7} size={7}>
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" fontWeight="600" gutterBottom textAlign="center">
-            Nueva solicitud
+            {t('vacations.form.title')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Fecha inicio"
+              label={t('vacations.form.startDate')}
               type="date"
               value={form.startDate}
               onChange={e => onFormChange(prev => ({ ...prev, startDate: e.target.value }))}
@@ -48,7 +50,7 @@ export function RequestForm({
               fullWidth
             />
             <TextField
-              label="Fecha fin"
+              label={t('vacations.form.endDate')}
               type="date"
               value={form.endDate}
               onChange={e => onFormChange(prev => ({ ...prev, endDate: e.target.value }))}
@@ -57,23 +59,23 @@ export function RequestForm({
             />
             <TextField
               select
-              label="Tipo"
+              label={t('vacations.form.type')}
               value={form.type}
               onChange={e => onFormChange(prev => ({ ...prev, type: e.target.value }))}
               fullWidth
             >
-              <MenuItem value="VACATION">Vacaciones</MenuItem>
-              <MenuItem value="PERSONAL">Asuntos personales</MenuItem>
-              <MenuItem value="OTHER">Otro</MenuItem>
+              <MenuItem value="VACATION">{t('vacations.form.types.vacation')}</MenuItem>
+              <MenuItem value="PERSONAL">{t('vacations.form.types.personal')}</MenuItem>
+              <MenuItem value="OTHER">{t('vacations.form.types.other')}</MenuItem>
             </TextField>
             <TextField
-              label="Comentario (opcional)"
+              label={t('vacations.form.comment')}
               value={form.comment}
               onChange={e => onFormChange(prev => ({ ...prev, comment: e.target.value }))}
               multiline
               rows={3}
               fullWidth
-              placeholder="Ej: Viaje familiar..."
+              placeholder={t('vacations.form.commentPlaceholder')}
             />
 
             <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
@@ -83,17 +85,17 @@ export function RequestForm({
                 disabled={!validation?.isValid || creating}
                 startIcon={creating ? <CircularProgress size={16} /> : <Send />}
               >
-                Enviar
+                {t('vacations.form.submit')}
               </Button>
               <Button
                 variant="outlined"
                 onClick={onSaveDraft}
                 disabled={!validation?.isValid || creating}
               >
-                Guardar borrador
+                {t('vacations.form.saveDraft')}
               </Button>
               <Button onClick={onCancel}>
-                Cancelar
+                {t('common.cancel')}
               </Button>
             </Box>
           </Box>
@@ -104,7 +106,7 @@ export function RequestForm({
       <Grid item xs={12} md={5} size={5}>
         <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fafafa' }}>
           <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-            Cálculo automático
+            {t('vacations.form.calculation.title')}
           </Typography>
 
           {validating && (
@@ -113,20 +115,20 @@ export function RequestForm({
 
           {!validation && !validating && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Selecciona las fechas para ver el cálculo.
+              {t('vacations.form.calculation.hint')}
             </Typography>
           )}
 
           {validation && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">Días laborables solicitados:</Typography>
+                <Typography variant="body2">{t('vacations.form.calculation.workingDays')}</Typography>
                 <Typography variant="body2" fontWeight="600">
                   {validation.workingDays}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">Días disponibles:</Typography>
+                <Typography variant="body2">{t('vacations.form.calculation.availableDays')}</Typography>
                 <Typography variant="body2" fontWeight="600">
                   {validation.availableDays}
                 </Typography>
@@ -134,7 +136,7 @@ export function RequestForm({
               <Divider />
               {validation.isValid && (
                 <Alert severity="success" sx={{ py: 0.5 }}>
-                  Fechas válidas ✓
+                  {t('vacations.form.calculation.valid')}
                 </Alert>
               )}
               {validation.errors?.map((err, i) => (

@@ -10,6 +10,7 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import { StatusChip, SnackbarAlert } from '../../../components/ui';
 import { ApprovalsFilters } from './components/ApprovalsFilters';
 import { ApprovalsTable }  from './components/ApprovalsTable';
+import { useTranslation } from 'react-i18next';
 
 export default function VacationApprovals() {
   const {
@@ -22,6 +23,8 @@ export default function VacationApprovals() {
     employees, loadingEmployees, departments,
     loadData, approve, reject,
   } = useVacationApprovals();
+
+  const { t } = useTranslation();
 
   const { snackbar, showSnack, closeSnack } = useSnackbar();
 
@@ -60,7 +63,7 @@ export default function VacationApprovals() {
   return (
     <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
-        Bandeja de Aprobaciones
+        {t('vacations.approvals.title')}
       </Typography>
 
       <ApprovalsFilters
@@ -87,49 +90,49 @@ export default function VacationApprovals() {
 
       {/* Dialog: Rechazar */}
       <Dialog open={rejectOpen} onClose={() => setRejectOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Rechazar solicitud</DialogTitle>
+        <DialogTitle>{t('vacations.approvals.reject.title')}</DialogTitle>
         <DialogContent>
           <TextField
-            label="Motivo del rechazo" value={rejectComment}
+            label={t('vacations.approvals.reject.reason')} value={rejectComment}
             onChange={(e) => setRejectComment(e.target.value)}
             multiline rows={3} required fullWidth autoFocus sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => { setRejectOpen(false); setRejectComment(''); }}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button variant="contained" color="error" onClick={handleReject}>
-            Confirmar rechazo
+            {t('vacations.approvals.reject.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Dialog: Detalle */}
       <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Detalle de solicitud</DialogTitle>
+        <DialogTitle>{t('vacations.approvals.detail')}</DialogTitle>
         <DialogContent>
           {selectedRow && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-              <Typography><strong>Empleado:</strong> {selectedRow.employeeName}</Typography>
-              <Typography><strong>Desde:</strong> {selectedRow.startFormatted}</Typography>
-              <Typography><strong>Hasta:</strong> {selectedRow.endFormatted}</Typography>
-              <Typography><strong>Días:</strong> {selectedRow.requestedDays}</Typography>
-              <Typography><strong>Tipo:</strong> {selectedRow.type}</Typography>
+              <Typography><strong>{t('vacations.approvals.columns.employee')}:</strong> {selectedRow.employeeName}</Typography>
+              <Typography><strong>{t('vacations.approvals.columns.from')}:</strong> {selectedRow.startFormatted}</Typography>
+              <Typography><strong>{t('vacations.approvals.columns.to')}:</strong> {selectedRow.endFormatted}</Typography>
+              <Typography><strong>{t('vacations.approvals.columns.days')}:</strong> {selectedRow.requestedDays}</Typography>
+              <Typography><strong>{t('vacations.table.type')}:</strong> {selectedRow.type}</Typography>
               <Typography component="div">
-                <strong>Estado:</strong>{' '}
+                <strong>{t('common.statusLabel')}:</strong>{' '}
                 <StatusChip status={selectedRow.status} />
               </Typography>
               {selectedRow.approverComment && (
                 <Alert severity="info">
-                  <strong>Comentario:</strong> {selectedRow.approverComment}
+                  <strong>{t('vacations.approvals.columns.comment')}:</strong> {selectedRow.approverComment}
                 </Alert>
               )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
+          <Button onClick={() => setDetailOpen(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
 

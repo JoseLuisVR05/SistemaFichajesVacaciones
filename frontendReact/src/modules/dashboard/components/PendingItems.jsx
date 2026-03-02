@@ -1,5 +1,6 @@
 // src/pages/dashboard/PendingItems.jsx
 import { Box, Paper, Typography, Chip } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 /**
  * PendingItems
@@ -9,15 +10,16 @@ import { Box, Paper, Typography, Chip } from '@mui/material';
  * @param {number} pendingApprovals    - Solicitudes de vacaciones pendientes
  */
 export function PendingItems({ pendingCorrections, pendingApprovals }) {
+  const { t } = useTranslation();
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" fontWeight="600" gutterBottom>
-        Pendientes
+        {t('dashboard.pending.title')}
       </Typography>
       <Box sx={{ mt: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2">
-            • Mis correcciones pendientes
+            {t('dashboard.pending.myCorrections')}
           </Typography>
           <Chip
             label={pendingCorrections}
@@ -27,7 +29,7 @@ export function PendingItems({ pendingCorrections, pendingApprovals }) {
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2">
-            • Mis aprobaciones de vacaciones pendientes
+            {t('dashboard.pending.myVacations')}
           </Typography>
           <Chip
             label={pendingApprovals}

@@ -7,6 +7,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Refresh } from '@mui/icons-material';
 import { getEmployees, toggleEmployeeActive } from '../../../services/employeesService';
 import { StatusChip, LoadingSpinner } from '../../../components/ui';
+import { useTranslation } from 'react-i18next';
+import { common } from '@mui/material/colors';
 
 export function EmployeesTab({ showSnack }) {
   const [rows, setRows]       = useState([]);
@@ -14,6 +16,7 @@ export function EmployeesTab({ showSnack }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
 
+  const { t } = useTranslation();
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,28 +57,26 @@ export function EmployeesTab({ showSnack }) {
   };
 
   const columns = [
-    { field: 'employeeCode', headerName: 'Código',       width: 110 },
-    { field: 'fullName',     headerName: 'Nombre',       flex: 1, minWidth: 200 },
-    { field: 'department',   headerName: 'Departamento', width: 160 },
-    { field: 'company',      headerName: 'Empresa',      width: 130 },
+    { field: 'employeeCode', headerName: t('employees.columns.code'),       width: 110 },
+    { field: 'fullName',     headerName: t('employees.columns.name'),       flex: 1, minWidth: 200 },
+    { field: 'department',   headerName: t('employees.columns.department'), width: 160 },
+    { field: 'company',      headerName: t('employees.columns.company'),      width: 130 },
     {
-      field: 'isActive', headerName: 'Estado', width: 110,
+      field: 'isActive', headerName: t('employees.columns.status'), width: 110,
       // ✅ StatusChip en lugar del Chip manual
       renderCell: ({ value }) => <StatusChip status={value} />,
     },
     {
-      field: 'acciones', headerName: 'Acción', width: 150, sortable: false,
+      field: 'acciones', headerName: t('common.actions'), width: 150, sortable: false,
       renderCell: ({ row }) => (
-        <Tooltip title={row.isActive ? 'Marcar Inactivo' : 'Marcar Activo'}>
           <Button
             size="small"
             variant="outlined"
             color={row.isActive ? 'error' : 'success'}
             onClick={() => handleToggle(row.id)}
           >
-            {row.isActive ? 'Desactivar' : 'Activar'}
-          </Button>
-        </Tooltip>
+            {row.isActive ? t('common.status.desactivate') : t('common.status.activate')}
+          </Button>        
       ),
     },
   ];
@@ -85,21 +86,21 @@ export function EmployeesTab({ showSnack }) {
       <Paper sx={{ p: 2, mb: 2 }}>
         <Box display="flex" gap={2}>
           <TextField
-            label="Buscar empleado" value={search}
+            label={t('employees.search')} value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             size="small" sx={{ flex: 1 }}
           />
           <Button variant="contained" onClick={handleSearch}>
-            Buscar
+            {t('common.search')}
           </Button>
           <Button
             variant="outlined"
             onClick={() => { setSearch(''); setRows(allRows); }}
           >
-            Limpiar
+            {t('common.clear')}
           </Button>
-          <Tooltip title="Recargar">
+          <Tooltip title={t('common.refresh')}>
             <IconButton onClick={load}><Refresh /></IconButton>
           </Tooltip>
         </Box>

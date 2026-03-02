@@ -2,6 +2,7 @@
 
 // ─── Imports de React ──────────────────────────────────────────────────────
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // ─── Imports de MUI ───────────────────────────────────────────────────────
 import {
@@ -22,6 +23,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { StatusChip, SnackbarAlert } from '../../../components/ui';
 
+
 // ─── Subcomponentes ────────────────────────────────────────────────────────
 import { BalanceCards }   from './components/BalanceCards';
 import { RequestForm }    from './components/RequestForm';
@@ -33,6 +35,7 @@ const EMPTY_FORM = { startDate: '', endDate: '', type: 'VACATION', comment: '' }
 export default function VacationRequests() {
   const { user } = useAuth();
   const { snackbar, showSnack, closeSnack } = useSnackbar();
+  const { t } = useTranslation();
 
   // ── Tabs ─────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState(0);
@@ -151,7 +154,7 @@ export default function VacationRequests() {
   return (
     <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
-        Vacaciones
+        {t('vacations.title')}
       </Typography>
 
       {/* Tarjetas de saldo */}
@@ -160,8 +163,8 @@ export default function VacationRequests() {
       {/* Tabs */}
       <Paper sx={{ px: 2, mb: 3 }}>
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-          <Tab icon={<Add />} iconPosition="start" label="Nueva solicitud" />
-          <Tab icon={<History />} iconPosition="start" label="Mis solicitudes" />
+          <Tab icon={<Add />} iconPosition="start" label={t('vacations.tabs.new')} />
+          <Tab icon={<History />} iconPosition="start" label={t('vacations.tabs.history')} />
         </Tabs>
       </Paper>
 
@@ -195,28 +198,28 @@ export default function VacationRequests() {
 
       {/* Dialog de detalle */}
       <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Detalle de solicitud</DialogTitle>
+        <DialogTitle>{t('vacations.approvals.detail')}</DialogTitle>
         <DialogContent>
           {selectedRow && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-              <Typography><strong>Desde:</strong> {selectedRow.startFormatted}</Typography>
-              <Typography><strong>Hasta:</strong> {selectedRow.endFormatted}</Typography>
-              <Typography><strong>Días laborables:</strong> {selectedRow.requestedDays}</Typography>
-              <Typography><strong>Tipo:</strong> {selectedRow.type}</Typography>
+              <Typography><strong>{t('vacations.form.startDate')}:</strong> {selectedRow.startFormatted}</Typography>
+              <Typography><strong>{t('vacations.form.endDate')}:</strong> {selectedRow.endFormatted}</Typography>
+              <Typography><strong>{t('vacations.table.days')}:</strong> {selectedRow.requestedDays}</Typography>
+              <Typography><strong>{t('vacations.form.type')}:</strong> {selectedRow.type}</Typography>
               <Typography component="div">
-                <strong>Estado:</strong>{' '}
+                <strong>{t('common.statusLabel')}:</strong>{' '}
                 <StatusChip status={selectedRow.status} />
               </Typography>
               {selectedRow.approverComment && (
                 <Alert severity={selectedRow.status === 'APPROVED' ? 'success' : 'info'}>
-                  <strong>Comentario del aprobador:</strong> {selectedRow.approverComment}
+                  <strong>{t('vacations.approvals.columns.comment')}</strong> {selectedRow.approverComment}
                 </Alert>
               )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDetailOpen(false)}>Cerrar</Button>
+          <Button onClick={() => setDetailOpen(false)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
 

@@ -3,7 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, CircularProgress
 } from '@mui/material';
-
+import { useTranslation } from 'react-i18next';
 /**
  * ConfirmDialog
  *
@@ -40,6 +40,7 @@ export function ConfirmDialog({
   confirmColor = 'primary',
   loading = false,
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>{title}</DialogTitle>
@@ -48,7 +49,7 @@ export function ConfirmDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancelar
+          {t('common.cancel')}
         </Button>
         <Button
           variant="contained"

@@ -7,6 +7,7 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { Send, Cancel, Visibility } from '@mui/icons-material';
 import { StatusChip, LoadingSpinner } from '../../../../components/ui';
+import { t } from 'i18next';
 
 /**
  * RequestsTable
@@ -32,48 +33,48 @@ export function RequestsTable({
   onCancel,
 }) {
   const columns = [
-    { field: 'startFormatted', headerName: 'Desde', width: 110 },
-    { field: 'endFormatted',   headerName: 'Hasta', width: 110 },
-    { field: 'requestedDays',  headerName: 'Días',  width: 70, type: 'number' },
+    { field: 'startFormatted', headerName: t('vacations.table.from'), width: 110 },
+    { field: 'endFormatted',   headerName: t('vacations.table.to'), width: 110 },
+    { field: 'requestedDays',  headerName: t('vacations.table.days'),  width: 70, type: 'number' },
     {
       field: 'type',
-      headerName: 'Tipo',
+      headerName: t('vacations.table.type'),
       width: 130,
       renderCell: ({ value }) => (
         <span>
-          {value === 'VACATION' ? 'Vacaciones'
-            : value === 'PERSONAL' ? 'Personal'
+          {value === 'VACATION' ? t('vacations.table.columns.vacation')
+            : value === 'PERSONAL' ? t('vacations.table.columns.personal')
             : value}
         </span>
       ),
     },
     {
       field: 'status',
-      headerName: 'Estado',
+      headerName: t('common.statusLabel'),
       width: 120,
       renderCell: ({ value }) => <StatusChip status={value} />,
     },
     {
-      field: 'acciones',
-      headerName: 'Acciones',
+      field: 'actions',
+      headerName: t('common.actions'),
       width: 150,
       sortable: false,
       renderCell: ({ row }) => (
         <Box>
-          <Tooltip title="Ver detalle">
+          <Tooltip title={t('common.view')}>
             <IconButton size="small" onClick={() => onView(row)}>
               <Visibility fontSize="small" />
             </IconButton>
           </Tooltip>
           {row.status === 'DRAFT' && (
-            <Tooltip title="Enviar para aprobación">
+            <Tooltip title={t('vacations.table.submittedForApproval')}>
               <IconButton size="small" color="primary" onClick={() => onSubmit(row.id)}>
                 <Send fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
           {(row.status === 'DRAFT' || row.status === 'SUBMITTED') && (
-            <Tooltip title="Cancelar">
+            <Tooltip title={t('common.cancel')}>
               <IconButton size="small" color="error" onClick={() => onCancel(row.id)}>
                 <Cancel fontSize="small" />
               </IconButton>
@@ -91,21 +92,21 @@ export function RequestsTable({
         <Box display="flex" gap={2} alignItems="center">
           <TextField
             select
-            label="Estado"
+            label={t('common.statusLabel')}
             value={statusFilter}
             onChange={e => onStatusFilterChange(e.target.value)}
             size="small"
             sx={{ minWidth: 160 }}
           >
-            <MenuItem value="ALL">Todos</MenuItem>
-            <MenuItem value="DRAFT">Borrador</MenuItem>
-            <MenuItem value="SUBMITTED">Enviada</MenuItem>
-            <MenuItem value="APPROVED">Aprobada</MenuItem>
-            <MenuItem value="REJECTED">Rechazada</MenuItem>
-            <MenuItem value="CANCELLED">Cancelada</MenuItem>
+            <MenuItem value="ALL">{t('common.status.all')}</MenuItem>
+            <MenuItem value="DRAFT">{t('common.status.draft')}</MenuItem>
+            <MenuItem value="SUBMITTED">{t('common.status.submitted')}</MenuItem>
+            <MenuItem value="APPROVED">{t('common.status.approved')}</MenuItem>
+            <MenuItem value="REJECTED">{t('common.status.rejected')}</MenuItem>
+            <MenuItem value="CANCELLED">{t('common.status.cancelled')}</MenuItem>
           </TextField>
           <Button variant="contained" onClick={onSearch} size="small">
-            Filtrar
+            {t('common.filter')}
           </Button>
         </Box>
       </Paper>

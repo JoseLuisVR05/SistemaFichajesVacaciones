@@ -1,0 +1,358 @@
+{
+  "common": {
+    "search": "Search",
+    "clear": "Clear",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "actions": "Actions",
+    "statusLabel": "Status",
+    "view": "View detail",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "cancelled": "Cancelled",
+      "all": "All",
+      "desactivate": "Desactivate",
+      "activate": "Activate"
+    }
+  },
+  "months": {
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "timeclock": "Time Clock",
+    "history": "History",
+    "corrections": "Corrections",
+    "vacations": "Vacations",
+    "employees": "Employees",
+    "admin": "Admin",
+    "logout": "Log out"
+  },
+  "dashboard": {
+    "welcome": "Welcome, {{name}}",
+    "metrics": {
+      "hoursToday": "Hours today",
+      "weekBalance": "Week balance",
+      "vacationsLeft": "Remaining vacations"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "clockIn": "Clock In",
+      "clockOut": "Clock Out",
+      "requestVacation": "Request vacation"
+    },
+    "pending": {
+      "title": "Pending",
+      "myCorrections": "My pending corrections",
+      "myVacations": "My pending vacation requests"
+    },
+    "recentActivity": {
+      "title": "Recent activity",
+      "lastEntries": "Last clock entries",
+      "lastRequests": "Last vacation requests",
+      "noEntries": "No recent entries",
+      "noRequests": "No requests"
+    }
+  },
+  "timeclock": {
+    "title": "Time Clock",
+    "statusCard": "Status card",
+    "employee": "Employee",
+    "date": "Date",
+    "time": "Time",
+    "lastEntry": "Last entry",
+    "noEntries": "No entries today",
+    "mainAction": "Main action",
+    "messages": "Messages",
+    "clockIn": "CLOCK IN",
+    "clockOut": "CLOCK OUT",
+    "incident": {
+      "missing": "<strong>Incident detected:</strong> No entry was registered on {{date}}. If this was a mistake, you can request a correction.",
+      "incomplete": "<strong>Incomplete shift:</strong> On {{date}}, <strong>{{worked}}h</strong> were registered out of the expected <strong>{{expected}}h</strong>{{deficit}}. If this was a clock error, you can request a correction.",
+      "requestCorrection": "Request correction"
+    }
+  },
+
+  "history": {
+    "title": "Clock History",
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "type": "Type",
+      "all": "All",
+      "entry": "Entry",
+      "exit": "Exit",
+      "employees": "Employees",
+      "searchEmployees": "Search employees..."
+    },
+    "export": "Export",
+    "columns": {
+      "date": "Date",
+      "time": "Time",
+      "type": "Type",
+      "employee": "Employee",
+      "source": "Source",
+      "actions": "Actions"
+    },
+    "detail": {
+      "title": "Entry detail",
+      "ip": "IP",
+      "notes": "Notes",
+      "origin": "Origin"
+    },
+    "actions": {
+      "requestCorrection": "Request correction"
+    }
+  },
+  
+  "corrections": {
+    "title": "Clock Corrections",
+    "newRequest": "New request",
+    "tabs": {
+      "mine": "My requests",
+      "management": "Management (team)"
+    },
+  "filters": {
+    "employee": "Search employee",
+    "subordinate": "Search subordinate",
+    "noDept": "No dept.",
+    "viewAll": "View all",
+    "showing": "Corrections for"
+  },
+    "columns": {
+      "date": "Date",
+      "originalMinutes": "Original min.",
+      "correctedMinutes": "Corrected min.",
+      "reason": "Reason",
+      "employee": "Employee",
+      "created": "Created"
+    },
+    "create": {
+      "title": "New correction request",
+      "date": "Entry date",
+      "originalMinutes": "Original registered minutes",
+      "originalMinutesHelper": "Minutes currently on record",
+      "correctedMinutes": "Corrected minutes (actual)",
+      "correctedMinutesHelper": "Minutes that should be on record",
+      "reason": "Reason for correction",
+      "reasonPlaceholder": "E.g.: Forgot to clock out, left at 18:00",
+      "submit": "Submit request"
+    },
+    "edit": {
+      "title": "Edit correction request",
+      "editing": "Editing correction for <strong>{{date}}</strong>"
+    },
+    "reject": {
+      "title": "Reject correction",
+      "description": "Provide the rejection reason for the correction on <strong>{{date}}</strong>:",
+      "reason": "Rejection reason",
+      "confirm": "Confirm rejection"
+    },
+    "delete": {
+      "title": "Cancel request",
+      "description": "Are you sure you want to cancel the request for {{date}}? This action cannot be undone.",
+      "confirm": "Yes, cancel request"
+    }
+  },
+  "vacations": {
+    "title": "Vacations",
+    "balance": {
+      "allocated": "Allocated",
+      "used": "Used",
+      "remaining": "Remaining"
+    },
+    "tabs": {
+      "new": "New request",
+      "history": "My requests"
+    },
+    "form": {
+      "title": "New request",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "type": "Type",
+      "types": {
+        "vacation": "Vacation",
+        "personal": "Personal matters",
+        "other": "Other"
+      },
+      "comment": "Comment (optional)",
+      "commentPlaceholder": "E.g.: Family trip...",
+      "submit": "Submit",
+      "saveDraft": "Save draft",
+      "calculation": {
+        "title": "Automatic calculation",
+        "hint": "Select dates to see the calculation.",
+        "workingDays": "Requested working days:",
+        "availableDays": "Available days:",
+        "valid": "Valid dates ✓"
+      }
+    },
+    "table": {
+      "from": "From",
+      "to": "To",
+      "days": "Days",
+      "type": "Type",
+      "submittedForApproval": "Submit for approval",
+      "columns": {
+        "vacation": "Vacation",
+        "personal": "Personal",
+        "other": "Other"
+      }
+    },
+    "approvals": {
+      "title": "Approvals Inbox",
+      "approve": "Approve request",
+      "columns": {
+        "employee": "Employee",
+        "from": "From",
+        "to": "To",
+        "days": "Days",
+        "reason": "Reason",
+        "comment": "Approver comment"
+      },
+      "reject": {
+        "title": "Reject request",
+        "reason": "Rejection reason",
+        "confirm": "Confirm rejection"
+      },
+      "detail": "Request detail"
+    },
+    "calendar": {
+      "title": "Annual Absence Calendar",
+      "legend": "Legend:",
+      "types": {
+        "vacation": "Vacation",
+        "personal": "Personal",
+        "other": "Other"
+      }
+    }
+  },
+  "employees": {
+    "title": "Employee Management",
+    "search": "Search employee",
+    "searchPlaceholder": "Name, code, email or department...",
+    "columns": {
+      "code": "Code",
+      "name": "Full name",
+      "email": "Email",
+      "department": "Department",
+      "company": "Company",
+      "status": "Status"
+    },
+    "detail": {
+      "title": "Employee detail",
+      "code": "Code",
+      "name": "Name",
+      "email": "Email",
+      "company": "Company",
+      "businessUnit": "Business unit",
+      "department": "Department",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "noDetails": "No details could be loaded"
+    }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "tabs": {
+      "policies": "Vacation Policies",
+      "schedules": "Employee Schedules",
+      "import": "CSV Import",
+      "employees": "Employee Management"
+    },
+    "policies": {
+      "new": "New Policy",
+      "columns": {
+        "name": "Name",
+        "year": "Year",
+        "type": "Type",
+        "daysPerYear": "Days/Year",
+        "carryOver": "Max carry-over"
+      },
+      "form": {
+        "title_create": "New Policy",
+        "title_edit": "Edit Policy",
+        "name": "Name",
+        "year": "Year",
+        "accrualType": "Accrual type",
+        "annual": "Annual",
+        "monthly": "Monthly",
+        "daysPerYear": "Days per year",
+        "carryOverMax": "Max carry-over days"
+      },
+      "delete": {
+        "title": "Confirm deletion",
+        "description": "Are you sure you want to delete this policy? It cannot be recovered.",
+        "confirm": "Delete"
+      }
+    },
+    "schedules": {
+      "selectEmployee": "Select employee",
+      "selectEmployeeHint": "Select an employee to manage their schedules.",
+      "newSchedule": "New Schedule",
+      "editSchedule": "Edit Schedule",
+      "columns": {
+        "validFrom": "Valid from",
+        "validTo": "Valid to",
+        "indefinite": "Indefinite",
+        "start": "Start",
+        "end": "End",
+        "break": "Break",
+        "notes": "Notes",
+        "helperText": "Leave empty if the schedule has no end date"
+      },
+      "delete": {
+        "title": "Confirm deletion",
+        "description": "Delete this schedule?",
+        "confirm": "Delete"
+      }
+    },
+    "import": {
+      "title": "Import employees from CSV (Axapta)",
+      "description": "Expected format:",
+      "inactiveNote": "Employees <strong>not present</strong> in the CSV will be automatically marked as <strong>Inactive</strong>.",
+      "selectFile": "Select CSV file",
+      "importing": "Importing...",
+      "result": "Import completed — ID: {{id}} | Total: {{total}} rows | Errors: {{errors}}",
+      "history": "Import history",
+      "columns": {
+        "file": "File",
+        "date": "Date",
+        "total": "Total",
+        "success": "Success",
+        "errors": "Errors",
+        "status": "Status"
+      }
+    }
+  },
+  "login": {
+    "title": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "error": "Invalid credentials"
+  }
+}

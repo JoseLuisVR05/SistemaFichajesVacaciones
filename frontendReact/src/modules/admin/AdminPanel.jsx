@@ -8,6 +8,7 @@ import { PoliciesTab }  from './tabs/PoliciesTab';
 import { SchedulesTab } from './tabs/SchedulesTab';
 import { ImportTab }    from './tabs/ImportTab';
 import { EmployeesTab } from './tabs/EmployeesTab';
+import { useTranslation } from 'react-i18next';
 
 function TabPanel({ children, value, index }) {
   return value === index ? <Box sx={{ pt: 3 }}>{children}</Box> : null;
@@ -16,20 +17,21 @@ function TabPanel({ children, value, index }) {
 export default function AdminPanel() {
   const [tab, setTab] = useState(0);
   const { snackbar, showSnack, closeSnack } = useSnackbar();
-
+  const { t } = useTranslation();
   
   return (
     <Box>
       <Typography variant="h4" textAlign="center" gutterBottom>
-        Panel de Administración
+        {t('admin.title')}
       </Typography>
 
       <Paper sx={{ px: 2 }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable">
-          <Tab icon={<Policy />}      iconPosition="start" label="Políticas Vacaciones" />
-          <Tab icon={<Schedule />}    iconPosition="start" label="Horarios Empleados" />
-          <Tab icon={<UploadFile />}  iconPosition="start" label="Importación CSV" />
-          <Tab icon={<People />}      iconPosition="start" label="Gestión Empleados" />
+          <Tab icon={<Policy />}      iconPosition="start" label={t('admin.tabs.policies')} />
+
+          <Tab icon={<Schedule />}    iconPosition="start" label={t('admin.tabs.schedules')} />
+          <Tab icon={<UploadFile />}  iconPosition="start" label={t('admin.tabs.import')} />
+          <Tab icon={<People />}      iconPosition="start" label={t('admin.tabs.employees')} />
         </Tabs>
       </Paper>
 

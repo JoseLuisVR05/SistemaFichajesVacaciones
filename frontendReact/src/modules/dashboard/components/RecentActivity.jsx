@@ -3,6 +3,7 @@ import { Box, Paper, Typography, Chip, CircularProgress } from '@mui/material';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 /**
  * RecentActivity
@@ -13,15 +14,16 @@ import { toLocalDate } from '../../../utils/helpers/dateUtils';
  * @param {boolean} loading       - Si está cargando
  */
 export function RecentActivity({ lastEntries, lastRequests, loading }) {
+  const { t } = useTranslation();
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" fontWeight="600" gutterBottom>
-        Actividad reciente
+        {t('dashboard.recentActivity.title')}
       </Typography>
 
       {/* Últimos fichajes */}
       <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-        Últimos fichajes
+        {t('dashboard.recentActivity.lastEntries')}
       </Typography>
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
@@ -55,13 +57,13 @@ export function RecentActivity({ lastEntries, lastRequests, loading }) {
         </Box>
       ) : (
         <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-          No hay fichajes recientes
+          {t('dashboard.recentActivity.noEntries')}
         </Typography>
       )}
 
       {/* Últimas solicitudes de vacaciones */}
       <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 3, mb: 1 }}>
-        Últimas solicitudes de vacaciones
+        {t('dashboard.recentActivity.lastRequests')}
       </Typography>
       {lastRequests.length > 0 ? (
         <Box>
@@ -92,7 +94,7 @@ export function RecentActivity({ lastEntries, lastRequests, loading }) {
         </Box>
       ) : (
         <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-          Sin solicitudes
+          {t('dashboard.recentActivity.noRequests')}
         </Typography>
       )}
     </Paper>

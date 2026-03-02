@@ -12,12 +12,13 @@ import { getEmployees } from '../../../services/employeesService';
 import { getAbsenceCalendar } from '../../../services/vacationsService';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { MonthGrid, TYPE_COLOR } from './components/MonthGrid';
-
+import { useTranslation } from 'react-i18next';
 
 
 // ─── Componente principal ────────────────────────────────────────────────────
 export default function VacationCalendar() {
   const { canViewEmployees } = useRole();
+  const { t } = useTranslation();
 
   // Año actual como estado de navegación
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -74,7 +75,7 @@ export default function VacationCalendar() {
   return (
     <Box >
       <Typography variant="h4" textAlign="center" gutterBottom>
-        Calendario Anual de Ausencias
+        {t('vacations.calendar.title')}
       </Typography>
 
       {/* ── Controles ── */}
@@ -96,11 +97,11 @@ export default function VacationCalendar() {
 
           {/* Filtro departamento */}
           <TextField
-            select label="Departamento" value={departmentFilter}
+            select label={t('employees.columns.department')} value={departmentFilter}
             onChange={e => setDepartmentFilter(e.target.value)}
             size="small" sx={{ minWidth: 160 }}
           >
-            <MenuItem value="ALL">Todos</MenuItem>
+            <MenuItem value="ALL">{t('common.status.all')}</MenuItem>
             {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
           </TextField>
 
@@ -109,12 +110,12 @@ export default function VacationCalendar() {
           {/* ── Leyenda — colores fijos por tipo ── */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
             <Typography variant="caption" color="text.secondary" fontWeight="600">
-              Leyenda:
+              {t('vacations.calendar.legend')}:
             </Typography>
             {[
-              { label: 'Vacaciones', color: TYPE_COLOR.VACATION },
-              { label: 'Personal',   color: TYPE_COLOR.PERSONAL },
-              { label: 'Otro',       color: TYPE_COLOR.OTHER },
+              { label: t('vacations.calendar.types.vacation'), color: TYPE_COLOR.VACATION },
+              { label: t('vacations.calendar.types.personal'),   color: TYPE_COLOR.PERSONAL },
+              { label: t('vacations.calendar.types.other'),       color: TYPE_COLOR.OTHER },
             ].map(({ label, color }) => (
               <Chip
                 key={label}

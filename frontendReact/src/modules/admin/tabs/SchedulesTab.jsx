@@ -13,6 +13,7 @@ import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { getSchedules, createSchedule, updateSchedule, deleteSchedule } from '../../../services/schedulesService';
 import { getEmployees } from '../../../services/employeesService';
 import { ConfirmDialog, LoadingSpinner } from '../../../components/ui';
+import { useTranslation } from 'react-i18next';
 
 const EMPTY_SCHEDULE = {
   employeeId: null,
@@ -35,6 +36,8 @@ export function SchedulesTab({ showSnack }) {
   const [form, setForm]               = useState(EMPTY_SCHEDULE);
   const [saving, setSaving]           = useState(false);
   const [deleteId, setDeleteId]       = useState(null);
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     getEmployees()
@@ -112,32 +115,32 @@ export function SchedulesTab({ showSnack }) {
 
   const columns = [
     {
-      field: 'validFrom', headerName: 'Válido desde', width: 130,
+      field: 'validFrom', headerName: t('admin.schedules.columns.validFrom'), width: 130,
       renderCell: ({ value }) =>
         value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : '-',
     },
     {
-      field: 'validTo', headerName: 'Válido hasta', width: 130,
+      field: 'validTo', headerName: t('admin.schedules.columns.validTo'), width: 130,
       renderCell: ({ value }) =>
         value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : 'Indefinido',
     },
-    { field: 'expectedStartTime', headerName: 'Entrada',  width: 90 },
-    { field: 'expectedEndTime',   headerName: 'Salida',   width: 90 },
+    { field: 'expectedStartTime', headerName: t('admin.schedules.columns.start'),  width: 90 },
+    { field: 'expectedEndTime',   headerName: t('admin.schedules.columns.end'),   width: 90 },
     {
-      field: 'breakMinutes', headerName: 'Descanso', width: 100,
+      field: 'breakMinutes', headerName: t('admin.schedules.columns.break'), width: 100,
       renderCell: ({ value }) => `${value} min`,
     },
-    { field: 'notes', headerName: 'Notas', flex: 1 },
+    { field: 'notes', headerName: t('admin.schedules.columns.notes'), flex: 1 },
     {
-      field: 'acciones', headerName: 'Acciones', width: 110, sortable: false,
+      field: 'acciones', headerName: t('common.actions'), width: 110, sortable: false,
       renderCell: ({ row }) => (
         <>
-          <Tooltip title="Editar">
+          <Tooltip title={t('common.edit')}>
             <IconButton size="small" onClick={() => openEdit(row)}>
               <Edit fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Eliminar">
+          <Tooltip title={t('common.delete')}>
             <IconButton size="small" color="error" onClick={() => setDeleteId(row.id)}>
               <Delete fontSize="small" />
             </IconButton>
@@ -161,7 +164,7 @@ export function SchedulesTab({ showSnack }) {
           sx={{ maxWidth: 400 }}
           renderInput={params => (
             <TextField
-              {...params} label="Seleccionar empleado"
+              {...params} label={t('admin.schedules.selectEmployee')}
               InputProps={{
                 ...params.InputProps,
                 endAdornment: (
@@ -179,7 +182,7 @@ export function SchedulesTab({ showSnack }) {
       {/* Sin empleado seleccionado */}
       {!selectedEmp && (
         <Alert severity="info">
-          Selecciona un empleado para gestionar sus horarios.
+          {t('admin.schedules.selectEmployeeHint')}
         </Alert>
       )}
 
@@ -188,7 +191,7 @@ export function SchedulesTab({ showSnack }) {
         <>
           <Box display="flex" justifyContent="flex-end" mb={2}>
             <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
-              Nuevo Horario
+              {t('admin.schedules.newSchedule')}
             </Button>
           </Box>
           <Paper sx={{ height: 380 }}>
@@ -207,39 +210,38 @@ export function SchedulesTab({ showSnack }) {
 
       {/* Dialog crear/editar */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editing ? 'Editar Horario' : 'Nuevo Horario'}</DialogTitle>
+        <DialogTitle>{editing ? t('admin.schedules.editSchedule') : t('admin.schedules.newSchedule')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <TextField
-              label="Válido desde" type="date" value={form.validFrom}
+              label={t('admin.schedules.columns.validFrom')} type="date" value={form.validFrom}
               onChange={e => setForm(f => ({ ...f, validFrom: e.target.value }))}
               InputLabelProps={{ shrink: true }} fullWidth required
             />
             <TextField
-              label="Válido hasta (vacío = indefinido)" type="date" value={form.validTo}
+              label={t('admin.schedules.columns.validTo')} type="date" value={form.validTo}
               onChange={e => setForm(f => ({ ...f, validTo: e.target.value }))}
               InputLabelProps={{ shrink: true }} fullWidth
-              helperText="Dejar vacío si el horario no tiene fecha de fin"
+              helperText={t('admin.schedules.columns.helperText')}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
-                label="Hora entrada" type="time" value={form.expectedStartTime}
+                label={t('admin.schedules.columns.start')} type="time" value={form.expectedStartTime}
                 onChange={e => setForm(f => ({ ...f, expectedStartTime: e.target.value }))}
                 InputLabelProps={{ shrink: true }} fullWidth required
               />
               <TextField
-                label="Hora salida" type="time" value={form.expectedEndTime}
+                label={t('admin.schedules.columns.end')} type="time" value={form.expectedEndTime}
                 onChange={e => setForm(f => ({ ...f, expectedEndTime: e.target.value }))}
                 InputLabelProps={{ shrink: true }} fullWidth required
               />
             </Box>
             <TextField
-              label="Minutos de descanso" type="number" value={form.breakMinutes}
+              label={t('admin.schedules.columns.break')} type="number" value={form.breakMinutes}
               onChange={e => setForm(f => ({ ...f, breakMinutes: +e.target.value }))}
-              fullWidth helperText="Ej: 60 = 1 hora de descanso"
             />
             <TextField
-              label="Notas (opcional)" value={form.notes}
+              label={t('admin.schedules.columns.notes')} value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               multiline rows={2} fullWidth
             />
@@ -248,7 +250,7 @@ export function SchedulesTab({ showSnack }) {
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
-            {saving ? <CircularProgress size={18} /> : 'Guardar'}
+            {saving ? <CircularProgress size={18} /> : t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -258,9 +260,9 @@ export function SchedulesTab({ showSnack }) {
         open={Boolean(deleteId)}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Confirmar eliminación"
-        description="¿Eliminar este horario?"
-        confirmLabel="Eliminar"
+        title={t('admin.schedules.delete.title')}
+        description={t('admin.schedules.delete.description')}
+        confirmLabel={t('common.delete')}
         confirmColor="error"
       />
     </>

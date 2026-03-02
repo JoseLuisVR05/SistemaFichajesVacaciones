@@ -1,0 +1,356 @@
+{
+  "common": {
+    "search": "Buscar",
+    "clear": "Limpiar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "loading": "Cargando...",
+    "actions": "Acciones",
+    "statusLabel": "Estado",
+    "view": "Ver detalle",
+    "filter": "Filtrar",
+    "refresh": "Recargar",
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "pending": "Pendiente",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "draft": "Borrador",
+      "submitted": "Enviada",
+      "cancelled": "Cancelada",
+      "all": "Todos",
+      "desactivate": "Desactivar",
+      "activate": "Activar"
+    }
+  },
+  "months": {
+    "january": "Enero",
+    "february": "Febrero",
+    "march": "Marzo",
+    "april": "Abril",
+    "may": "Mayo",
+    "june": "Junio",
+    "july": "Julio",
+    "august": "Agosto",
+    "september": "Septiembre",
+    "october": "Octubre",
+    "november": "Noviembre",
+    "december": "Diciembre"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "timeclock": "Fichaje",
+    "history": "Historial",
+    "corrections": "Correcciones",
+    "vacations": "Vacaciones",
+    "employees": "Empleados",
+    "admin": "Admin",
+    "logout": "Cerrar sesión"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido, {{name}}",
+    "metrics": {
+      "hoursToday": "Horas hoy",
+      "weekBalance": "Balance semana",
+      "vacationsLeft": "Vacaciones restantes"
+    },
+    "quickActions": {
+      "title": "Acciones rápidas",
+      "clockIn": "Fichar Entrada",
+      "clockOut": "Fichar Salida",
+      "requestVacation": "Solicitar vacaciones"
+    },
+    "pending": {
+      "title": "Pendientes",
+      "myCorrections": "Mis correcciones pendientes",
+      "myVacations": "Mis aprobaciones de vacaciones pendientes"
+    },
+    "recentActivity": {
+      "title": "Actividad reciente",
+      "lastEntries": "Últimos fichajes",
+      "lastRequests": "Últimas solicitudes de vacaciones",
+      "noEntries": "No hay fichajes recientes",
+      "noRequests": "Sin solicitudes"
+    }
+  },
+  "timeclock": {
+    "title": "Registro de fichaje",
+    "statusCard": "Tarjeta de estado",
+    "employee": "Empleado",
+    "date": "Fecha",
+    "time": "Hora",
+    "lastEntry": "Último fichaje",
+    "noEntries": "Sin fichajes hoy",
+    "mainAction": "Acción principal",
+    "messages": "Mensajes",
+    "clockIn": "ENTRADA",
+    "clockOut": "SALIDA",
+    "incident": {
+      "missing": "<strong>Incidencia detectada:</strong> El {{date}} no se registró ningún fichaje. Si fue un error, puedes solicitar una corrección.",
+      "incomplete": "<strong>Jornada incompleta:</strong> El {{date}} se registraron <strong>{{worked}}h</strong> de las <strong>{{expected}}h</strong> esperadas{{deficit}}. Si fue un error de fichaje, puedes solicitar una corrección.",
+      "requestCorrection": "Solicitar corrección"
+    }
+  },
+  "history": {
+    "title": "Histórico de Fichajes",
+    "filters": {
+      "from": "Desde",
+      "to": "Hasta",
+      "type": "Tipo",
+      "all": "Todos",
+      "entry": "Entrada",
+      "exit": "Salida",
+      "employees": "Empleados",
+      "searchEmployees": "Buscar empleados..."
+    },
+    "export": "Exportar",
+    "columns": {
+      "date": "Fecha",
+      "time": "Hora",
+      "type": "Tipo",
+      "employee": "Empleado",
+      "source": "Origen",
+      "actions": "Acciones"
+    },
+    "detail": {
+      "title": "Detalle del fichaje",
+      "ip": "IP",
+      "notes": "Notas",
+      "origin": "Origen"
+    },
+    "actions": {
+      "requestCorrection": "Solicitar corrección"
+    }
+  },
+  "corrections": {
+    "title": "Correcciones de Fichajes",
+    "newRequest": "Nueva solicitud",
+    "tabs": {
+      "mine": "Mis solicitudes",
+      "management": "Gestión (equipo)"
+    },
+    "filters": {
+      "employee": "Buscar empleado",
+      "subordinate": "Buscar subordinado",
+      "noDept": "Sin dept.",
+      "viewAll": "Ver todas",
+      "showing": "Correcciones de"
+    },
+    "columns": {
+      "date": "Fecha",
+      "originalMinutes": "Min. originales",
+      "correctedMinutes": "Min. corregidos",
+      "reason": "Motivo",
+      "employee": "Empleado",
+      "created": "Creado"
+    },
+    "create": {
+      "title": "Nueva solicitud de corrección",
+      "date": "Fecha del fichaje",
+      "originalMinutes": "Minutos originales registrados",
+      "originalMinutesHelper": "Minutos trabajados que figuran actualmente",
+      "correctedMinutes": "Minutos corregidos (reales)",
+      "correctedMinutesHelper": "Minutos que deberían figurar",
+      "reason": "Motivo de la corrección",
+      "reasonPlaceholder": "Ej: Olvidé fichar la salida, salí a las 18:00",
+      "submit": "Enviar solicitud"
+    },
+    "edit": {
+      "title": "Editar solicitud de corrección",
+      "editing": "Editando la corrección del <strong>{{date}}</strong>"
+    },
+    "reject": {
+      "title": "Rechazar corrección",
+      "description": "Indica el motivo del rechazo para la corrección del <strong>{{date}}</strong>:",
+      "reason": "Motivo del rechazo",
+      "confirm": "Confirmar rechazo"
+    },
+    "delete": {
+      "title": "Cancelar solicitud",
+      "description": "¿Seguro que deseas cancelar la solicitud del {{date}}? Esta acción no se puede deshacer.",
+      "confirm": "Sí, cancelar solicitud"
+    }
+  },
+  "vacations": {
+    "title": "Vacaciones",
+    "balance": {
+      "allocated": "Asignados",
+      "used": "Usados",
+      "remaining": "Restantes"
+    },
+    "tabs": {
+      "new": "Nueva solicitud",
+      "history": "Mis solicitudes"
+    },
+    "form": {
+      "title": "Nueva solicitud",
+      "startDate": "Fecha inicio",
+      "endDate": "Fecha fin",
+      "type": "Tipo",
+      "types": {
+        "vacation": "Vacaciones",
+        "personal": "Asuntos personales",
+        "other": "Otro"
+      },
+      "comment": "Comentario (opcional)",
+      "commentPlaceholder": "Ej: Viaje familiar...",
+      "submit": "Enviar",
+      "saveDraft": "Guardar borrador",
+      "calculation": {
+        "title": "Cálculo automático",
+        "hint": "Selecciona las fechas para ver el cálculo.",
+        "workingDays": "Días laborables solicitados:",
+        "availableDays": "Días disponibles:",
+        "valid": "Fechas válidas ✓"
+      }
+    },
+    "table": {
+      "from": "Desde",
+      "to": "Hasta",
+      "days": "Días",
+      "type": "Tipo",
+      "submittedForApproval": "Enviar para aprobación",
+      "columns": {
+        "vacation": "Vacaciones",
+        "personal": "Personal",
+        "other": "Otro"
+      }
+    },
+    "approvals": {
+      "title": "Bandeja de Aprobaciones",
+      "approve": "Aprobar solicitud",
+      "columns": {
+        "employee": "Empleado",
+        "from": "Desde",
+        "to": "Hasta",
+        "days": "Días",
+        "reason": "Motivo",
+        "comment": "Comentario"
+      },
+      "reject": {
+        "title": "Rechazar solicitud",
+        "reason": "Motivo del rechazo",
+        "confirm": "Confirmar rechazo"
+      },
+      "detail": "Detalle de solicitud"
+    },
+    "calendar": {
+      "title": "Calendario Anual de Ausencias",
+      "legend": "Leyenda:",
+      "types": {
+        "vacation": "Vacaciones",
+        "personal": "Personal",
+        "other": "Otro"
+      }
+    }
+  },
+  "employees": {
+    "title": "Gestión de empleados",
+    "search": "Buscar empleado",
+    "searchPlaceholder": "Nombre, codigo, email o departamento...",
+    "columns": {
+      "code": "Código",
+      "name": "Nombre Completo",
+      "email": "Email",
+      "department": "Departamento",
+      "company": "Empresa",
+      "status": "Estado"
+    },
+    "detail": {
+      "title": "Detalle del empleado",
+      "code": "Código",
+      "name": "Nombre",
+      "email": "Email",
+      "company": "Empresa",
+      "businessUnit": "Unidad de negocio",
+      "department": "Departamento",
+      "startDate": "Fecha de alta",
+      "endDate": "Fecha de baja",
+      "noDetails": "No se pudo cargar el detalle"
+    }
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "tabs": {
+      "policies": "Políticas Vacaciones",
+      "schedules": "Horarios Empleados",
+      "import": "Importación CSV",
+      "employees": "Gestión Empleados"
+    },
+    "policies": {
+      "new": "Nueva Política",
+      "columns": {
+        "name": "Nombre",
+        "year": "Año",
+        "type": "Tipo",
+        "daysPerYear": "Días/Año",
+        "carryOver": "Arrastre máx"
+      },
+      "form": {
+        "title_create": "Nueva Política",
+        "title_edit": "Editar Política",
+        "name": "Nombre",
+        "year": "Año",
+        "accrualType": "Tipo devengo",
+        "annual": "Anual",
+        "monthly": "Mensual",
+        "daysPerYear": "Días por año",
+        "carryOverMax": "Días de arrastre máx."
+      },
+      "delete": {
+        "title": "Confirmar eliminación",
+        "description": "¿Seguro que deseas eliminar esta política? No podrá recuperarse.",
+        "confirm": "Eliminar"
+      }
+    },
+    "schedules": {
+      "selectEmployee": "Seleccionar empleado",
+      "selectEmployeeHint": "Selecciona un empleado para gestionar sus horarios.",
+      "newSchedule": "Nuevo Horario",
+      "editSchedule": "Editar Horario",
+      "columns": {
+        "validFrom": "Válido desde",
+        "validTo": "Válido hasta",
+        "indefinite": "Indefinido",
+        "start": "Entrada",
+        "end": "Salida",
+        "break": "Descanso",
+        "notes": "Notas", 
+        "helperText": "Dejar vacío si el horario no tiene fecha de fin"
+      },
+      "delete": {
+        "title": "Confirmar eliminación",
+        "description": "¿Eliminar este horario?",
+        "confirm": "Eliminar"
+      }
+    },
+    "import": {
+      "title": "Importar empleados desde CSV (Axapta)",
+      "description": "Formato esperado:",
+      "inactiveNote": "Los empleados <strong>no presentes</strong> en el CSV serán marcados automáticamente como <strong>Inactivos</strong>.",
+      "selectFile": "Seleccionar archivo CSV",
+      "importing": "Importando...",
+      "result": "Importación finalizada — ID: {{id}} | Total: {{total}} filas | Errores: {{errors}}",
+      "history": "Historial de importaciones",
+      "columns": {
+        "file": "Archivo",
+        "date": "Fecha",
+        "total": "Total",
+        "success": "Éxito",
+        "errors": "Errores",
+        "status": "Estado"
+      }
+    }
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "email": "Email",
+    "password": "Contraseña",
+    "submit": "Entrar",
+    "error": "Credenciales inválidas"
+  }
+}

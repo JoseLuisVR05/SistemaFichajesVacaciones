@@ -24,6 +24,7 @@
 import { Box, Typography } from '@mui/material';
 import { endOfMonth, eachDayOfInterval, format, isWeekend, isSameDay } from 'date-fns';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
+import { t } from 'i18next';
 
 // Mapa de colores por tipo de ausencia.
 // Vive aquí y se exporta para que VacationCalendar pueda usarlo
@@ -45,8 +46,18 @@ export const getTypeColor = (type) => {
 };
 
 const MONTH_NAMES = [
-  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
+  t('months.january'),
+  t('months.february'),
+  t('months.march'),
+  t('months.april'),
+  t('months.may'),
+  t('months.june'),
+  t('months.july'),
+  t('months.august'),
+  t('months.september'),
+  t('months.october'),
+  t('months.november'),
+  t('months.december'),
 ];
 
 export function MonthGrid({ year, monthIndex, absences }) {
@@ -58,6 +69,7 @@ export function MonthGrid({ year, monthIndex, absences }) {
 
   const getAbsencesForDay = (day) =>
     absences.filter(a => isSameDay(toLocalDate(a.date), day));
+
 
   return (
     <Box sx={{ minWidth: 220 }}>

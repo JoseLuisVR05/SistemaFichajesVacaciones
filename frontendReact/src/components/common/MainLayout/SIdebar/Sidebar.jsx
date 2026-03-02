@@ -18,6 +18,7 @@ import {
   People,
 } from '@mui/icons-material';
 
+import { useTranslation } from 'react-i18next';
 import { NavItem } from './NavItem';
 import styles from './Sidebar.module.css';
 
@@ -28,6 +29,7 @@ import styles from './Sidebar.module.css';
 export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose }) {
   const { user } = useAuth();
   const { hasRole } = useRole();
+  const { t } = useTranslation();
 
   // Estado para submenús
   const [vacationsOpen, setVacationsOpen] = useState(false);
@@ -84,28 +86,28 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
         <NavItem
           to="/dashboard"
           icon={<DashboardIcon />}
-          label="Dashboard"
+          label={t('nav.dashboard')}
           onClick={handleNavClick}
           collapsed={collapsed}
         />
         <NavItem
           to="/timeclock"
           icon={<AccessTimeIcon />}
-          label="Fichaje"
+          label={t('nav.timeclock')}
           onClick={handleNavClick}
           collapsed={collapsed}
         />
         <NavItem
           to="/history"
           icon={<HistoryIcon />}
-          label="Historial"
+          label={t('nav.history')}
           onClick={handleNavClick}
           collapsed={collapsed}
         />
         <NavItem
           to="/corrections"
           icon={<EditNoteIcon />}
-          label="Correcciones"
+          label={t('nav.corrections')}
           badge={pendingCorrections}
           onClick={handleNavClick}
           collapsed={collapsed}
@@ -114,7 +116,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
         {/* Sección Vacaciones (Colapsable) */}
         <NavItem
           icon={<BeachIcon />}
-          label="Vacaciones"
+          label={t('nav.vacations')}
           submenu
           isOpen={vacationsOpen && !collapsed}
           onClick={() => !collapsed && setVacationsOpen(!vacationsOpen)}
@@ -123,7 +125,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
           <NavItem
             to="/vacations/requests"
             icon={<RequestPage style={{ fontSize: 18 }} />}
-            label="Mis solicitudes"
+            label={t('vacations.tabs.history')}
             onClick={handleNavClick}
             collapsed={collapsed}
           />
@@ -131,7 +133,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
             <NavItem
               to="/vacations/approvals"
               icon={<ThumbUpAlt style={{ fontSize: 18 }} />}
-              label="Aprobaciones"
+              label={t('vacations.approvals.title')}
               badge={pendingApprovals}
               onClick={handleNavClick}
               collapsed={collapsed}
@@ -140,7 +142,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
           <NavItem
             to="/vacations/calendar"
             icon={<CalendarMonth style={{ fontSize: 18 }} />}
-            label="Calendario"
+            label={t('vacations.calendar.title')}
             onClick={handleNavClick}
             collapsed={collapsed}
           />
@@ -152,7 +154,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
             <NavItem
               to="/employees"
               icon={<People />}
-              label="Empleados"
+              label={t('nav.employees')}
               onClick={handleNavClick}
               collapsed={collapsed}
             />
@@ -163,7 +165,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
           <NavItem
             to="/admin"
             icon={<AdminPanelSettings />}
-            label="Admin"
+            label={t('nav.admin')}
             onClick={handleNavClick}
             collapsed={collapsed} 
           />

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, Menu, MenuItem, Divider } from '@mui/material';
 import { Logout as LogoutIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import styles from './UserMenu.module.css';
+import { useTranslation } from 'react-i18next';
 
 /**
  * UserMenu Component
@@ -13,6 +14,7 @@ export function UserMenu() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
+  const { t } = useTranslation();
 
   const handleOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -81,7 +83,7 @@ export function UserMenu() {
 
         <MenuItem onClick={handleLogout} className={styles.logout}>
           <LogoutIcon sx={{ mr: 1.5 }} fontSize="small" />
-          Cerrar sesión
+          {t('nav.logout')}
         </MenuItem>
       </Menu>
     </>
