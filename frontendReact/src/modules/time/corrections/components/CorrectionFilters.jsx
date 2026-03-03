@@ -1,10 +1,12 @@
 // CorrectionFilters.jsx — solo renderiza los filtros, no sabe nada de la API
 import {
-  Box, Paper, TextField, MenuItem, Button,
-  CircularProgress, Autocomplete, Typography
+  Box, Paper, MenuItem, Button,
+  CircularProgress, Autocomplete, Typography,
+  TextField
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { DateField } from '../../../../components/ui';
 
 export function CorrectionFilters({
   fromDate, onFromDateChange,
@@ -24,13 +26,13 @@ export function CorrectionFilters({
     <Paper sx={{ p: 2, mb: 3 }}>
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
 
-        <TextField
+        <DateField
           label={t('history.filters.from')} type="date" value={fromDate}
           onChange={e => onFromDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
         />
 
-        <TextField
+        <DateField
           label={t('history.filters.to')} type="date" value={toDate}
           onChange={e => onToDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
@@ -56,7 +58,7 @@ export function CorrectionFilters({
             loading={loadingEmployees}
             size="small" sx={{ minWidth: 300 }}
             renderInput={params => (
-              <TextField
+              <DateField
                 {...params}
                 label={isManager ? t('corrections.filters.subordinate') : t('corrections.filters.employee')}
                 InputProps={{

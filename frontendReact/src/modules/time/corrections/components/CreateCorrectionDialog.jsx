@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { DateField } from '../../../../components/ui';
 
 const EMPTY_FORM = {
   date: format(new Date(), 'yyyy-MM-dd'),
@@ -50,7 +51,7 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
       <DialogTitle>{t('corrections.create.title')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-          <TextField
+          <DateField
             label={t('corrections.create.date')} type="date" value={form.date}
             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
             InputLabelProps={{ shrink: true }} fullWidth

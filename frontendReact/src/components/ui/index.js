@@ -10,3 +10,4 @@ export { StatusChip }    from './StatusChip';
 export { ConfirmDialog } from './ConfirmDialog';
 export { LoadingSpinner } from './LoadingSpinner';
 export { SnackbarAlert }  from './SnackbarAlert';
+export { DateField }      from './DateField/DateField';

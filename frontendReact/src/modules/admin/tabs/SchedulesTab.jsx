@@ -14,6 +14,7 @@ import { getSchedules, createSchedule, updateSchedule, deleteSchedule } from '..
 import { getEmployees } from '../../../services/employeesService';
 import { ConfirmDialog, LoadingSpinner } from '../../../components/ui';
 import { useTranslation } from 'react-i18next';
+import { DateField } from '../../../components/ui';
 
 const EMPTY_SCHEDULE = {
   employeeId: null,
@@ -213,12 +214,12 @@ export function SchedulesTab({ showSnack }) {
         <DialogTitle>{editing ? t('admin.schedules.editSchedule') : t('admin.schedules.newSchedule')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
+            <DateField
               label={t('admin.schedules.columns.validFrom')} type="date" value={form.validFrom}
               onChange={e => setForm(f => ({ ...f, validFrom: e.target.value }))}
               InputLabelProps={{ shrink: true }} fullWidth required
             />
-            <TextField
+            <DateField
               label={t('admin.schedules.columns.validTo')} type="date" value={form.validTo}
               onChange={e => setForm(f => ({ ...f, validTo: e.target.value }))}
               InputLabelProps={{ shrink: true }} fullWidth
@@ -248,7 +249,7 @@ export function SchedulesTab({ showSnack }) {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? <CircularProgress size={18} /> : t('common.save')}
           </Button>

@@ -6,6 +6,7 @@ import {
 import { Send } from '@mui/icons-material';
 import { Grid } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { DateField } from '../../../../components/ui';
 
 /**
  * RequestForm
@@ -56,7 +57,7 @@ export function RequestForm({
             {t('vacations.form.title')}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
+            <DateField
               label={t('vacations.form.startDate')}
               type="date"
               value={form.startDate}
@@ -64,7 +65,7 @@ export function RequestForm({
               InputLabelProps={{ shrink: true }}
               fullWidth
             />
-            <TextField
+            <DateField
               label={t('vacations.form.endDate')}
               type="date"
               value={form.endDate}

@@ -24,6 +24,7 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpi
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../context/AuthContext';
+import { DateField } from '../../../components/ui';
 
 export default function History() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function History() {
   } = useHistory();
 
   // ── Traducción ───────────────────────────────────────────
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // ── Estado de UI — solo pertenece al componente ────────
   const [detailOpen, setDetailOpen]     = useState(false);
@@ -120,20 +121,22 @@ export default function History() {
       {/* Filtros */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <TextField 
+          <DateField 
             label={t('history.filters.from')} 
             type="date" 
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
             InputLabelProps={{ shrink: true }} 
-            size="small" />
-          <TextField 
+            size="small"
+            inputProps={{ lang: i18n.language }} />
+          <DateField 
             label={t('history.filters.to')} 
             type="date" 
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
             InputLabelProps={{ shrink: true }} 
-            size="small" />
+            size="small"
+            inputProps={{ lang: i18n.language }} />
           <TextField 
             select 
             label={t('history.filters.type')} 

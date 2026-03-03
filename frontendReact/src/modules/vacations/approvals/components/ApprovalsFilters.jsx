@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { DateField } from '../../../../components/ui';
 
 /**
  * ApprovalsFilters
@@ -53,12 +54,12 @@ export function ApprovalsFilters({
           <MenuItem value="APPROVED">{t('common.status.approved')}</MenuItem>
           <MenuItem value="REJECTED">{t('common.status.rejected')}</MenuItem>
         </TextField>
-        <TextField
+        <DateField
           label={t('vacations.approvals.columns.from')} type="date" value={fromDate}
           onChange={(e) => onFromDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
         />
-        <TextField
+        <DateField
           label={t('vacations.approvals.columns.to')} type="date" value={toDate}
           onChange={(e) => onToDateChange(e.target.value)}
           InputLabelProps={{ shrink: true }} size="small"
