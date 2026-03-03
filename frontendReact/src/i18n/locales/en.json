@@ -91,7 +91,8 @@
     "clockOut": "CLOCK OUT",
     "incident": {
       "missing": "<strong>Incident detected:</strong> No entry was registered on {{date}}. If this was a mistake, you can request a correction.",
-      "incomplete": "<strong>Incomplete shift:</strong> On {{date}}, <strong>{{worked}}h</strong> were registered out of the expected <strong>{{expected}}h</strong>{{deficit}}. If this was a clock error, you can request a correction.",
+      "incomplete": "<strong>Incomplete shift:</strong> On {{date}}, <strong>{{worked}}h</strong> were registered out of the expected <strong>{{expected}}h</strong>. If this was a clock error, you can request a correction.",
+      "missing_out": "<strong>Incident detected:</strong> No exit was registered on {{date}}. If this was a mistake, you can request a correction.",
       "requestCorrection": "Request correction"
     }
   },

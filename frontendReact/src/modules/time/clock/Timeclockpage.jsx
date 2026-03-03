@@ -69,7 +69,13 @@ export default function TimeClockPage() {
       let incidentType = null;
       if(apiIncidentType) {
         // Si la API ya detectó una incidencia, usar ese resultado (evita mostrar incidencia si ya la gestionó el empleado)
-        incidentType = apiIncidentType === 'NO_ENTRIES' ? 'missing' : 'incomplete';
+        if(apiIncidentType === 'NO_ENTRIES') {
+          incidentType = 'missing';
+        } else if(MISSING_OUT_API_TYPES.includes(apiIncidentType)) {
+          incidentType = 'missing_out';
+        } else{ 
+          incidentType = 'incomplete';
+        }
       }else if (workedH === 0) {
         incidentType = 'missing';
       } else if (balanceH < -0.25) {
@@ -114,6 +120,38 @@ export default function TimeClockPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderIncidentMessage = () => {
+    if (!incident) return null;
+
+    if (incident.type === 'missing') {
+      return (
+        <span dangerouslySetInnerHTML={{ __html:
+          t('timeclock.incident.missing', { date: incident.dateFormatted })
+        }} />
+      );
+    }
+
+    if (incident.type === 'missing_out') {
+      return (
+        <span dangerouslySetInnerHTML={{ __html:
+          t('timeclock.incident.missingOut', { date: incident.dateFormatted })
+        }} />
+      );
+    }
+
+    // 'incomplete': fichó entrada y salida pero con menos horas de las esperadas
+    return (
+      <span dangerouslySetInnerHTML={{ __html:
+        t('timeclock.incident.incomplete', {
+          date: incident.dateFormatted,
+          worked: incident.workedHours,
+          expected: incident.expectedHours,
+          deficit: incident.deficitHours
+        })
+      }} />
+    );
   };
 
   return (
@@ -236,25 +274,12 @@ export default function TimeClockPage() {
                  }
               })}
             >
-              {t('timeclock.requestCorrection')}
+              {t('timeclock.incident.requestCorrection')}
             </Button>
           }
           onClose={() => setIncident(null)}
         >
-          {incident.type === 'missing' ? (
-            <span dangerouslySetInnerHTML={{ __html: 
-              t('timeclock.incident.missing', { date: incident.dateFormatted }) 
-            }} />
-          ) : (
-            <span dangerouslySetInnerHTML={{ __html: 
-              t('timeclock.incident.incomplete', { 
-                date: incident.dateFormatted, 
-                deficit: incident.workedHours,
-                expected: incident.expectedHours,
-                proposed: incident.deficitHours ? `(faltan ${incident.deficitHours}h)` : '' 
-              })
-             }} />
-          )}
+          {renderIncidentMessage()}
         </Alert>
       )}
       </Paper>

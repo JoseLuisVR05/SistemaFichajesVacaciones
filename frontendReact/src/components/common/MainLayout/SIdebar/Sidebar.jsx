@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getCorrections } from '../../../../services/correctionsService';
 import { getVacationRequests } from '../../../../services/vacationsService';
 import logo from '../../../../assets/la.png';
+import logo2 from '../../../../assets/bg-mission_sm-eF42QH3n.png';
 import {
   Dashboard as DashboardIcon,
   AccessTime as AccessTimeIcon,
@@ -170,7 +171,11 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
             collapsed={collapsed} 
           />
         )}
+        
       </nav>
+      <div className={styles.footer}>
+        <img src={logo2} alt="Mission Logo" className={styles.footerImage} />
+      </div>
     </aside>
   );
 }

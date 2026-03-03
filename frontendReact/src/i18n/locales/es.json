@@ -91,7 +91,8 @@
     "clockOut": "SALIDA",
     "incident": {
       "missing": "<strong>Incidencia detectada:</strong> El {{date}} no se registró ningún fichaje. Si fue un error, puedes solicitar una corrección.",
-      "incomplete": "<strong>Jornada incompleta:</strong> El {{date}} se registraron <strong>{{worked}}h</strong> de las <strong>{{expected}}h</strong> esperadas{{deficit}}. Si fue un error de fichaje, puedes solicitar una corrección.",
+      "incomplete": "<strong>Jornada incompleta:</strong> El {{date}} se registraron <strong>{{worked}}h</strong> de las <strong>{{expected}}h</strong> esperadas. Si fue un error de fichaje, puedes solicitar una corrección.",
+      "missing_out": "<strong>Incidencia detectada:</strong> El {{date}} no se registró la salida. Si fue un error, puedes solicitar una corrección.",
       "requestCorrection": "Solicitar corrección"
     }
   },

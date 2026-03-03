@@ -87,11 +87,18 @@
    ============================================ */
 .footer {
   padding: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
+  border-top: none;
   background: rgba(0, 0, 0, 0.02);
   flex-shrink: 0;
 }
 
+
+.footerImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
 .userInfo {
   display: flex;
   flex-direction: column;

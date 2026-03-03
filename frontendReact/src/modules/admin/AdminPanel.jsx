@@ -26,7 +26,7 @@ export default function AdminPanel() {
       </Typography>
 
       <Paper sx={{ px: 2 }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable">
+        <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable" scrollButtons="auto">
           <Tab icon={<Policy />}      iconPosition="start" label={t('admin.tabs.policies')} />
 
           <Tab icon={<Schedule />}    iconPosition="start" label={t('admin.tabs.schedules')} />
