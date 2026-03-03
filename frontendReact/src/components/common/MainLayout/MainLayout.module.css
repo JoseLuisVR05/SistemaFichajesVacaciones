@@ -4,6 +4,7 @@
 .mainLayout {
   display: flex;
   min-height: 100vh;
+  overflow: hidden;
   background-color: var(--color-background);
   position: relative;
 }
@@ -13,6 +14,12 @@
    ============================================ */
 .sidebarContainer {
   flex-shrink: 0;
+  width: 280px;
+  overflow: hidden;
+  transition: width var(--transition-normal);
+}
+.sidebarCollapsed .sidebarContainer {
+  width: 0;
 }
 
 /* ============================================
@@ -23,6 +30,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* ============================================
@@ -31,7 +40,8 @@
 .main {
   flex: 1;
   padding: var(--spacing-lg);
-  overflow-y: auto;
+  overflow-y: 0; 
+  min-height: 0;
 }
 
 /* ============================================
@@ -62,10 +72,20 @@
     top: 0;
     height: 100vh;
     z-index: 1000;
+    width: auto;
+    overflow: visible;
+    transition: none;
+  }
+
+  .mainContent {
+    overflow: visible;
+    min-height: 100vh;
+    height: auto;
   }
 
   .main {
     padding: var(--spacing-md);
+    overflow-y: visible;
   }
 
   .overlay {

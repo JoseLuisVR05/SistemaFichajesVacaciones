@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useDashboard } from '../../hooks/useDashboard';
 import { registerEntry } from '../../services/timeService';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS} from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 
 // ─── Subcomponentes ────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ import { RecentActivity } from './components/RecentActivity';
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // ── Hook de datos ──────────────────────────────────────
   const {
@@ -28,6 +28,9 @@ export default function Dashboard() {
     loadingData, pendingCorrections, pendingApprovals,
     vacationBalance, lastRequests, loadDashboardData,
   } = useDashboard();
+
+  const currentLocale = i18n.language === 'es' ? es : enUS;
+  const datePattern = i18n.language === 'es' ? "eeee, d 'de' MMMM 'de' yyyy" : "eeee, MMMM d, yyyy";
 
   // ── Estado de UI ───────────────────────────────────────
   const [loading, setLoading] = useState(false);
@@ -56,7 +59,7 @@ export default function Dashboard() {
           {t('dashboard.welcome', { name: user?.employeeName })}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {format(new Date(), "eeee, d 'de' MMMM 'de' yyyy", { locale: es })}
+          {format(new Date(), datePattern, { locale: currentLocale })}
         </Typography>
       </Box>
 

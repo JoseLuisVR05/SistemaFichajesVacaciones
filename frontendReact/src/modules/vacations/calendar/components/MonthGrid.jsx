@@ -24,7 +24,7 @@
 import { Box, Typography } from '@mui/material';
 import { endOfMonth, eachDayOfInterval, format, isWeekend, isSameDay } from 'date-fns';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 // Mapa de colores por tipo de ausencia.
 // Vive aquí y se exporta para que VacationCalendar pueda usarlo
@@ -45,20 +45,6 @@ export const getTypeColor = (type) => {
   return TYPE_COLOR[normalized] ?? TYPE_COLOR.VACATION;
 };
 
-const MONTH_NAMES = [
-  t('months.january'),
-  t('months.february'),
-  t('months.march'),
-  t('months.april'),
-  t('months.may'),
-  t('months.june'),
-  t('months.july'),
-  t('months.august'),
-  t('months.september'),
-  t('months.october'),
-  t('months.november'),
-  t('months.december'),
-];
 
 export function MonthGrid({ year, monthIndex, absences }) {
   const monthStart     = new Date(year, monthIndex, 1);
@@ -66,6 +52,23 @@ export function MonthGrid({ year, monthIndex, absences }) {
   const days           = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const firstDayOfWeek = (monthStart.getDay() + 6) % 7; // Lunes = 0
   const emptyDays      = Array(firstDayOfWeek).fill(null);
+
+  const { t } = useTranslation();
+
+  const MONTH_NAMES = [
+    t('months.january'),
+    t('months.february'),
+    t('months.march'),
+    t('months.april'),
+    t('months.may'),
+    t('months.june'),
+    t('months.july'),
+    t('months.august'),
+    t('months.september'),
+    t('months.october'),
+    t('months.november'),
+    t('months.december'),
+  ];
 
   const getAbsencesForDay = (day) =>
     absences.filter(a => isSameDay(toLocalDate(a.date), day));

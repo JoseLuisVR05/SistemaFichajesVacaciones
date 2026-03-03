@@ -110,7 +110,7 @@ export default function VacationCalendar() {
           {/* ── Leyenda — colores fijos por tipo ── */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
             <Typography variant="caption" color="text.secondary" fontWeight="600">
-              {t('vacations.calendar.legend')}:
+              {t('vacations.calendar.legend')}
             </Typography>
             {[
               { label: t('vacations.calendar.types.vacation'), color: TYPE_COLOR.VACATION },

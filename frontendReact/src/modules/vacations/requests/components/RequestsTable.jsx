@@ -7,7 +7,7 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { Send, Cancel, Visibility } from '@mui/icons-material';
 import { StatusChip, LoadingSpinner } from '../../../../components/ui';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 /**
  * RequestsTable
@@ -32,6 +32,9 @@ export function RequestsTable({
   onSubmit,
   onCancel,
 }) {
+
+  const { t } = useTranslation();
+
   const columns = [
     { field: 'startFormatted', headerName: t('vacations.table.from'), width: 110 },
     { field: 'endFormatted',   headerName: t('vacations.table.to'), width: 110 },

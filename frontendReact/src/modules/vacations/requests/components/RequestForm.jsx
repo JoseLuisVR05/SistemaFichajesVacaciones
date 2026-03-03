@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import { Send } from '@mui/icons-material';
 import { Grid } from '@mui/material';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 /**
  * RequestForm
@@ -20,6 +20,13 @@ import { t } from 'i18next';
  * @param {function} onSaveDraft   - Callback al pulsar "Guardar borrador" (autoSubmit=false)
  * @param {function} onCancel      - Callback al pulsar "Cancelar"
  */
+
+const isWekend = (dateStr) => {
+  if (!dateStr) return false;
+  const day = new Date(dateStr + 'T00:00:00').getDay();
+  return day === 0 || day === 6;
+}
+
 export function RequestForm({
   form,
   onFormChange,
@@ -30,6 +37,14 @@ export function RequestForm({
   onSaveDraft,
   onCancel,
 }) {
+
+  const { t } = useTranslation();
+
+  // Si alguna de las fechas es fin de semaana, bloqueamos todo
+
+  const startIsWeekend = isWekend(form.startDate);
+  const endIsWeekend = isWekend(form.endDate);
+  const hasWeekend = startIsWeekend || endIsWeekend;
   
   return (
     <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -82,7 +97,7 @@ export function RequestForm({
               <Button
                 variant="contained"
                 onClick={onSubmit}
-                disabled={!validation?.isValid || creating}
+                disabled={!validation?.isValid || creating || hasWeekend }
                 startIcon={creating ? <CircularProgress size={16} /> : <Send />}
               >
                 {t('vacations.form.submit')}
@@ -90,7 +105,7 @@ export function RequestForm({
               <Button
                 variant="outlined"
                 onClick={onSaveDraft}
-                disabled={!validation?.isValid || creating}
+                disabled={!validation?.isValid || creating || hasWeekend}
               >
                 {t('vacations.form.saveDraft')}
               </Button>
@@ -113,13 +128,19 @@ export function RequestForm({
             <CircularProgress size={24} sx={{ display: 'block', mx: 'auto', my: 2 }} />
           )}
 
-          {!validation && !validating && (
+          {!validation && !validating && !hasWeekend && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
               {t('vacations.form.calculation.hint')}
             </Typography>
           )}
 
-          {validation && (
+          {hasWeekend && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {t('vacations.form.errors.weekendAlert')}
+            </Alert>
+          )}
+
+          {validation && !hasWeekend && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">{t('vacations.form.calculation.workingDays')}</Typography>

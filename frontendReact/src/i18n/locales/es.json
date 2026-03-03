@@ -27,6 +27,15 @@
       "activate": "Activar"
     }
   },
+
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "Sin notificaciones nuevas",
+    "teamCorrections": "{{count}} corrección(es) del equipo pendiente(s) de aprobación",
+    "teamVacations": "{{count}} solicitud(es) de vacaciones pendiente(s) de aprobación",
+    "myCorrectionsResolved": "{{count}} corrección(es) tuya(s) han sido revisadas",
+    "myVacationsResolved": "{{count}} solicitud(es) de vacaciones tuya(s) han sido resueltas"
+  },
   "months": {
     "january": "Enero",
     "february": "Febrero",
@@ -162,7 +171,11 @@
     },
     "edit": {
       "title": "Editar solicitud de corrección",
-      "editing": "Editando la corrección del <strong>{{date}}</strong>"
+      "editing": "Editando la corrección del <strong>{{date}}</strong>",
+      "correctedMinutes": "Minutos corregidos (reales)",
+      "correctedMinutesHelper": "Minutos que deberían figurar",
+      "reason": "Motivo de la corrección",
+      "save": "Guardar cambios"
     },
     "reject": {
       "title": "Rechazar corrección",
@@ -174,6 +187,25 @@
       "title": "Cancelar solicitud",
       "description": "¿Seguro que deseas cancelar la solicitud del {{date}}? Esta acción no se puede deshacer.",
       "confirm": "Sí, cancelar solicitud"
+    },
+    "detail": {
+      "title": "Detalle de la corrección",
+      "rejectionReason": "Motivo del rechazo"
+    },
+    "tooltips": {
+      "ownOnly": "Solo puedes solicitar correcciones propias"
+    },
+    "messages": {
+      "created": "Solicitud creada correctamente",
+      "updated": "Corrección actualizada",
+      "cancelled": "Corrección cancelada",
+      "approved": "Corrección aprobada",
+      "rejected": "Corrección rechazada",
+      "errorCreate": "Error al crear la solicitud",
+      "errorUpdate": "Error al actualizar la corrección",
+      "errorCancel": "Error al cancelar la solicitud",
+      "errorApprove": "Error al aprobar la corrección",
+      "errorReject": "Error al rechazar la corrección"
     }
   },
   "vacations": {
@@ -192,6 +224,10 @@
       "startDate": "Fecha inicio",
       "endDate": "Fecha fin",
       "type": "Tipo",
+      "errors": {
+        "weekend": "No se permiten fines de semana",
+        "weekendAlert": "La fecha de inicio o fin cae en fin de semana. Selecciona solo días laborables."
+      },
       "types": {
         "vacation": "Vacaciones",
         "personal": "Asuntos personales",

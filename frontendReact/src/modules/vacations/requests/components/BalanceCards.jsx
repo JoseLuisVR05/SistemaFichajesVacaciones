@@ -6,7 +6,7 @@ import {
   EventAvailable,
 } from '@mui/icons-material';
 import { Grid } from '@mui/material';
-import { t } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 /**
  * BalanceCards
@@ -19,6 +19,7 @@ export function BalanceCards({ balance }) {
   // Si no hay balance configurado, no renderizamos nada
   if (!balance) return null;
 
+  const { t } = useTranslation();
 
   const cards = [
     {

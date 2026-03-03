@@ -23,10 +23,12 @@ import { es } from 'date-fns/locale';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpinner';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function History() {
   const navigate = useNavigate();
   const { canViewEmployees } = useRole();
+  const { user } = useAuth();
 
   // ── Hook de datos ──────────────────────────────────────
   const {
@@ -85,21 +87,24 @@ export default function History() {
           <IconButton size="small" onClick={() => handleView(row)} title={t('common.view')}>
             <Visibility fontSize="small" />
           </IconButton>
-          <IconButton 
-            size="small" 
-            color="primary"
-            title={t('history.actions.requestCorrection')}
-            onClick={() => navigate('/corrections', {
-              state: {
-                entryId: row.id,
-                date: row.eventTime
-                  ? format(toLocalDate(row.eventTime), 'yyyy-MM-dd')
-                  : row.dateFormatted,
-                openNew: true,
-              },
-            })}>
+          {(!canViewEmployees() || row.employeeId === user.employeeId) && (
+            <IconButton 
+              size="small" 
+              color ="primary"
+              title={t('history.actions.requestCorrection')}
+              onClick={() => navigate('/corrections', {
+                state: {
+                  entryId: row.id,
+                  date: row.eventTime
+                    ? format(toLocalDate(row.eventTime), 'yyyy-MM-dd')
+                    : row.dateFormatted,
+                  openNew: true,             
+                },
+            })}
+          >
             <Edit fontSize="small" />
           </IconButton>
+          )}
         </Box>
       ),
     },

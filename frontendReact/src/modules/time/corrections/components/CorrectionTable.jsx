@@ -10,7 +10,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
-import { t } from 'i18next';
 
 const formatMinutes = (mins) => {
   if (mins == null) return '-';
@@ -19,34 +18,6 @@ const formatMinutes = (mins) => {
   return `${mins < 0 ? '-' : ''}${h}h ${String(m).padStart(2, '0')}m`;
 };
 
-// Columnas base compartidas entre los dos modos
-const baseColumns = [
-  {
-    field: 'date', headerName: t('corrections.columns.date'), width: 110,
-    renderCell: ({ value }) =>
-      value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : '-',
-  },
-  {
-    field: 'originalMinutes', headerName: t('corrections.columns.originalMinutes'), width: 130,
-    renderCell: ({ value }) => formatMinutes(value),
-  },
-  {
-    field: 'correctedMinutes', headerName: t('corrections.columns.correctedMinutes'), width: 130,
-    renderCell: ({ value }) => formatMinutes(value),
-  },
-  {
-    field: 'reason', headerName: t('corrections.columns.reason'), flex: 1, minWidth: 200,
-  },
-  {
-    field: 'status', headerName: t('common.statusLabel'), width: 120,
-    renderCell: ({ value }) => <StatusChip status={value} />,
-  },
-  {
-    field: 'createdAt', headerName: t('corrections.columns.created'), width: 140,
-    renderCell: ({ value }) =>
-      value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
-  },
-];
 
 /**
  * CorrectionTable
@@ -67,6 +38,35 @@ export function CorrectionTable({
 }) {
 
   const { t } = useTranslation();
+
+  const baseColumns = [
+    {
+      field: 'date', headerName: t('corrections.columns.date'), width: 110,
+      renderCell: ({ value }) =>
+        value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : '-',
+    },
+    {
+      field: 'originalMinutes', headerName: t('corrections.columns.originalMinutes'), width: 130,
+      renderCell: ({ value }) => formatMinutes(value),
+    },
+    {
+      field: 'correctedMinutes', headerName: t('corrections.columns.correctedMinutes'), width: 130,
+      renderCell: ({ value }) => formatMinutes(value),
+    },
+    {
+      field: 'reason', headerName: t('corrections.columns.reason'), flex: 1, minWidth: 200,
+    },
+    {
+      field: 'status', headerName: t('common.statusLabel'), width: 120,
+      renderCell: ({ value }) => <StatusChip status={value} />,
+    },
+    {
+      field: 'createdAt', headerName: t('corrections.columns.created'), width: 140,
+      renderCell: ({ value }) =>
+        value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
+    },
+  ];
+
   const actionsColumn = {
     field: 'acciones',
     headerName: t('common.actions'),

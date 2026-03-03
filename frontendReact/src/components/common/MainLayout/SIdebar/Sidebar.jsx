@@ -36,33 +36,6 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
   const [vacationsOpen, setVacationsOpen] = useState(false);
   
 
-  // Notificaciones
-  const [pendingCorrections, setPendingCorrections] = useState(0);
-  const [pendingApprovals, setPendingApprovals] = useState(0);
-
-  // Cargar notificaciones
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
-    try {
-      // Correcciones pendientes
-      const corrections = await getCorrections({ status: 'PENDING', includeOwn: true });
-      const myCorrections = (Array.isArray(corrections) ? corrections : [])
-        .filter(c => c.employeeId === user?.employeeId);
-      setPendingCorrections(myCorrections.length);
-
-      // Aprobaciones pendientes
-      if (hasRole(['ADMIN', 'RRHH', 'MANAGER'])) {
-        const approvals = await getVacationRequests({ status: 'SUBMITTED' });
-        setPendingApprovals((Array.isArray(approvals) ? approvals : []).length);
-      }
-    } catch (err) {
-      console.error('Error loading notifications:', err);
-    }
-  };
-
   // Cerrar sidebar al navegar en mobile
   const handleNavClick = () => {
     onMobileClose?.();
@@ -109,7 +82,6 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
           to="/corrections"
           icon={<EditNoteIcon />}
           label={t('nav.corrections')}
-          badge={pendingCorrections}
           onClick={handleNavClick}
           collapsed={collapsed}
         />
@@ -135,7 +107,6 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onMobileClose
               to="/vacations/approvals"
               icon={<ThumbUpAlt style={{ fontSize: 18 }} />}
               label={t('vacations.approvals.title')}
-              badge={pendingApprovals}
               onClick={handleNavClick}
               collapsed={collapsed}
             />

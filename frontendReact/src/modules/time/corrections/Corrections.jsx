@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Tabs, Tab,
-  Button, Tooltip
+  Button, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Alert
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { format, subDays } from 'date-fns';
@@ -14,7 +14,7 @@ import { useRole } from '../../../hooks/useRole';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import { useCorrections } from '../../../hooks/useCorrections';
 import { useEmployees } from '../../../hooks/useEmployees';
-import { ConfirmDialog } from '../../../components/ui';
+import { ConfirmDialog, StatusChip  } from '../../../components/ui';
 import { CorrectionFilters }        from './components/CorrectionFilters';
 import { CorrectionTable }          from './components/CorrectionTable';
 import { CreateCorrectionDialog }   from './components/CreateCorrectionDialog';
@@ -24,6 +24,7 @@ import { SnackbarAlert }           from '../../../components/ui/SnackbarAlert/Sn
 import { useTranslation } from 'react-i18next';
 
 export default function Corrections() {
+
   const { user }  = useAuth();
   const { canManageCorrections, canViewEmployees, isManager } = useRole();
   const location  = useLocation();
@@ -84,9 +85,9 @@ export default function Corrections() {
   const handleCreate = async (data) => {
     try {
       await create(data);
-      showSnack('Solicitud creada correctamente');
+      showSnack(t('corrections.messages.created'));
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al crear', 'error');
+      showSnack(err.response?.data?.message || t('corrections.messages.errorCreate'), 'error');
       throw err; // para que el dialog no se cierre
     }
   };
@@ -94,10 +95,10 @@ export default function Corrections() {
   const handleEdit = async (id, data) => {
     try {
       await update(id, data);
-      showSnack('Corrección actualizada');
+      showSnack(t('corrections.messages.updated'));
       setEditTarget(null);
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al actualizar', 'error');
+      showSnack(err.response?.data?.message || t('corrections.messages.errorUpdate'), 'error');
       throw err;
     }
   };
@@ -105,33 +106,33 @@ export default function Corrections() {
   const handleDelete = async () => {
     try {
       await remove(deleteTarget.id);
-      showSnack('Corrección cancelada', 'info');
+      showSnack(t('corrections.messages.cancelled'), 'info');
       setDeleteTarget(null);
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al cancelar', 'error');
+      showSnack(err.response?.data?.message || t('corrections.messages.errorCancel'), 'error');
     }
   };
 
   const handleApprove = async (id) => {
     try {
       await approve(id);
-      showSnack('Corrección aprobada');
-    } catch {
-      showSnack('Error al aprobar', 'error');
+      showSnack(t('corrections.messages.approved'));
+    } catch (err) {
+      showSnack(err.response?.data?.message || t('corrections.messages.errorApprove'), 'error');
     }
   };
 
   const handleReject = async (id, reason) => {
     try {
       await reject(id, reason);
-      showSnack('Corrección rechazada');
+      showSnack(t('corrections.messages.rejected'));
       setRejectTarget(null);
     } catch {
-      showSnack('Error al rechazar', 'error');
+      showSnack(t('corrections.messages.errorReject'), 'error');  
       throw new Error('reject failed');
     }
   };
-
+ 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Box>
@@ -140,7 +141,7 @@ export default function Corrections() {
           <Button variant="contained" startIcon={<Add />}>{t('corrections.newRequest')}</Button>
         </Box>
         <Typography variant="h4">{t('corrections.title')}</Typography>
-        <Tooltip title={activeTab === 1 ? 'Solo puedes solicitar correcciones propias' : ''}>
+        <Tooltip title={activeTab === 1 ? t('corrections.tooltip.ownOnly') : ''}>
           <span>
             <Button variant="contained" startIcon={<Add />} onClick={() => setCreateOpen(true)}>
               {t('corrections.newRequest')}
@@ -212,15 +213,76 @@ export default function Corrections() {
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title="Cancelar solicitud"
-        description={`¿Seguro que deseas cancelar la solicitud del ${
-          deleteTarget?.date
-            ? new Date(deleteTarget.date).toLocaleDateString('es-ES')
-            : ''
-        }? Esta acción no se puede deshacer.`}
-        confirmLabel="Sí, cancelar solicitud"
+        title={t('corrections.delete.title')}
+        description={t('corrections.delete.description', {
+          date: deleteTarget?.date ? new Date(deleteTarget.date).toLocaleDateString() : ''
+        })} 
+        confirmLabel={t('corrections.delete.confirm')}
         confirmColor="error"
       />
+
+      {/* ── Diálogo de detalle ── */}
+      <Dialog
+        open={Boolean(detailTarget)}
+        onClose={() => setDetailTarget(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t('corrections.detail.title')}</DialogTitle>
+        <DialogContent>
+          {detailTarget && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
+              <Typography>
+                <strong>{t('corrections.columns.date')}:</strong>{' '}
+                {detailTarget.date
+                  ? new Date(detailTarget.date + 'T00:00:00').toLocaleDateString()
+                  : '-'}
+              </Typography>
+              <Typography>
+                <strong>{t('corrections.columns.originalMinutes')}:</strong>{' '}
+                {detailTarget.originalMinutes != null
+                  ? `${Math.floor(Math.abs(detailTarget.originalMinutes) / 60)}h ${Math.abs(detailTarget.originalMinutes) % 60}m`
+                  : '-'}
+              </Typography>
+              <Typography>
+                <strong>{t('corrections.columns.correctedMinutes')}:</strong>{' '}
+                {detailTarget.correctedMinutes != null
+                  ? `${Math.floor(Math.abs(detailTarget.correctedMinutes) / 60)}h ${Math.abs(detailTarget.correctedMinutes) % 60}m`
+                  : '-'}
+              </Typography>
+              <Typography>
+                <strong>{t('corrections.columns.reason')}:</strong>{' '}
+                  {detailTarget.reason || '-'}
+              </Typography>
+              <Typography component="div">
+                <strong>{t('common.statusLabel')}:</strong>{' '}
+                <StatusChip status={detailTarget.status} />
+              </Typography>
+                {detailTarget.employeeName && (
+                <Typography>
+                  <strong>{t('corrections.columns.employee')}:</strong>{' '}
+                  {detailTarget.employeeName}
+                </Typography>
+              )}
+              <Typography>
+                <strong>{t('corrections.columns.created')}:</strong>{' '}
+                {detailTarget.createdAt
+                  ? new Date(detailTarget.createdAt + (detailTarget.createdAt.endsWith('Z') ? '' : 'Z')).toLocaleString()
+                  : '-'}
+              </Typography>
+              {detailTarget.rejectionReason && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  <strong>{t('corrections.detail.rejectionReason')}:</strong>{' '}
+                  {detailTarget.rejectionReason}
+                </Alert>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDetailTarget(null)}>{t('common.close')}</Button>
+        </DialogActions>
+      </Dialog>
 
       <SnackbarAlert {...snackbar} onClose={closeSnack} />
     </Box>

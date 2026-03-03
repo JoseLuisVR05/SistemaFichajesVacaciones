@@ -27,6 +27,14 @@
       "activate": "Activate"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No new notifications",
+    "teamCorrections": "{{count}} correction request(s) pending your approval",
+    "teamVacations": "{{count}} vacation request(s) pending your approval",
+    "myCorrectionsResolved": "{{count}} of your correction(s) have been reviewed",
+    "myVacationsResolved": "{{count}} of your vacation request(s) have been resolved"
+  },
   "months": {
     "january": "January",
     "february": "February",
@@ -164,7 +172,11 @@
     },
     "edit": {
       "title": "Edit correction request",
-      "editing": "Editing correction for <strong>{{date}}</strong>"
+      "editing": "Editing correction for <strong>{{date}}</strong>",
+      "correctedMinutes": "Corrected minutes (actual)",
+      "correctedMinutesHelper": "Minutes that should be on record",
+      "reason": "Reason for correction",
+      "save": "Save changes"
     },
     "reject": {
       "title": "Reject correction",
@@ -176,6 +188,25 @@
       "title": "Cancel request",
       "description": "Are you sure you want to cancel the request for {{date}}? This action cannot be undone.",
       "confirm": "Yes, cancel request"
+    },
+    "detail": {
+    "title": "Correction detail",
+    "rejectionReason": "Rejection reason"
+    },
+    "tooltips": {
+      "ownOnly": "You can only request your own corrections"
+    },
+    "messages": {
+      "created": "Request created successfully",
+      "updated": "Correction updated",
+      "cancelled": "Correction cancelled",
+      "approved": "Correction approved",
+      "rejected": "Correction rejected",
+      "errorCreate": "Error creating request",
+      "errorUpdate": "Error updating correction",
+      "errorCancel": "Error cancelling request",
+      "errorApprove": "Error approving correction",
+      "errorReject": "Error rejecting correction"
     }
   },
   "vacations": {
@@ -194,6 +225,10 @@
       "startDate": "Start date",
       "endDate": "End date",
       "type": "Type",
+      "errors": {
+        "weekend": "Weekends are not allowed",
+        "weekendAlert": "Start or end date falls on a weekend. Please select working days only."
+      },
       "types": {
         "vacation": "Vacation",
         "personal": "Personal matters",
