@@ -101,12 +101,12 @@ export default function VacationRequests() {
       if (autoSubmit && result?.requestId) {
         try {
           await submit(result.requestId);
-          showSnack(`Solicitud enviada para aprobación (${result.requestedDays} días)`);
+          showSnack(t('vacations.messages.submitted', { days: result.requestedDays }));
         } catch {
-          showSnack(`Guardada como borrador. Error al enviar.`, 'warning');
+          showSnack(t('vacations.messages.submitError'), 'warning');
         }
       } else {
-        showSnack(`Borrador guardado (${result.requestedDays} días). Recuerda enviarlo.`, 'info');
+        showSnack(t('vacations.messages.draftSaved', { days: result.requestedDays }), 'info');
       }
       setForm(EMPTY_FORM);
       setValidation(null);
@@ -122,7 +122,7 @@ export default function VacationRequests() {
   const handleSubmit = async (requestId) => {
     try {
       await submit(requestId);
-      showSnack('Solicitud enviada para aprobación');
+      showSnack(t('vacations.messages.submittedForApproval'));
     } catch (err) {
       showSnack(err.response?.data?.message || 'Error al enviar', 'error');
     }
@@ -131,7 +131,7 @@ export default function VacationRequests() {
   const handleCancel = async (requestId) => {
     try {
       await cancel(requestId);
-      showSnack('Solicitud cancelada', 'info');
+      showSnack(t('vacations.messages.requestCancel'), 'info');
       refetchBalance();
     } catch (err) {
       showSnack(err.response?.data?.message || 'Error al cancelar', 'error');

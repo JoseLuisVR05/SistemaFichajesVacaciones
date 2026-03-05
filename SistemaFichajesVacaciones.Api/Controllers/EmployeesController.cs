@@ -124,7 +124,6 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
 
         return Ok(new
         {
-            message  = $"Empleado {(employee.IsActive ? "activado" : "desactivado")} correctamente",
             isActive = employee.IsActive
         });
     }

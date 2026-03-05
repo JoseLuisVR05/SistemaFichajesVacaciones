@@ -8,7 +8,7 @@ import { Refresh } from '@mui/icons-material';
 import { getEmployees, toggleEmployeeActive } from '../../../services/employeesService';
 import { StatusChip, LoadingSpinner } from '../../../components/ui';
 import { useTranslation } from 'react-i18next';
-import { common } from '@mui/material/colors';
+
 
 export function EmployeesTab({ showSnack }) {
   const [rows, setRows]       = useState([]);
@@ -46,7 +46,6 @@ export function EmployeesTab({ showSnack }) {
   const handleToggle = async (id) => {
     try {
       const result = await toggleEmployeeActive(id);
-      showSnack(result.message);
       const update = (prev) =>
         prev.map(r => r.id === id ? { ...r, isActive: result.isActive } : r);
       setRows(update);

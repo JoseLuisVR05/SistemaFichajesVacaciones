@@ -38,7 +38,7 @@ export default function VacationApprovals() {
   const handleApprove = async (requestId) => {
     try {
       await approve(requestId);
-      showSnack('Solicitud aprobada correctamente');
+      showSnack(t('vacations.messages.requestApproved'));
     } catch (err) {
       showSnack(err.response?.data?.message || 'Error al aprobar', 'error');
     }
@@ -46,12 +46,12 @@ export default function VacationApprovals() {
 
   const handleReject = async () => {
     if (!rejectComment.trim()) {
-      showSnack('El motivo del rechazo es obligatorio', 'warning');
+      showSnack(t('vacations.messages.requestReason'), 'warning');
       return;
     }
     try {
       await reject(selectedRow.id, rejectComment.trim());
-      showSnack('Solicitud rechazada', 'info');
+      showSnack( t('vacations.messages.requestRejected'), 'info');
       setRejectOpen(false);
       setRejectComment('');
       setSelectedRow(null);

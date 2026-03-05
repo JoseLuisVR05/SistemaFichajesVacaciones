@@ -66,7 +66,7 @@ export function PoliciesTab({ showSnack }) {
     try {
       if (editing) await updatePolicy(editing.id, form);
       else         await createPolicy(form);
-      showSnack(editing ? 'Política actualizada' : 'Política creada');
+      showSnack(editing ? t('admin.policies.messages.updatedPolicy') : t('admin.policies.messages.createdPolicy'));
       setDialogOpen(false);
       load();
     } catch (err) {
@@ -79,7 +79,7 @@ export function PoliciesTab({ showSnack }) {
   const handleDelete = async () => {
     try {
       await deletePolicy(deleteId);
-      showSnack('Política eliminada');
+      showSnack(t('admin.policies.messages.removedPolicy'));
       setDeleteId(null);
       load();
     } catch (err) {

@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
+import { formatCorrectionReason } from '../../../../utils/helpers/formatCorrections';
 
 const formatMinutes = (mins) => {
   if (mins == null) return '-';
@@ -54,7 +55,7 @@ export function CorrectionTable({
       renderCell: ({ value }) => formatMinutes(value),
     },
     {
-      field: 'reason', headerName: t('corrections.columns.reason'), flex: 1, minWidth: 200,
+      field: 'reason', headerName: t('corrections.columns.reason'), flex: 1, minWidth: 200, renderCell: ({value}) => formatCorrectionReason(value, t),
     },
     {
       field: 'status', headerName: t('common.statusLabel'), width: 120,

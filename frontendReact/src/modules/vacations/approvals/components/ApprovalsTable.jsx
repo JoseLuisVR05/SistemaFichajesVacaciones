@@ -18,11 +18,15 @@ export function ApprovalsTable({ rows, loading, onView, onApprove, onReject }) {
     { field: 'endFormatted',   headerName: t('vacations.approvals.columns.to'),    width: 110 },
     { field: 'requestedDays',  headerName: t('vacations.approvals.columns.days'),     width: 70  },
     {
-      field: 'comment', headerName: t('vacations.approvals.columns.reason'), flex: 1, minWidth: 150,
-      renderCell: ({ value }) => (
-        <Typography variant="body2" noWrap title={value || ''}>
-          {value || '-'}
-        </Typography>
+      field: 'type', headerName: t('vacations.table.type'), flex: 1, minWidth: 150,
+     renderCell: ({ value }) => (
+        <span>
+          {value === 'VACATION' ? t('vacations.table.columns.vacation')
+            : value === 'PERSONAL' ? t('vacations.table.columns.personal')
+            : value === 'OTHER' ? t('vacations.table.columns.other')
+            : value
+          }
+        </span>
       ),
     },
     {

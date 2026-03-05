@@ -173,7 +173,7 @@ public class TimeCorrectionsController : ControllerBase
         correction.Status = "REJECTED";
         correction.ApprovedByUserId = userId;
         correction.ApprovedAt = DateTime.UtcNow;
-        correction.Reason += $"\n[RECHAZO]: {dto.RejectionReason}";
+        correction.Reason += $"\n[REJECTION_REASON]: {dto.RejectionReason}";
         correction.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();

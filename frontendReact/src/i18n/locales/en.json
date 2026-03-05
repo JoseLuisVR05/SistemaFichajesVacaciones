@@ -13,6 +13,7 @@
     "view": "View detail",
     "filter": "Filter",
     "refresh": "Refresh",
+    "days": "days",
     "status": {
       "active": "Active",
       "inactive": "Inactive",
@@ -97,6 +98,16 @@
     "messages": "Messages",
     "clockIn": "CLOCK IN",
     "clockOut": "CLOCK OUT",
+    "entryRegistered": {
+      "IN": "Clock in registered successfully",
+      "OUT": "Clock out registered successfully"
+    },
+    "errors": {
+      "wrongSequence": "Last entry was {{last}}. Expected {{expected}}",
+      "noEmployee": "No employee assigned to this user",
+      "invalidToken": "Invalid session, please log in again",
+      "generic": "Error registering entry"
+    },
     "incident": {
       "missing": "<strong>Incident detected:</strong> No entry was registered on {{date}}. If this was a mistake, you can request a correction.",
       "incomplete": "<strong>Incomplete shift:</strong> On {{date}}, <strong>{{worked}}h</strong> were registered out of the expected <strong>{{expected}}h</strong>. If this was a clock error, you can request a correction.",
@@ -180,7 +191,7 @@
     },
     "reject": {
       "title": "Reject correction",
-      "description": "Provide the rejection reason for the correction on <strong>{{date}}</strong>:",
+      "description": "Provide the rejection reason for the correction on {{date}}:",
       "reason": "Rejection reason",
       "confirm": "Confirm rejection"
     },
@@ -207,7 +218,9 @@
       "errorCancel": "Error cancelling request",
       "errorApprove": "Error approving correction",
       "errorReject": "Error rejecting correction"
-    }
+    },
+    
+    "rejectionPrefix": "[Rejection reason]"
   },
   "vacations": {
     "title": "Vacations",
@@ -284,6 +297,16 @@
         "personal": "Personal",
         "other": "Other"
       }
+    },
+    "messages": {
+      "submitted": "Request submitted for approval ({{days}} days)",
+      "submitError": "Saved as draft. Error while submitting.",
+      "draftSaved": "Draft saved ({{days}} days). Remember to submit it.",
+      "submittedForApproval": "Request sent for approval",
+      "requestCancel": "request canceled",
+      "requestApproved": "request approved correctly",
+      "requestRejected": "request rejected",
+      "requestReason": "The reason for the rejection is mandatory"
     }
   },
   "employees": {
@@ -343,6 +366,11 @@
         "title": "Confirm deletion",
         "description": "Are you sure you want to delete this policy? It cannot be recovered.",
         "confirm": "Delete"
+      },
+      "messages": {
+        "updatedPolicy": "updated policy",
+        "createdPolicy": "created policy",
+        "removedPolicy": "removed policy"
       }
     },
     "schedules": {

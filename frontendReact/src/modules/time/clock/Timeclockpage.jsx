@@ -6,14 +6,23 @@ import { getCorrections } from '../../../services/correctionsService';
 import { useAuth } from '../../../context/AuthContext';
 import { format, subDays, isWeekend } from 'date-fns';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { mapEntryError } from '../../../utils/helpers/backendErrors';
 
 export default function TimeClockPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLocale = i18n.language === 'es' ? es : enUS;
+  // Opción más clara y fácil de mantener
+  const MISSING_OUT_API_TYPES = [
+    'MISSING_OUT',
+    'MISSING_OUT_ENTRY', 
+    'MISSING_OUT_EXIT',
+    'UNCLOSED_ENTRY'
+  ];
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -23,7 +32,7 @@ export default function TimeClockPage() {
 
   useEffect(() => {
     loadLastEntry();
-    checkYesterdayIncident();
+    checkYesterdayIncident(i18n.language);
     // Actualizar hora cada segundo
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -40,83 +49,121 @@ export default function TimeClockPage() {
     }
   };
   // ── Req #4: detectar incidencia del día anterior ──────────────────────
-  const checkYesterdayIncident = async () => {
+  const checkYesterdayIncident = async (language ='en') => {
     try {
-      const yesterday = subDays(new Date(), 1);
 
-      // Solo comprobar días laborables (lun-vie)
+      const currentLocale = language === 'es' ? es : enUS;
+      const datePattern   = language === 'es' ? "EEEE d 'de' MMMM" : "EEEE, MMMM d";
+
+      const yesterday = subDays(new Date(), 1);
       if (isWeekend(yesterday)) return;
 
       const yesterdayStr = format(yesterday, 'yyyy-MM-dd');
-
-      // 1. Obtener resumen del día anterior
       const summaries = await getDailySummary({ from: yesterdayStr, to: yesterdayStr });
       const summary = summaries?.[0];
 
+      if (!summary) return;
+
       const workedH = summary?.workedHours ?? 0;
-      const expectedH = summary?.expectedHours ?? 0;  
+      const expectedH = summary?.expectedHours ?? 0;
       const balanceH = summary?.balanceHours ?? 0;
       const apiIncidentType = summary?.incidentType ?? null;
       const proposedMinutes = summary?.proposedCorrectionsMinutes ?? 0;
 
-      // Si expectedHours === 0 el empleado no tiene horario configurado ese día:
-      // no hay nada que comprobar, salir sin incidencia.
-      if (expectedH === 0) return;
-      // Determinar tipo de incidencia:
-      // 'missing'    → ningún fichaje registrado en todo el día
-      // 'incomplete' → fichajes registrados pero no alcanzó las horas esperadas
-      // Tolerancia de 0.25h (15 min) para evitar falsas alertas por redondeos.
-      let incidentType = null;
-      if(apiIncidentType) {
-        // Si la API ya detectó una incidencia, usar ese resultado (evita mostrar incidencia si ya la gestionó el empleado)
-        if(apiIncidentType === 'NO_ENTRIES') {
-          incidentType = 'missing';
-        } else if(MISSING_OUT_API_TYPES.includes(apiIncidentType)) {
-          incidentType = 'missing_out';
-        } else{ 
-          incidentType = 'incomplete';
-        }
-      }else if (workedH === 0) {
-        incidentType = 'missing';
-      } else if (balanceH < -0.25) {
-        incidentType = 'incomplete';
+      console.log('📊 Resumen:', { apiIncidentType, workedH, expectedH, balanceH, proposedMinutes });
+
+      if (expectedH === 0) {
+        console.log('⏭️ expectedH es 0, saliendo');
+        return;
       }
+
+      // Depuración paso a paso
+      console.log('🔍 PASO 1: apiIncidentType =', apiIncidentType);
+      console.log('🔍 PASO 2: ¿apiIncidentType === "NO_ENTRIES"?', apiIncidentType === 'NO_ENTRIES');
       
-      if (!incidentType) return; // No hay incidencia
+      // Determinar tipo de incidencia
+      let incidentType = null;
 
-      // 2. Verificar que no exista ya una corrección para esa fecha (evita mostrar la incidencia si ya la gestionó)
+      if (apiIncidentType === 'NO_ENTRIES') {
+        console.log('🔍 PASO 3: Entró en NO_ENTRIES');
+        incidentType = 'missing';
+      } else if (apiIncidentType === 'UNCLOSED_ENTRY') {
+        console.log('🔍 PASO 3: Entró en UNCLOSED_ENTRY específico');
+        incidentType = 'missing_out';
+      } else if (['MISSING_OUT', 'MISSING_OUT_ENTRY', 'MISSING_OUT_EXIT'].includes(apiIncidentType)) {
+        console.log('🔍 PASO 3: Entró en array de MISSING_OUT');
+        incidentType = 'missing_out';
+      } else if (apiIncidentType === 'INCOMPLETE') {
+        console.log('🔍 PASO 3: Entró en INCOMPLETE por API');
+        incidentType = 'incomplete';
+      } else if (balanceH < -0.25) {
+        console.log('🔍 PASO 3: Entró en incomplete por balance');
+        incidentType = 'incomplete';
+      } else if (workedH === 0) {
+        console.log('🔍 PASO 3: Entró en missing por workedH');
+        incidentType = 'missing';
+      } else {
+        console.log('🔍 PASO 3: No entró en ninguna condición');
+      }
+
+      console.log('🔍 PASO 4: incidentType después de condiciones =', incidentType);
+
+      if (!incidentType) {
+        console.log('❌ PASO 5: incidentType es null, retornando sin crear incidencia');
+        return;
+      }
+
+      console.log('✅ PASO 5: incidentType tiene valor, continuando...');
+
+      // Verificar correcciones existentes
+      console.log('🔍 PASO 6: Verificando correcciones para', yesterdayStr);
       const corrections = await getCorrections({ includeOwn: true, from: yesterdayStr, to: yesterdayStr });
-      const alreadyHandled = (corrections || []).some(c =>
-        c.date?.startsWith(yesterdayStr)
-      );
+      const alreadyHandled = (corrections || []).some(c => c.date?.startsWith(yesterdayStr));
 
-      if (alreadyHandled) return; 
-        setIncident({
-          date: yesterdayStr,
-          dateFormatted: format(yesterday, "EEEE d 'de' MMMM", { locale: es }),
-          type: incidentType,
-          apiIncidentType,
-          workedHours: workedH,
-          expectedHours: expectedH,
-          deficitHours: Math.abs(balanceH).toFixed(1),
-          proposedMinutes
-        });
-    } catch {/* No hacer nada en caso de error, simplemente no mostrar la incidencia */}
+      console.log('🔍 PASO 7: alreadyHandled =', alreadyHandled);
+
+      if (alreadyHandled) {
+        console.log('❌ PASO 8: Ya hay corrección, no mostramos incidencia');
+        return;
+      }
+
+      console.log('✅ PASO 8: No hay corrección, creando incidencia');
+
+      // Crear incidencia
+      const incidentData = {
+        date: yesterdayStr,
+        dateFormatted: format(yesterday, datePattern, { locale: currentLocale }),
+        type: incidentType,
+        apiIncidentType,
+        workedHours: workedH,
+        expectedHours: expectedH,
+        deficitHours: Math.abs(balanceH).toFixed(1),
+        proposedMinutes
+      };
+
+      console.log('🎯 PASO 9: Incidencia a mostrar:', incidentData);
+      setIncident(incidentData);
+      console.log('✅ PASO 10: setIncident ejecutado');
+      
+    } catch (error) {
+      console.error('❌ ERROR en checkYesterdayIncident:', error);
+    }
   };
 
   const handleEntry = async (type) => {
     setLoading(true);
     setMessage('');
     try {
-      const result = await registerEntry(type);
-      setMessage(result.message || `Fichaje de ${type === 'IN' ? 'entrada' : 'salida'} registrado correctamente`);
+      await registerEntry(type);
+      setMessage(t(`timeclock.entryRegistered.${type}`));
       
       setTimeout(() => {
         loadLastEntry();
         setMessage('');
       }, 2000);
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Error al registrar fichaje');
+      const backendMessage = err.response?.data?.message || '';
+      setMessage(mapEntryError(backendMessage, t));
     } finally {
       setLoading(false);
     }
@@ -136,7 +183,7 @@ export default function TimeClockPage() {
     if (incident.type === 'missing_out') {
       return (
         <span dangerouslySetInnerHTML={{ __html:
-          t('timeclock.incident.missingOut', { date: incident.dateFormatted })
+          t('timeclock.incident.missing_out', { date: incident.dateFormatted })
         }} />
       );
     }
@@ -175,20 +222,20 @@ export default function TimeClockPage() {
           <Box>
             <Typography variant="body2" color="text.secondary">{t('timeclock.date')}</Typography>
             <Typography variant="h6" fontWeight="600">
-              {format(currentTime, "dd/MM/yyyy", { locale: es })}
+              {format(currentTime, "dd/MM/yyyy", { locale: currentLocale })}
             </Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">{t('timeclock.time')}</Typography>
             <Typography variant="h6" fontWeight="600" color="primary">
-              {format(currentTime, "HH:mm:ss", { locale: es })}
+              {format(currentTime, "HH:mm:ss", { locale: currentLocale })}
             </Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">{t('timeclock.lastEntry')}</Typography>
             <Typography variant="h6" fontWeight="600">
               {lastEntry 
-                ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.eventTime), "HH:mm", { locale: es })}`
+                ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.eventTime), "HH:mm", { locale: currentLocale })}`
                 : t('timeclock.noEntriesT')
               }
             </Typography>

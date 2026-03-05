@@ -13,6 +13,7 @@
     "view": "Ver detalle",
     "filter": "Filtrar",
     "refresh": "Recargar",
+    "days": "Días",
     "status": {
       "active": "Activo",
       "inactive": "Inactivo",
@@ -98,6 +99,16 @@
     "messages": "Mensajes",
     "clockIn": "ENTRADA",
     "clockOut": "SALIDA",
+    "entryRegistered": {
+      "IN": "Fichaje de entrada registrado correctamente",
+      "OUT": "Fichaje de salida registrado correctamente"
+    },
+    "errors": {
+      "wrongSequence": "El último registro fue {{last}}. Se esperaba {{expected}}",
+      "noEmployee": "Usuario sin empleado asignado",
+      "invalidToken": "Sesión inválida, vuelve a iniciar sesión",
+      "generic": "Error al registrar fichaje"
+    },
     "incident": {
       "missing": "<strong>Incidencia detectada:</strong> El {{date}} no se registró ningún fichaje. Si fue un error, puedes solicitar una corrección.",
       "incomplete": "<strong>Jornada incompleta:</strong> El {{date}} se registraron <strong>{{worked}}h</strong> de las <strong>{{expected}}h</strong> esperadas. Si fue un error de fichaje, puedes solicitar una corrección.",
@@ -179,7 +190,7 @@
     },
     "reject": {
       "title": "Rechazar corrección",
-      "description": "Indica el motivo del rechazo para la corrección del <strong>{{date}}</strong>:",
+      "description": "Indica el motivo del rechazo para la corrección del {{date}}:",
       "reason": "Motivo del rechazo",
       "confirm": "Confirmar rechazo"
     },
@@ -206,7 +217,8 @@
       "errorCancel": "Error al cancelar la solicitud",
       "errorApprove": "Error al aprobar la corrección",
       "errorReject": "Error al rechazar la corrección"
-    }
+    },
+    "rejectionPrefix": "[Motivo de rechazo]"
   },
   "vacations": {
     "title": "Vacaciones",
@@ -283,6 +295,16 @@
         "personal": "Personal",
         "other": "Otro"
       }
+    },
+    "messages": {
+      "submitted": "Solicitud enviada para aprobación ({{days}} días)",
+      "submitError": "Guardada como borrador. Error al enviar.",
+      "draftSaved": "Borrador guardado ({{days}} días). Recuerda enviarlo.",
+      "submittedForApproval": "Solicitud enviada para aprobación",
+      "requestCancel": "Solicitud cancelada",
+      "requestApproved": "Solicitud aprobada correctamente",
+      "requestRejected": "Solicitud rechazada",
+      "requestReason": "El motivo del rechazo es obligatorio"
     }
   },
   "employees": {
@@ -342,6 +364,11 @@
         "title": "Confirmar eliminación",
         "description": "¿Seguro que deseas eliminar esta política? No podrá recuperarse.",
         "confirm": "Eliminar"
+      },
+      "messages": {
+        "updatedPolicy": "política actualizada",
+        "createdPolicy": "política creada",
+        "removedPolicy": "política eliminada"
       }
     },
     "schedules": {

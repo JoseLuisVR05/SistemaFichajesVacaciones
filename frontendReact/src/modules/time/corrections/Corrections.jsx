@@ -22,6 +22,7 @@ import { EditCorrectionDialog }     from './components/EditCorrectionDialog';
 import { RejectCorrectionDialog }   from './components/RejectCorrectionDialog';
 import { SnackbarAlert }           from '../../../components/ui/SnackbarAlert/SnackbarAlert';
 import { useTranslation } from 'react-i18next';
+import { formatCorrectionReason } from '../../../utils/helpers/formatCorrections';
 
 export default function Corrections() {
 
@@ -252,7 +253,7 @@ export default function Corrections() {
               </Typography>
               <Typography>
                 <strong>{t('corrections.columns.reason')}:</strong>{' '}
-                  {detailTarget.reason || '-'}
+                  {formatCorrectionReason(detailTarget.reason, t)}
               </Typography>
               <Typography component="div">
                 <strong>{t('common.statusLabel')}:</strong>{' '}

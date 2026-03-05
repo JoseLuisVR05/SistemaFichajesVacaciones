@@ -47,7 +47,9 @@ export function RequestsTable({
         <span>
           {value === 'VACATION' ? t('vacations.table.columns.vacation')
             : value === 'PERSONAL' ? t('vacations.table.columns.personal')
-            : value}
+            : value === 'OTHER' ? t('vacations.table.columns.other')
+            : value
+          }
         </span>
       ),
     },

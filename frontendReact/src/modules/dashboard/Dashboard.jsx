@@ -11,6 +11,7 @@ import { registerEntry } from '../../services/timeService';
 import { format } from 'date-fns';
 import { es, enUS} from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
+import { mapEntryError } from '../../utils/helpers/backendErrors'
 
 // ─── Subcomponentes ────────────────────────────────────────────────────────
 import { QuickActions }  from './components/QuickActions';
@@ -41,11 +42,15 @@ export default function Dashboard() {
     setLoading(true);
     setMessage('');
     try {
-      const result = await registerEntry(type);
-      setMessage(result.message || `Fichaje ${type} registrado correctamente`);
-      setTimeout(() => { loadDashboardData(); setMessage(''); }, 1000);
+      await registerEntry(type);
+      setMessage(t(`timeclock.entryRegistered.${type}`));
+      setTimeout(() => { 
+        loadDashboardData(); 
+        setMessage(''); 
+      }, 1000);
     } catch (err) {
-      setMessage(err.response?.data?.message || 'Error al registrar fichaje');
+      const backendMessage = err.response?.data?.message || '';
+      setMessage(mapEntryError(backendMessage, t));
     } finally {
       setLoading(false);
     }
@@ -94,7 +99,7 @@ export default function Dashboard() {
           {
             label: t('dashboard.metrics.vacationsLeft'),
             value: loadingData ? null : (
-              vacationBalance ? `${vacationBalance.remainingDays} días` : '--'
+              vacationBalance ? `${vacationBalance.remainingDays} ${t('common.days')}` : '--'
             ),
           },
         ].map(({ label, value, color }) => (

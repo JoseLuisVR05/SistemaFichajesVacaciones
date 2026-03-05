@@ -6,9 +6,11 @@ import { useRole } from './useRole';
 import { getEntries, exportEntries } from '../services/timeService';
 import { getEmployees } from '../services/employeesService';
 import { toLocalDate } from '../utils/helpers/dateUtils';
+import { useAuth } from '../context/AuthContext';
 
 export function useHistory() {
   const { canViewEmployees } = useRole();
+  const { user } = useAuth();
 
   // ── Datos ─────────────────────────────────────────────
   const [rows, setRows]       = useState([]);
@@ -50,6 +52,17 @@ export function useHistory() {
         allData = results.flat();
       } else {
         allData = await getEntries(baseParams);
+
+          // 🔴 IMPORTANTE: Si no hay empleados seleccionados y el usuario es manager,
+        // los registros vienen SIN employeeId. Necesitamos filtrar solo los del usuario actual
+        if (canViewEmployees() && user) {
+          // Si el backend no devuelve employeeId, asumimos que todos los registros
+          // son del usuario actual cuando no hay filtro de empleados
+          allData = (allData || []).map(entry => ({
+            ...entry,
+            employeeId: user.employeeId // 👈 Asignamos el employeeId del usuario actual
+          }));
+        }
       }
 
       // Filtro local por tipo
