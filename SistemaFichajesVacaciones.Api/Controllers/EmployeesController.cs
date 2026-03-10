@@ -25,7 +25,7 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
     [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-           var userIdClaim = User.FindFirst("userId")?.Value;
+           var userIdClaim = User.FindFirst("userID")?.Value;
 
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();

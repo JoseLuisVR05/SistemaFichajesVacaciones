@@ -13,7 +13,7 @@
     "view": "View detail",
     "filter": "Filter",
     "refresh": "Refresh",
-    "days": "days",
+    "days": "Days",
     "status": {
       "active": "Active",
       "inactive": "Inactive",

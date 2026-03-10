@@ -58,7 +58,7 @@ export function CorrectionFilters({
             loading={loadingEmployees}
             size="small" sx={{ minWidth: 300 }}
             renderInput={params => (
-              <DateField
+              <TextField
                 {...params}
                 label={isManager ? t('corrections.filters.subordinate') : t('corrections.filters.employee')}
                 InputProps={{

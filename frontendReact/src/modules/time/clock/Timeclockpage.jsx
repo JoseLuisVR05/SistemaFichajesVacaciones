@@ -45,7 +45,6 @@ export default function TimeClockPage() {
         setLastEntry(entries[0]);
       }
     } catch (err) {
-      console.error('Error cargando último fichaje:', err);
     }
   };
   // ── Req #4: detectar incidencia del día anterior ──────────────────────
@@ -70,64 +69,31 @@ export default function TimeClockPage() {
       const apiIncidentType = summary?.incidentType ?? null;
       const proposedMinutes = summary?.proposedCorrectionsMinutes ?? 0;
 
-      console.log('📊 Resumen:', { apiIncidentType, workedH, expectedH, balanceH, proposedMinutes });
-
-      if (expectedH === 0) {
-        console.log('⏭️ expectedH es 0, saliendo');
-        return;
-      }
-
-      // Depuración paso a paso
-      console.log('🔍 PASO 1: apiIncidentType =', apiIncidentType);
-      console.log('🔍 PASO 2: ¿apiIncidentType === "NO_ENTRIES"?', apiIncidentType === 'NO_ENTRIES');
-      
+      if (expectedH === 0) return;
+  
       // Determinar tipo de incidencia
       let incidentType = null;
 
       if (apiIncidentType === 'NO_ENTRIES') {
-        console.log('🔍 PASO 3: Entró en NO_ENTRIES');
         incidentType = 'missing';
       } else if (apiIncidentType === 'UNCLOSED_ENTRY') {
-        console.log('🔍 PASO 3: Entró en UNCLOSED_ENTRY específico');
         incidentType = 'missing_out';
       } else if (['MISSING_OUT', 'MISSING_OUT_ENTRY', 'MISSING_OUT_EXIT'].includes(apiIncidentType)) {
-        console.log('🔍 PASO 3: Entró en array de MISSING_OUT');
         incidentType = 'missing_out';
       } else if (apiIncidentType === 'INCOMPLETE') {
-        console.log('🔍 PASO 3: Entró en INCOMPLETE por API');
         incidentType = 'incomplete';
       } else if (balanceH < -0.25) {
-        console.log('🔍 PASO 3: Entró en incomplete por balance');
         incidentType = 'incomplete';
       } else if (workedH === 0) {
-        console.log('🔍 PASO 3: Entró en missing por workedH');
         incidentType = 'missing';
-      } else {
-        console.log('🔍 PASO 3: No entró en ninguna condición');
-      }
+      } 
 
-      console.log('🔍 PASO 4: incidentType después de condiciones =', incidentType);
+      if (!incidentType) return;
 
-      if (!incidentType) {
-        console.log('❌ PASO 5: incidentType es null, retornando sin crear incidencia');
-        return;
-      }
-
-      console.log('✅ PASO 5: incidentType tiene valor, continuando...');
-
-      // Verificar correcciones existentes
-      console.log('🔍 PASO 6: Verificando correcciones para', yesterdayStr);
       const corrections = await getCorrections({ includeOwn: true, from: yesterdayStr, to: yesterdayStr });
       const alreadyHandled = (corrections || []).some(c => c.date?.startsWith(yesterdayStr));
 
-      console.log('🔍 PASO 7: alreadyHandled =', alreadyHandled);
-
-      if (alreadyHandled) {
-        console.log('❌ PASO 8: Ya hay corrección, no mostramos incidencia');
-        return;
-      }
-
-      console.log('✅ PASO 8: No hay corrección, creando incidencia');
+      if (alreadyHandled) return;
 
       // Crear incidencia
       const incidentData = {
@@ -141,12 +107,9 @@ export default function TimeClockPage() {
         proposedMinutes
       };
 
-      console.log('🎯 PASO 9: Incidencia a mostrar:', incidentData);
       setIncident(incidentData);
-      console.log('✅ PASO 10: setIncident ejecutado');
       
     } catch (error) {
-      console.error('❌ ERROR en checkYesterdayIncident:', error);
     }
   };
 
