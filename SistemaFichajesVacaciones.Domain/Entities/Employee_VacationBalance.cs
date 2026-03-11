@@ -1,6 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SistemaFichajesVacaciones.Domain.Entities;
 public class Employee_VacationBalance
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int BalanceId { get; set; }
     public int EmployeeId { get; set; }
     public int PolicyId { get; set; }

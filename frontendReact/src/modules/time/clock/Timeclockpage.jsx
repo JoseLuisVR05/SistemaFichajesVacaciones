@@ -199,7 +199,7 @@ export default function TimeClockPage() {
             <Typography variant="h6" fontWeight="600">
               {lastEntry 
                 ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.eventTime), "HH:mm", { locale: currentLocale })}`
-                : t('timeclock.noEntriesT')
+                : t('timeclock.noEntries')
               }
             </Typography>
           </Box>

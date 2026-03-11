@@ -1,9 +1,12 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SistemaFichajesVacaciones.Domain.Entities;
 
 public class TimeDailySummary
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int SummaryId { get; set; }
     public int EmployeeId { get; set; }
     public DateTime Date { get; set; } // Solo fecha (sin hora)
