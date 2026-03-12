@@ -96,8 +96,8 @@ export default function History() {
               onClick={() => navigate('/corrections', {
                 state: {
                   entryId: row.id,
-                  date: row.eventTime
-                    ? format(toLocalDate(row.eventTime), 'yyyy-MM-dd')
+                  date: row.time
+                    ? format(toLocalDate(row.time), 'yyyy-MM-dd')
                     : row.dateFormatted,
                   openNew: true,             
                 },

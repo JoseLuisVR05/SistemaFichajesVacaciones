@@ -118,6 +118,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Source)
                 .IsRequired()
                 .HasMaxLength(50);
+                
+            entity.Property(e => e.Time)
+                .HasColumnType("datetime")
+                .IsRequired(false);
 
             // Relación con Employee
             entity.HasOne(e => e.Employee)
@@ -126,7 +130,7 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Índice compuesto para búsquedas eficientes
-            entity.HasIndex(e => new { e.EmployeeId, e.EventTime });
+            entity.HasIndex(e => new { e.EmployeeId, e.Time });
         });
 
         // Configuración para EmployeesStaging

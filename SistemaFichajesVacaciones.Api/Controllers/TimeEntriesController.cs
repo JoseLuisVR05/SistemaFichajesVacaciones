@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -46,11 +47,16 @@ public class TimeEntriesController : ControllerBase
         if (dto.EntryType != "IN" && dto.EntryType != "OUT")
             return BadRequest(new { message = "EntryType debe ser IN o OUT" });
 
-        // Obtener último registro del día
+        var now = DateTime.UtcNow;
         var today = DateTime.UtcNow.Date;
+
+        // Obtener último registro del día
+        
         var lastEntry = await _db.TimeEntries
-            .Where(e => e.EmployeeId == employeeId && e.EventTime.Date == today)
-            .OrderByDescending(e => e.EventTime)
+            .Where(e => e.EmployeeId == employeeId
+                && e.Time != null
+                && e.Time.Value.Date == today)
+            .OrderByDescending(e => e.Time)
             .FirstOrDefaultAsync();
 
         // Validar secuencia IN -> OUT -> IN -> OUT
@@ -64,7 +70,8 @@ public class TimeEntriesController : ControllerBase
         {
             EmployeeId = employeeId,
             EntryType = dto.EntryType,
-            EventTime = DateTime.UtcNow,
+            EventTime = now,
+            Time = now,
             Source = "WEB",
             Comment = dto.Comment,
             CreatedByUserId = userId
@@ -77,9 +84,10 @@ public class TimeEntriesController : ControllerBase
         {
             message = $"Fichaje {dto.EntryType} registrado correctamente",
             timeEntryId = entry.TimeEntryId,
-            eventTime = entry.EventTime
+            time = entry.Time
         });
     }
+
 
     /// <summary>
     /// Obtener fichajes de un empleado en un rango de fechas
@@ -140,18 +148,18 @@ public class TimeEntriesController : ControllerBase
             .Where(e => e.EmployeeId == targetEmployeeId);
 
         if (from.HasValue)
-            query = query.Where(e => e.EventTime >= from.Value);
+            query = query.Where(e => e.Time >= from.Value);
 
         if (to.HasValue)
-            query = query.Where(e => e.EventTime <= to.Value.AddDays(1).AddSeconds(-1));
+            query = query.Where(e => e.Time <= to.Value.AddDays(1).AddSeconds(-1));
 
         var entries = await query
-            .OrderByDescending(e => e.EventTime)
+            .OrderByDescending(e => e.Time)
             .Select(e => new
             {
                 e.TimeEntryId,
                 e.EntryType,
-                e.EventTime,
+                time = e.Time,
                 e.Source,
                 e.Comment,
                 EmployeeName = e.Employee.FullName

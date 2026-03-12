@@ -27,160 +27,161 @@ public class TimeSummaryService : ITimeSummaryService
     public async Task<TimeDailySummary?> CalculateDailySummaryAsync(int employeeId, DateTime date)
     {
         var dateOnly = date.Date;
-    var nextDay = dateOnly.AddDays(1);
+        var nextDay = dateOnly.AddDays(1);
 
-    // Verificar si es festivo o fin de semana
-    var calendarDay = await _db.Calendar_Days
-        .AsNoTracking()
-        .SingleOrDefaultAsync(c => c.Date == dateOnly);
+        // Verificar si es festivo o fin de semana
+        var calendarDay = await _db.Calendar_Days
+            .AsNoTracking()
+            .SingleOrDefaultAsync(c => c.Date == dateOnly);
 
-    bool isWorkingDay = calendarDay == null || (!calendarDay.IsWeekend && !calendarDay.IsHoliday);
+        bool isWorkingDay = calendarDay == null || (!calendarDay.IsWeekend && !calendarDay.IsHoliday);
 
-    // Obtener horario del empleado para esa fecha
-    var schedule = await _db.Employee_WorkSchedules
-        .AsNoTracking()
-        .Where(s => s.EmployeeId == employeeId
-            && s.ValidFrom <= dateOnly
-            && (s.ValidTo == null || s.ValidTo >= dateOnly))
-        .OrderByDescending(s => s.ValidFrom)
-        .FirstOrDefaultAsync();
+        // Obtener horario del empleado para esa fecha
+        var schedule = await _db.Employee_WorkSchedules
+            .AsNoTracking()
+            .Where(s => s.EmployeeId == employeeId
+                && s.ValidFrom <= dateOnly
+                && (s.ValidTo == null || s.ValidTo >= dateOnly))
+            .OrderByDescending(s => s.ValidFrom)
+            .FirstOrDefaultAsync();
 
-    int expectedMinutes = 0;
-    TimeSpan endTimeOfDay = new TimeSpan(18, 0, 0); // 18:00 por defecto
+        int expectedMinutes = 0;
+        TimeSpan endTimeOfDay = new TimeSpan(18, 0, 0); // 18:00 por defecto
 
-    if (isWorkingDay)
-    {
-        if (schedule != null)
+        if (isWorkingDay)
         {
-            var workDuration = schedule.ExpectedEndTime - schedule.ExpectedStartTime;
-            expectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - schedule.BreakMinutes;
-            endTimeOfDay = schedule.ExpectedEndTime;
-        }
-        else
-        {
-            expectedMinutes = 480; // 8h por defecto
-        }
-    }
-
-    // Obtener todos los fichajes del día ordenados
-    var entries = await _db.TimeEntries
-        .AsNoTracking()
-        .Where(e => e.EmployeeId == employeeId
-                 && e.EventTime >= dateOnly
-                 && e.EventTime < nextDay)
-        .OrderBy(e => e.EventTime)
-        .ToListAsync();
-
-    int totalMinutes = 0;
-    bool hasOpenEntry = false;
-    TimeEntry? lastIn = null;
-
-    foreach (var entry in entries)
-    {
-        if (entry.EntryType == "IN")
-        {
-            lastIn = entry;
-        }
-        else if (entry.EntryType == "OUT" && lastIn != null)
-        {
-            totalMinutes += (int)Math.Round((entry.EventTime - lastIn.EventTime).TotalMinutes);
-            lastIn = null;
-        }
-    }
-
-    // Entrada sin cerrar
-    if (lastIn != null)
-    {
-        hasOpenEntry = true;
-
-        if (dateOnly == DateTime.UtcNow.Date)
-        {
-            // HOY: sumar tiempo hasta ahora (balance en tiempo real)
-            totalMinutes += (int)Math.Round((DateTime.UtcNow - lastIn.EventTime).TotalMinutes);
-        }
-        else
-        {
-            // Día pasado: cortar en fin de jornada del horario
-            // Preserva los pares IN/OUT cerrados anteriores del mismo día
-            var cutoff = dateOnly.Add(endTimeOfDay);
-            if (cutoff > lastIn.EventTime)
-                totalMinutes += (int)Math.Round((cutoff - lastIn.EventTime).TotalMinutes);
-
-            // Nunca superar los minutos esperados
-            totalMinutes = Math.Min(totalMinutes, expectedMinutes);
-        }
-    }
-
-    // ── Tipo de incidencia (solo días pasados laborables con horario) ─────
-    string? incidentType = null;
-
-    if (isWorkingDay && expectedMinutes > 0 && dateOnly < DateTime.UtcNow.Date)
-    {
-        if (entries.Count == 0)
-            incidentType = "NO_ENTRIES";
-        else if (hasOpenEntry)
-            incidentType = "UNCLOSED_ENTRY";
-        else if (totalMinutes < expectedMinutes)
-            incidentType = "INCOMPLETE";
-    }
-
-    // Calcular balance: trabajado - esperado
-    // Fin de semana → expectedMinutes=0 → balance=0 siempre
-    // Día laboral sin fichar → 0 - 480 = -480
-    // Día laboral fichado 8h → 480 - 480 = 0
-    // Día laboral fichado 9h → 540 - 480 = +60
-    var balance = totalMinutes - expectedMinutes;
-
-    // Guardar o actualizar resumen
-    var summary = await _db.TimeDailySummaries
-        .SingleOrDefaultAsync(s => s.EmployeeId == employeeId && s.Date == dateOnly);
-
-    if (summary == null)
-    {
-        summary = new TimeDailySummary
-        {
-            EmployeeId = employeeId,
-            Date = dateOnly,
-            ExpectedMinutes = expectedMinutes,
-            WorkedMinutes = totalMinutes,
-            BalanceMinutes = balance,
-            LastCalculatedAt = DateTime.UtcNow
-        };
-        _db.TimeDailySummaries.Add(summary);
-    }
-    else
-    {
-        summary.ExpectedMinutes = expectedMinutes;
-        summary.WorkedMinutes = totalMinutes;
-        summary.BalanceMinutes = balance;
-        summary.LastCalculatedAt = DateTime.UtcNow;
-    }
-
-    await _db.SaveChangesAsync();
-
-    // Asignar transientes después del save
-    summary.IncidentType = incidentType;
-    summary.HasOpenEntry = hasOpenEntry;
-
-    return summary;
-    }
-
-    public async Task<List<TimeDailySummary>> CalculateRangeSummaryAsync(int employeeId, DateTime fromDate, DateTime toDate)
-    {
-        var summaries = new List<TimeDailySummary>();
-
-        for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
-        {
-            var summary = await CalculateDailySummaryAsync(employeeId, date);
-
-            if( summary != null)
+            if (schedule != null)
             {
-                summaries.Add(summary);
+                var workDuration = schedule.ExpectedEndTime - schedule.ExpectedStartTime;
+                expectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - schedule.BreakMinutes;
+                endTimeOfDay = schedule.ExpectedEndTime;
+            }
+            else
+            {
+                expectedMinutes = 480; // 8h por defecto
             }
         }
-        
-        return summaries;
-    }
+
+        // Obtener todos los fichajes del día ordenados
+        var entries = await _db.TimeEntries
+            .AsNoTracking()
+            .Where(e => e.EmployeeId == employeeId
+                    && e.Time != null
+                    && e.Time >= dateOnly
+                    && e.Time < nextDay)
+            .OrderBy(e => e.Time)
+            .ToListAsync();
+
+        int totalMinutes = 0;
+        bool hasOpenEntry = false;
+        TimeEntry? lastIn = null;
+
+        foreach (var entry in entries)
+        {
+            if (entry.EntryType == "IN")
+            {
+                lastIn = entry;
+            }
+            else if (entry.EntryType == "OUT" && lastIn != null)
+            {
+                totalMinutes += (int)Math.Round((entry.Time!.Value - lastIn.Time!.Value).TotalMinutes);
+                lastIn = null;
+            }
+        }
+
+        // Entrada sin cerrar
+        if (lastIn != null)
+        {
+            hasOpenEntry = true;
+
+            if (dateOnly == DateTime.UtcNow.Date)
+            {
+                // HOY: sumar tiempo hasta ahora (balance en tiempo real)
+                totalMinutes += (int)Math.Round((DateTime.UtcNow - lastIn.Time!.Value).TotalMinutes);
+            }
+            else
+            {
+                // Día pasado: cortar en fin de jornada del horario
+                // Preserva los pares IN/OUT cerrados anteriores del mismo día
+                var cutoff = dateOnly.Add(endTimeOfDay);
+                if (cutoff > lastIn.Time!.Value)
+                    totalMinutes += (int)Math.Round((cutoff - lastIn.Time.Value).TotalMinutes);
+
+                // Nunca superar los minutos esperados
+                totalMinutes = Math.Min(totalMinutes, expectedMinutes);
+            }
+        }
+
+        // ── Tipo de incidencia (solo días pasados laborables con horario) ─────
+        string? incidentType = null;
+
+        if (isWorkingDay && expectedMinutes > 0 && dateOnly < DateTime.UtcNow.Date)
+        {
+            if (entries.Count == 0)
+                incidentType = "NO_ENTRIES";
+            else if (hasOpenEntry)
+                incidentType = "UNCLOSED_ENTRY";
+            else if (totalMinutes < expectedMinutes)
+                incidentType = "INCOMPLETE";
+        }
+
+        // Calcular balance: trabajado - esperado
+        // Fin de semana → expectedMinutes=0 → balance=0 siempre
+        // Día laboral sin fichar → 0 - 480 = -480
+        // Día laboral fichado 8h → 480 - 480 = 0
+        // Día laboral fichado 9h → 540 - 480 = +60
+        var balance = totalMinutes - expectedMinutes;
+
+        // Guardar o actualizar resumen
+        var summary = await _db.TimeDailySummaries
+            .SingleOrDefaultAsync(s => s.EmployeeId == employeeId && s.Date == dateOnly);
+
+        if (summary == null)
+        {
+            summary = new TimeDailySummary
+            {
+                EmployeeId = employeeId,
+                Date = dateOnly,
+                ExpectedMinutes = expectedMinutes,
+                WorkedMinutes = totalMinutes,
+                BalanceMinutes = balance,
+                LastCalculatedAt = DateTime.UtcNow
+            };
+            _db.TimeDailySummaries.Add(summary);
+        }
+        else
+        {
+            summary.ExpectedMinutes = expectedMinutes;
+            summary.WorkedMinutes = totalMinutes;
+            summary.BalanceMinutes = balance;
+            summary.LastCalculatedAt = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+
+        // Asignar transientes después del save
+        summary.IncidentType = incidentType;
+        summary.HasOpenEntry = hasOpenEntry;
+
+        return summary;
+        }
+
+        public async Task<List<TimeDailySummary>> CalculateRangeSummaryAsync(int employeeId, DateTime fromDate, DateTime toDate)
+        {
+            var summaries = new List<TimeDailySummary>();
+
+            for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
+            {
+                var summary = await CalculateDailySummaryAsync(employeeId, date);
+
+                if( summary != null)
+                {
+                    summaries.Add(summary);
+                }
+            }
+            
+            return summaries;
+        }
 
     public async Task<TimeSummaryValidation> ValidateDayEntriesAsync(int employeeId, DateTime date)
     {
@@ -192,8 +193,11 @@ public class TimeSummaryService : ITimeSummaryService
         //Obtenemos entradas del dia
         var entries = await _db.TimeEntries
             .AsNoTracking()
-            .Where(e => e.EmployeeId == employeeId && e.EventTime >= dateOnly && e.EventTime < nextDay)
-            .OrderBy(e => e.EventTime)
+            .Where(e => e.EmployeeId == employeeId
+                && e.Time != null
+                && e.Time >= dateOnly 
+                && e.Time < nextDay)
+            .OrderBy(e => e.Time)
             .ToListAsync();
 
         if( !entries.Any())
@@ -213,7 +217,7 @@ public class TimeSummaryService : ITimeSummaryService
                 if(lastIn != null)
                 {
                     validation.HasSequenceErrors = true;
-                    validation.Warnings.Add($"Entrada duplicada detectada a las {entry.EventTime:HH:mm}");
+                    validation.Warnings.Add($"Entrada duplicada detectada a las {entry.Time!.Value:HH:mm}");
                 }
                 
                 lastIn = entry;
@@ -223,11 +227,11 @@ public class TimeSummaryService : ITimeSummaryService
                 if(lastIn == null)
                 {
                     validation.HasSequenceErrors = true;
-                    validation.Warnings.Add($"Salida sin entrada previa a las {entry.EventTime:HH:mm}");
+                    validation.Warnings.Add($"Salida sin entrada previa a las {entry.Time!.Value:HH:mm}");
                 }
                 else
                 {
-                    var span = entry.EventTime - lastIn.EventTime;
+                    var span = entry.Time!.Value - lastIn.Time!.Value;
                     totalMinutes += (int)span.TotalMinutes;
 
                     //Validar duraciones sospechosas
@@ -244,7 +248,7 @@ public class TimeSummaryService : ITimeSummaryService
         if(lastIn != null)
         {
             validation.HasOpenEntry = true;
-            validation.Warnings.Add($"Entrada sin salida desde las {lastIn.EventTime:HH:mm}");
+            validation.Warnings.Add($"Entrada sin salida desde las {lastIn.Time!.Value:HH:mm}");
         }
 
         //Obtener minutos esperados

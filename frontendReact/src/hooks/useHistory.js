@@ -75,11 +75,11 @@ export function useHistory() {
         (allData || []).map((entry, idx) => ({
           id: entry.timeEntryId || idx,
           ...entry,
-          dateFormatted: entry.eventTime
-            ? format(toLocalDate(entry.eventTime), 'dd/MM/yyyy', { locale: es })
+          dateFormatted: entry.time
+            ? format(toLocalDate(entry.time), 'dd/MM/yyyy', { locale: es })
             : '-',
-          timeFormatted: entry.eventTime
-            ? format(toLocalDate(entry.eventTime), 'HH:mm:ss', { locale: es })
+          timeFormatted: entry.time
+            ? format(toLocalDate(entry.time), 'HH:mm:ss', { locale: es })
             : '-',
         }))
       );

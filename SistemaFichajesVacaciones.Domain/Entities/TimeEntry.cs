@@ -12,6 +12,7 @@ public class TimeEntry
     public string? Comment { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public int CreatedByUserId { get; set; }
+    public DateTime? Time { get; set; }
 
     // Navegación
     public Employee Employee { get; set; } = null!;

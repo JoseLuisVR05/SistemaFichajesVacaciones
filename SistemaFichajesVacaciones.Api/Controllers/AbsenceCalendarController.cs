@@ -56,4 +56,5 @@ public class AbsenceCalendarController : ControllerBase
 
         return Ok(absences);
     }
+    
 }

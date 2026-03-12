@@ -49,7 +49,7 @@ export function RecentActivity({ lastEntries, lastRequests, loading }) {
                   sx={{ minWidth: 50 }}
                 />
                 <Typography variant="body2">
-                  {format(toLocalDate(entry.eventTime), 'dd/MM HH:mm', { locale: es })}
+                  {format(toLocalDate(entry.time), 'dd/MM HH:mm', { locale: es })}
                 </Typography>
               </Box>
             </Box>
