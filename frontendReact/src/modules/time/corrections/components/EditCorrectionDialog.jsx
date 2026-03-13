@@ -5,6 +5,8 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Alert
 } from '@mui/material';
+import { toLocalDate } from '../.././../../utils/helpers/dateUtils';
+import { es } from 'date-fns/locale'; 
 
 export function EditCorrectionDialog({ open, onClose, onSubmit, correction }) {
   const [form, setForm] = useState({ correctedMinutes: '', reason: '' });
@@ -38,7 +40,7 @@ export function EditCorrectionDialog({ open, onClose, onSubmit, correction }) {
   };
 
   const dateFormatted = correction?.date
-    ? new Date(correction.date).toLocaleDateString('es-ES')
+    ? format(toLocalDate(correction.date), 'dd/MM/yyyy', { locale: es })
     : '';
 
   return (

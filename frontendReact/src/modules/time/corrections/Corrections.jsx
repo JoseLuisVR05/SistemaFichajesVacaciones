@@ -23,6 +23,8 @@ import { RejectCorrectionDialog }   from './components/RejectCorrectionDialog';
 import { SnackbarAlert }           from '../../../components/ui/SnackbarAlert/SnackbarAlert';
 import { useTranslation } from 'react-i18next';
 import { formatCorrectionReason } from '../../../utils/helpers/formatCorrections';
+import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { es } from 'date-fns/locale'; 
 
 export default function Corrections() {
 
@@ -216,7 +218,9 @@ export default function Corrections() {
         onConfirm={handleDelete}
         title={t('corrections.delete.title')}
         description={t('corrections.delete.description', {
-          date: deleteTarget?.date ? new Date(deleteTarget.date).toLocaleDateString() : ''
+        date: deleteTarget?.date
+          ? format(toLocalDate(deleteTarget.date), 'dd/MM/yyyy', { locale: es })
+          : ''
         })} 
         confirmLabel={t('corrections.delete.confirm')}
         confirmColor="error"
@@ -236,7 +240,7 @@ export default function Corrections() {
               <Typography>
                 <strong>{t('corrections.columns.date')}:</strong>{' '}
                 {detailTarget.date
-                  ? new Date(detailTarget.date + 'T00:00:00').toLocaleDateString()
+                  ? format(toLocalDate(detailTarget.date), 'dd/MM/yyyy', { locale: es })
                   : '-'}
               </Typography>
               <Typography>
