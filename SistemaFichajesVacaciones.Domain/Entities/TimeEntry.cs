@@ -6,7 +6,7 @@ public class TimeEntry
     public int EmployeeId { get; set; }
     public string EntryType { get; set; } = string.Empty; // IN, OUT, ADJUSTMENT
     public DateTime EventTime { get; set; }
-    public string Source { get; set; } = string.Empty; // WEB, MOBILE, ADMIN
+    public string Source { get; set; } = string.Empty; // WEB, MOBILE, TERMINAL
     public string? GeoLocation { get; set; }
     public string? DeviceId { get; set; }
     public string? Comment { get; set; }

@@ -76,7 +76,7 @@ export default function History() {
       field: 'source', headerName: t('history.columns.source'), width: 110,
       renderCell: ({ value }) => (
         <Chip 
-          label={value === 'WEB' ? 'Web' : value === 'MOBILE' ? 'Móvil' : value || 'Web'}
+          label={value === 'WEB' ? 'Web' : value === 'MOBILE' ? 'Móvil' : value || 'Terminal'}
           size="small" 
           variant="outlined" />
       ),
@@ -215,14 +215,14 @@ export default function History() {
               <Typography component="div">
                 <strong>{t('history.columns.type')}:</strong>{' '}
                 <Chip 
-                  label={selectedEntry.entryType === 'IN' ? t('history.filters.entry') : t('history.columns.exit')}
+                  label={selectedEntry.entryType === 'IN' ? t('history.filters.entry') : t('history.filters.exit')}
                   color={selectedEntry.entryType === 'IN' ? 'success' : 'error'} 
                   size="small" />
               </Typography>
               {selectedEntry.employeeName && (
                 <Typography><strong>{t('history.columns.employee')}:</strong> {selectedEntry.employeeName}</Typography>
               )}
-              <Typography><strong>{t('history.detail.origin')}:</strong> {selectedEntry.source || 'Web'}</Typography>
+              <Typography><strong>{t('history.detail.origin')}:</strong> {selectedEntry.source || 'Terminal'}</Typography>
               {selectedEntry.ipAddress && (
                 <Typography><strong>{t('history.detail.ip')}:</strong> {selectedEntry.ipAddress}</Typography>
               )}

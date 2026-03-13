@@ -41,4 +41,5 @@ export const VACATION_TYPES = {
 export const ENTRY_SOURCES = {
   WEB:    'WEB',
   MOBILE: 'MOBILE',
+  TERMINAL: "TERMINAL",
 };
