@@ -213,6 +213,7 @@
       "approved": "Corrección aprobada",
       "rejected": "Corrección rechazada",
       "errorCreate": "Error al crear la solicitud",
+      "submitError": "No se puede seleccionar fechas futuras",
       "errorUpdate": "Error al actualizar la corrección",
       "errorCancel": "Error al cancelar la solicitud",
       "errorApprove": "Error al aprobar la corrección",

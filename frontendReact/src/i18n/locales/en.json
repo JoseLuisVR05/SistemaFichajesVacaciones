@@ -214,6 +214,7 @@
       "approved": "Correction approved",
       "rejected": "Correction rejected",
       "errorCreate": "Error creating request",
+      "submitError":"Future dates cannot be selected",
       "errorUpdate": "Error updating correction",
       "errorCancel": "Error cancelling request",
       "errorApprove": "Error approving correction",

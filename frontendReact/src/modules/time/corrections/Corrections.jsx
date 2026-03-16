@@ -91,6 +91,7 @@ export default function Corrections() {
       showSnack(t('corrections.messages.created'));
     } catch (err) {
       showSnack(err.response?.data?.message || t('corrections.messages.errorCreate'), 'error');
+      showSnack(err.response?.data?.message || t('corrections.messages.submitError'), 'error');
       throw err; // para que el dialog no se cierre
     }
   };

@@ -28,11 +28,11 @@ export default function TimeClockPage() {
   const [message, setMessage] = useState('');
   const [lastEntry, setLastEntry] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [incident, setIncident] = useState(null);
+  const [incidents, setIncidents] = useState([]);
 
   useEffect(() => {
     loadLastEntry();
-    checkYesterdayIncident(i18n.language);
+    checkRecentIncidents(i18n.language);
     // Actualizar hora cada segundo
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -48,69 +48,85 @@ export default function TimeClockPage() {
     }
   };
   // ── Req #4: detectar incidencia del día anterior ──────────────────────
-  const checkYesterdayIncident = async (language ='en') => {
+  const checkRecentIncidents  = async (language ='en') => {
     try {
 
       const currentLocale = language === 'es' ? es : enUS;
       const datePattern   = language === 'es' ? "EEEE d 'de' MMMM" : "EEEE, MMMM d";
 
-      const yesterday = subDays(new Date(), 1);
-      if (isWeekend(yesterday)) return;
+      // Buscar el último día laborable (hasta 4 días atrás para cubrir puentes)
+      const candidates = [];
+      for (let i = 1; i <= 4; i++) {
+        const day = subDays(new Date(), i);
+        if (!isWeekend(day)) candidates.push(day);
+      }
 
-      const yesterdayStr = format(yesterday, 'yyyy-MM-dd');
-      const summaries = await getDailySummary({ from: yesterdayStr, to: yesterdayStr });
-      const summary = summaries?.[0];
+      if (candidates.length === 0) return;
 
-      if (!summary) return;
+      // Pedir resumen del rango completo (primer y último candidato)
+      const fromStr = format(candidates[candidates.length - 1], 'yyyy-MM-dd');
+      const toStr   = format(candidates[0], 'yyyy-MM-dd');
 
-      const workedH = summary?.workedHours ?? 0;
-      const expectedH = summary?.expectedHours ?? 0;
-      const balanceH = summary?.balanceHours ?? 0;
-      const apiIncidentType = summary?.incidentType ?? null;
-      const proposedMinutes = summary?.proposedCorrectionsMinutes ?? 0;
+      const summaries = await getDailySummary({ from: fromStr, to: toStr });
+      if (!summaries || summaries.length === 0) return;
 
-      if (expectedH === 0) return;
+      const found = [];
+
+      // Revisar cada día laborable (del más reciente al más antiguo)
+      for (const day of candidates) {
+        const dayStr  = format(day, 'yyyy-MM-dd');
+        const summary = summaries.find(s => s.date?.startsWith(dayStr));
+
+        if (!summary) continue;
+
+        const workedH          = summary?.workedHours ?? 0;
+        const expectedH        = summary?.expectedHours ?? 0;
+        const balanceH         = summary?.balanceHours ?? 0;
+        const apiIncidentType  = summary?.incidentType ?? null;
+        const proposedMinutes  = summary?.proposedCorrectionsMinutes ?? 0;
+
+        if (expectedH === 0) continue;
   
-      // Determinar tipo de incidencia
-      let incidentType = null;
+        // Determinar tipo de incidencia
+        let incidentType = null;
 
-      if (apiIncidentType === 'NO_ENTRIES') {
-        incidentType = 'missing';
-      } else if (apiIncidentType === 'UNCLOSED_ENTRY') {
-        incidentType = 'missing_out';
-      } else if (['MISSING_OUT', 'MISSING_OUT_ENTRY', 'MISSING_OUT_EXIT'].includes(apiIncidentType)) {
-        incidentType = 'missing_out';
-      } else if (apiIncidentType === 'INCOMPLETE') {
-        incidentType = 'incomplete';
-      } else if (balanceH < -0.25) {
-        incidentType = 'incomplete';
-      } else if (workedH === 0) {
-        incidentType = 'missing';
-      } 
+        if (apiIncidentType === 'NO_ENTRIES') {
+          incidentType = 'missing';
+        } else if (apiIncidentType === 'UNCLOSED_ENTRY') {
+          incidentType = 'missing_out';
+        } else if (['MISSING_OUT', 'MISSING_OUT_ENTRY', 'MISSING_OUT_EXIT'].includes(apiIncidentType)) {
+          incidentType = 'missing_out';
+        } else if (apiIncidentType === 'INCOMPLETE') {
+          incidentType = 'incomplete';
+        } else if (balanceH < -0.25) {
+          incidentType = 'incomplete';
+        } else if (workedH === 0) {
+          incidentType = 'missing';
+        } 
 
-      if (!incidentType) return;
+        if (!incidentType) continue;
 
-      const corrections = await getCorrections({ includeOwn: true, from: yesterdayStr, to: yesterdayStr });
-      const alreadyHandled = (corrections || []).some(c => c.date?.startsWith(yesterdayStr));
+        const corrections = await getCorrections({ includeOwn: true, from: dayStr, to: dayStr });
+        const alreadyHandled = (corrections || []).some(c => c.date?.startsWith(dayStr));
 
-      if (alreadyHandled) return;
+        if (alreadyHandled) continue;
 
-      // Crear incidencia
-      const incidentData = {
-        date: yesterdayStr,
-        dateFormatted: format(yesterday, datePattern, { locale: currentLocale }),
-        type: incidentType,
-        apiIncidentType,
-        workedHours: workedH,
-        expectedHours: expectedH,
-        deficitHours: Math.abs(balanceH).toFixed(1),
-        proposedMinutes
-      };
-
-      setIncident(incidentData);
-      
-    } catch (error) {
-    }
+        found.push({
+          date: dayStr,
+          dateFormatted: format(day, datePattern, { locale: currentLocale }),
+          type: incidentType,
+          apiIncidentType,
+          workedHours: workedH,
+          expectedHours: expectedH,
+          deficitHours: Math.abs(balanceH).toFixed(1),
+          proposedMinutes
+        });
+      }
+ 
+      setIncidents(found);
+        
+      } catch (error) {
+      }
   };
 
   const handleEntry = async (type) => {
@@ -132,8 +148,8 @@ export default function TimeClockPage() {
     }
   };
 
-  const renderIncidentMessage = () => {
-    if (!incident) return null;
+  const renderIncidentMessage = (incident) => {
+    //if (!incident) return null;
 
     if (incident.type === 'missing') {
       return (
@@ -265,8 +281,9 @@ export default function TimeClockPage() {
           </Alert>
         )}
         {/* ── Req #4: Banner de incidencia ─────────────────────────────── */}
-         {incident && (
+         {incidents.map((incident) => (
         <Alert
+          key={incident.date}
           severity="warning"
           icon={<Warning />}
           sx={{ mb: 3 }}
@@ -275,23 +292,26 @@ export default function TimeClockPage() {
               color="inherit"
               size="small"
               variant="outlined"
-              onClick={() => navigate('/corrections', {
+              onClick={() => {
+                console.log('Sending state:', incident.date);
+                navigate('/corrections', {
                 state: { 
                   openNew: true, 
                   date: incident.date,
                   proposedMinutes: incident.proposedMinutes,
                   incidentType: incident.apiIncidentType
                  }
-              })}
+              })
+            }}
             >
               {t('timeclock.incident.requestCorrection')}
             </Button>
           }
-          onClose={() => setIncident(null)}
+          onClose={() => setIncidents(prev => prev.filter(i => i.date !== incident.date))}
         >
-          {renderIncidentMessage()}
+          {renderIncidentMessage(incident)}
         </Alert>
-      )}
+      ))}
       </Paper>
     </Box>
   );

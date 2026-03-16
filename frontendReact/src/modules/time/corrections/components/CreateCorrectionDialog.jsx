@@ -1,5 +1,5 @@
 // CreateCorrectionDialog.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box
@@ -21,6 +21,12 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
     date: initialDate || EMPTY_FORM.date,
   });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open && initialDate) {
+      setForm(f => ({ ...f, date: initialDate }));
+    }
+  }, [open, initialDate]); [initialDate];
 
   // Traducción
   const { t } = useTranslation();
