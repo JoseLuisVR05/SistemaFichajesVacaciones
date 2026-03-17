@@ -1,7 +1,7 @@
 // src/modules/vacations/requests/VacationRequests.jsx
 
 // ─── Imports de React ──────────────────────────────────────────────────────
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ─── Imports de MUI ───────────────────────────────────────────────────────

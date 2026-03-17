@@ -6,7 +6,8 @@ import {
   Button, TextField, Box, Alert
 } from '@mui/material';
 import { toLocalDate } from '../.././../../utils/helpers/dateUtils';
-import { es } from 'date-fns/locale'; 
+import { es } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 export function EditCorrectionDialog({ open, onClose, onSubmit, correction }) {
   const [form, setForm] = useState({ correctedMinutes: '', reason: '' });

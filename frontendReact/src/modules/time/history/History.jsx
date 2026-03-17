@@ -2,9 +2,6 @@
 
 // ─── Imports de React ──────────────────────────────────────────────────────
 import { useState } from 'react';
-
-// ─── Imports de MUI ───────────────────────────────────────────────────────
-// ⚠️ Eliminados: todos los servicios, format, subDays, useEffect, useAuth
 import {
   Box, Typography, Paper, CircularProgress,
   TextField, MenuItem, Button, IconButton,
@@ -19,7 +16,6 @@ import { useHistory } from '../../../hooks/useHistory';
 import { useRole } from '../../../hooks/useRole';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner/LoadingSpinner';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';

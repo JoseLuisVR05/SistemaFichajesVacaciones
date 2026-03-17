@@ -16,14 +16,6 @@ export default function TimeClockPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const currentLocale = i18n.language === 'es' ? es : enUS;
-  // Opción más clara y fácil de mantener
-  const MISSING_OUT_API_TYPES = [
-    'MISSING_OUT',
-    'MISSING_OUT_ENTRY', 
-    'MISSING_OUT_EXIT',
-    'UNCLOSED_ENTRY'
-  ];
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [lastEntry, setLastEntry] = useState(null);

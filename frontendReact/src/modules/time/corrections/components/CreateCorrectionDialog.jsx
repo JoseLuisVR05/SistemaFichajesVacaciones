@@ -26,7 +26,7 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
     if (open && initialDate) {
       setForm(f => ({ ...f, date: initialDate }));
     }
-  }, [open, initialDate]); [initialDate];
+  }, [open, initialDate]);
 
   // Traducción
   const { t } = useTranslation();

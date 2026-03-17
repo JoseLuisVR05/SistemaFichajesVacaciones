@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useRole } from '../../../../hooks/useRole';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { getCorrections } from '../../../../services/correctionsService';
-import { getVacationRequests } from '../../../../services/vacationsService';
 import logo from '../../../../assets/la.png';
 import logo2 from '../../../../assets/bg-mission_sm-eF42QH3n.png';
 import {
