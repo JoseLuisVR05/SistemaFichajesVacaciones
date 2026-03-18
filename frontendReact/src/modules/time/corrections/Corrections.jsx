@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { useDialogState } from '../../../hooks/useDialogState';
 import { CorrectionDetailDialog } from './components/CorrectionDetailDialog';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
+import { mapCorrectionError } from '../../../utils/helpers/backendErrors';
 
 export default function Corrections() {
 
@@ -43,7 +44,7 @@ export default function Corrections() {
 
   // traducción
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [initialDate, setInitialDate] = useState(null);
   const { dialogs, setDialog } = useDialogState();
@@ -86,7 +87,13 @@ export default function Corrections() {
       showSnack(t(`corrections.messages.${messageKey}`));
       onSuccess?.();
     } catch (err) {
-      showSnack(err.response?.data?.message || t(`corrections.messages.error${messageKey}`), 'error');
+      const backendMessage = err.response?.data?.message;
+      const mappedMessage = backendMessage
+        ? mapCorrectionError(backendMessage, t)
+        : t(`corrections.messages.error${messageKey}`);
+
+      showSnack(mappedMessage, 'error');
+
       if (shouldThrow) throw err;
     }
   };

@@ -23,3 +23,28 @@ export const mapEntryError = (message = '', t) => {
   // Fallback — cualquier otro error no mapeado
   return t('timeclock.errors.generic');
 };
+
+/**
+ * Mapea errores específicos del módulo de correcciones
+ * @param {string} message - Mensaje de error del backend
+ * @param {function} t - Función de traducción i18next
+ * @returns {string} - Mensaje traducido
+ */
+export const mapCorrectionError = (message = '', t) => {
+  if (message.includes('fecha futura'))
+    return t('corrections.messages.submitError');
+
+  if (message.includes('corrección pendiente'))
+    return t('corrections.messages.errorCreate');
+
+  if (message.includes('sin empleado asignado'))
+    return t('corrections.messages.errorCreate');
+
+  if (message.includes('no encontrada'))
+    return t('corrections.messages.errorUpdate');
+
+  if (message.includes('ya fue procesada'))
+    return t('corrections.messages.errorUpdate');
+
+  return t('corrections.messages.errorCreate');
+};

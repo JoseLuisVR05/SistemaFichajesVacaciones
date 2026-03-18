@@ -47,15 +47,15 @@ public class TimeCorrectionsController : ControllerBase
         if (existingPending)
             return BadRequest(new { message = "Ya existe una corrección pendiente para esta fecha" });
 
-        // Obtener minutos originales del resumen
-        var summary = await _db.TimeDailySummaries
-            .SingleOrDefaultAsync(s => s.EmployeeId == user.EmployeeId.Value && s.Date == dto.Date);
+        // Calcular minutos originales desde TimeEntries (asegura precisión)
+        var summary = await _summaryService.CalculateDailySummaryAsync(user.EmployeeId.Value, dto.Date);
+        int originalMinutes = summary?.WorkedMinutes ?? 0;
 
         var correction = new TimeCorrection
         {
             EmployeeId = user.EmployeeId.Value,
             Date = dto.Date,
-            OriginalMinutes = summary?.WorkedMinutes ?? 0,
+            OriginalMinutes = originalMinutes,
             CorrectedMinutes = dto.CorrectedMinutes,
             Reason = dto.Reason,
             Status = "PENDING",

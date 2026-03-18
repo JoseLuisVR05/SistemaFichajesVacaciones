@@ -10,7 +10,6 @@ import { DateField } from '../../../../components/ui';
 
 const EMPTY_FORM = {
   date: format(new Date(), 'yyyy-MM-dd'),
-  originalMinutes: '',
   correctedMinutes: '',
   reason: '',
 };
@@ -61,12 +60,6 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
             label={t('corrections.create.date')} type="date" value={form.date}
             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
             InputLabelProps={{ shrink: true }} fullWidth
-          />
-          <TextField
-            label={t('corrections.create.originalMinutes')} type="number"
-            value={form.originalMinutes}
-            onChange={e => setForm(f => ({ ...f, originalMinutes: e.target.value }))}
-            helperText={t('corrections.create.originalMinutesHelper')} fullWidth
           />
           <TextField
             label={t('corrections.create.correctedMinutes')} type="number"
