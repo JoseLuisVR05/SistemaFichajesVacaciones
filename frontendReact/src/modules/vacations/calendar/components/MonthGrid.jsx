@@ -25,6 +25,7 @@ import { Box, Typography } from '@mui/material';
 import { endOfMonth, eachDayOfInterval, format, isWeekend, isSameDay } from 'date-fns';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
+import { memo } from 'react';
 
 // Mapa de colores por tipo de ausencia.
 // Vive aquí y se exporta para que VacationCalendar pueda usarlo
@@ -46,14 +47,19 @@ export const getTypeColor = (type) => {
 };
 
 
-export function MonthGrid({ year, monthIndex, absences }) {
+export const MonthGrid = memo(function MonthGrid({ year, monthIndex, absences }) {
   const monthStart     = new Date(year, monthIndex, 1);
   const monthEnd       = endOfMonth(monthStart);
   const days           = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const firstDayOfWeek = (monthStart.getDay() + 6) % 7; // Lunes = 0
   const emptyDays      = Array(firstDayOfWeek).fill(null);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // Abreviaturas de días según idioma
+  const dayHeaders = i18n.language === 'es'
+    ? ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+    : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   const MONTH_NAMES = [
     t('months.january'),
@@ -87,9 +93,9 @@ export function MonthGrid({ year, monthIndex, absences }) {
 
       {/* Cabecera días de la semana */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
-        {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d, i) => (
+        {dayHeaders.map((d, i) => (
           <Box
-            key={d}
+            key={i}
             sx={{
               textAlign: 'center',
               fontSize: '0.65rem',
@@ -184,4 +190,4 @@ export function MonthGrid({ year, monthIndex, absences }) {
       </Box>
     </Box>
   );
-}
+});

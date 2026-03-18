@@ -35,16 +35,3 @@ export const formatTime = (utcDateString) => {
   });
 };
 
-export const formatTimeWithSeconds = (utcDateString) => {
-  const date = toLocalDate(utcDateString);
-  if (!date || isNaN(date)) return '-';
-  return date.toLocaleTimeString('es-ES', {
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  });
-};
-
-/**
- * Para usar con date-fns: convierte UTC string a Date local.
- * Úsalo donde antes hacías new Date(backendDate).
- */
-export const parseUTC = (utcDateString) => toLocalDate(utcDateString);
