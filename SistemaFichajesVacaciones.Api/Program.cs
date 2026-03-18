@@ -135,6 +135,9 @@ var app = builder.Build();
 
 // Middleware
 
+// ✅ MIDDLEWARE GLOBAL DE EXCEPCIONES - Debe ser lo primero
+app.UseMiddleware<SistemaFichajesVacaciones.Api.Middleware.GlobalExceptionMiddleware>();
+
 if  (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
