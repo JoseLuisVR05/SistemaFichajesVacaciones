@@ -20,7 +20,6 @@ import { useVacationRequests, useVacationBalance } from '../../../hooks/useVacat
 import { validateVacationDates } from '../../../services/vacationsService';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { StatusChip, SnackbarAlert } from '../../../components/ui';
 
 
@@ -143,10 +142,10 @@ export default function VacationRequests() {
     id: r.requestId,
     ...r,
     startFormatted: r.startDate
-      ? format(toLocalDate(r.startDate), 'dd/MM/yyyy', { locale: es })
+      ? format(toLocalDate(r.startDate), 'dd/MM/yyyy')
       : '-',
     endFormatted: r.endDate
-      ? format(toLocalDate(r.endDate), 'dd/MM/yyyy', { locale: es })
+      ? format(toLocalDate(r.endDate), 'dd/MM/yyyy')
       : '-',
   }));
 

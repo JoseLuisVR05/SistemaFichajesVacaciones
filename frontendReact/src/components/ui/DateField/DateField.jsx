@@ -5,6 +5,7 @@ import { format, parseISO, isValid } from 'date-fns';
  * DateField
  * Drop-in replacement de <TextField type="date">.
  * Recibe y devuelve strings 'yyyy-MM-dd' igual que antes.
+ * Muestra siempre en formato DD/MM/YYYY
  */
 export function DateField({ label, value, onChange, size, sx, fullWidth, required, helperText, error }) {
 
@@ -25,6 +26,7 @@ export function DateField({ label, value, onChange, size, sx, fullWidth, require
       label={label}
       value={dateValue}
       onChange={handleChange}
+      format="dd/MM/yyyy"
       slotProps={{
         textField: {
           size: size || 'small',

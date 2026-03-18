@@ -7,7 +7,6 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import { CloudUpload, UploadFile, Refresh } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { importEmployeesCSV, getImportRuns } from '../../../services/employeesService';
 import { LoadingSpinner } from '../../../components/ui';
@@ -57,7 +56,7 @@ export function ImportTab({ showSnack }) {
     {
       field: 'importedAt', headerName: 'Fecha', width: 160,
       renderCell: ({ value }) =>
-        value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
+        value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm') : '-',
     },
     { field: 'totalRows',   headerName: 'Total',  width: 80 },
     {

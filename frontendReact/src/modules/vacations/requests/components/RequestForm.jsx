@@ -59,18 +59,14 @@ export function RequestForm({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <DateField
               label={t('vacations.form.startDate')}
-              type="date"
               value={form.startDate}
               onChange={e => onFormChange(prev => ({ ...prev, startDate: e.target.value }))}
-              InputLabelProps={{ shrink: true }}
               fullWidth
             />
             <DateField
               label={t('vacations.form.endDate')}
-              type="date"
               value={form.endDate}
               onChange={e => onFormChange(prev => ({ ...prev, endDate: e.target.value }))}
-              InputLabelProps={{ shrink: true }}
               fullWidth
             />
             <TextField

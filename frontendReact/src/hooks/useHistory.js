@@ -1,7 +1,6 @@
 // src/hooks/useHistory.js
 import { useState, useEffect, useCallback } from 'react';
 import { format, subDays } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useRole } from './useRole';
 import { getEntries, exportEntries } from '../services/timeService';
 import { getEmployees } from '../services/employeesService';
@@ -76,10 +75,10 @@ export function useHistory() {
           id: entry.timeEntryId || idx,
           ...entry,
           dateFormatted: entry.time
-            ? format(toLocalDate(entry.time), 'dd/MM/yyyy', { locale: es })
+            ? format(toLocalDate(entry.time), 'dd/MM/yyyy')
             : '-',
           timeFormatted: entry.time
-            ? format(toLocalDate(entry.time), 'HH:mm:ss', { locale: es })
+            ? format(toLocalDate(entry.time), 'HH:mm:ss')
             : '-',
         }))
       );

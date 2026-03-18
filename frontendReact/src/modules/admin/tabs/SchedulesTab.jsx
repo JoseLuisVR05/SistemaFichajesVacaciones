@@ -8,7 +8,6 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { Autocomplete } from '@mui/material';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { getSchedules, createSchedule, updateSchedule, deleteSchedule } from '../../../services/schedulesService';
 import { getEmployees } from '../../../services/employeesService';
@@ -118,12 +117,12 @@ export function SchedulesTab({ showSnack }) {
     {
       field: 'validFrom', headerName: t('admin.schedules.columns.validFrom'), width: 130,
       renderCell: ({ value }) =>
-        value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : '-',
+        value ? format(toLocalDate(value), 'dd/MM/yyyy') : '-',
     },
     {
       field: 'validTo', headerName: t('admin.schedules.columns.validTo'), width: 130,
       renderCell: ({ value }) =>
-        value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : 'Indefinido',
+        value ? format(toLocalDate(value), 'dd/MM/yyyy') : 'Indefinido',
     },
     { field: 'expectedStartTime', headerName: t('admin.schedules.columns.start'),  width: 90 },
     { field: 'expectedEndTime',   headerName: t('admin.schedules.columns.end'),   width: 90 },
@@ -215,14 +214,17 @@ export function SchedulesTab({ showSnack }) {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <DateField
-              label={t('admin.schedules.columns.validFrom')} type="date" value={form.validFrom}
+              label={t('admin.schedules.columns.validFrom')} 
+              value={form.validFrom}
               onChange={e => setForm(f => ({ ...f, validFrom: e.target.value }))}
-              InputLabelProps={{ shrink: true }} fullWidth required
+              fullWidth 
+              required
             />
             <DateField
-              label={t('admin.schedules.columns.validTo')} type="date" value={form.validTo}
+              label={t('admin.schedules.columns.validTo')} 
+              value={form.validTo}
               onChange={e => setForm(f => ({ ...f, validTo: e.target.value }))}
-              InputLabelProps={{ shrink: true }} fullWidth
+              fullWidth
               helperText={t('admin.schedules.columns.helperText')}
             />
             <Box sx={{ display: 'flex', gap: 2 }}>

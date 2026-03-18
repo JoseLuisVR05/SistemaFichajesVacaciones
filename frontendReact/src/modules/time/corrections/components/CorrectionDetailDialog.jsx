@@ -3,7 +3,6 @@ import {
   Typography, Box, Button, Alert
 } from '@mui/material';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { StatusChip } from '../../../../components/ui';
 import { formatCorrectionReason } from '../../../../utils/helpers/formatCorrections';
@@ -22,7 +21,7 @@ export function CorrectionDetailDialog({ open, correction, onClose }) {
           <Typography>
             <strong>{t('corrections.columns.date')}:</strong>{' '}
             {correction.date
-              ? format(toLocalDate(correction.date), 'dd/MM/yyyy', { locale: es })
+              ? format(toLocalDate(correction.date), 'dd/MM/yyyy')
               : '-'}
           </Typography>
           <Typography>

@@ -119,20 +119,14 @@ export default function History() {
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <DateField 
             label={t('history.filters.from')} 
-            type="date" 
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            InputLabelProps={{ shrink: true }} 
-            size="small"
-            inputProps={{ lang: i18n.language }} />
+            size="small" />
           <DateField 
             label={t('history.filters.to')} 
-            type="date" 
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            InputLabelProps={{ shrink: true }} 
-            size="small"
-            inputProps={{ lang: i18n.language }} />
+            size="small" />
           <TextField 
             select 
             label={t('history.filters.type')} 

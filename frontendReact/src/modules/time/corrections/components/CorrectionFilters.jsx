@@ -27,15 +27,17 @@ export function CorrectionFilters({
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
 
         <DateField
-          label={t('history.filters.from')} type="date" value={fromDate}
+          label={t('history.filters.from')} 
+          value={fromDate}
           onChange={e => onFromDateChange(e.target.value)}
-          InputLabelProps={{ shrink: true }} size="small"
+          size="small"
         />
 
         <DateField
-          label={t('history.filters.to')} type="date" value={toDate}
+          label={t('history.filters.to')} 
+          value={toDate}
           onChange={e => onToDateChange(e.target.value)}
-          InputLabelProps={{ shrink: true }} size="small"
+          size="small"
         />
 
         <TextField

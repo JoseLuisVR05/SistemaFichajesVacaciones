@@ -1,7 +1,6 @@
 // src/pages/dashboard/RecentActivity.jsx
 import { Box, Paper, Typography, Chip, CircularProgress } from '@mui/material';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
 
@@ -49,7 +48,7 @@ export function RecentActivity({ lastEntries, lastRequests, loading }) {
                   sx={{ minWidth: 50 }}
                 />
                 <Typography variant="body2">
-                  {format(toLocalDate(entry.time), 'dd/MM HH:mm', { locale: es })}
+                  {format(toLocalDate(entry.time), 'dd/MM HH:mm')}
                 </Typography>
               </Box>
             </Box>
@@ -78,8 +77,8 @@ export function RecentActivity({ lastEntries, lastRequests, loading }) {
               }}
             >
               <Typography variant="body2">
-                {req.startDate ? format(toLocalDate(req.startDate), 'dd/MM', { locale: es }) : ''} -{' '}
-                {req.endDate   ? format(toLocalDate(req.endDate),   'dd/MM', { locale: es }) : ''}
+                {req.startDate ? format(toLocalDate(req.startDate), 'dd/MM') : ''} -{' '}
+                {req.endDate   ? format(toLocalDate(req.endDate),   'dd/MM') : ''}
               </Typography>
               <Chip
                 label={req.status} size="small" variant="outlined"

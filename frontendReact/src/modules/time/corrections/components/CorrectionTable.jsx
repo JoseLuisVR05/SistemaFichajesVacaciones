@@ -7,7 +7,6 @@ import {
 } from '@mui/icons-material';
 import { StatusChip, LoadingSpinner } from '../../../../components/ui';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { toLocalDate } from '../../../../utils/helpers/dateUtils';
 import { useTranslation } from 'react-i18next';
 import { formatCorrectionReason } from '../../../../utils/helpers/formatCorrections';
@@ -44,7 +43,7 @@ export function CorrectionTable({
     {
       field: 'date', headerName: t('corrections.columns.date'), width: 110,
       renderCell: ({ value }) =>
-        value ? format(toLocalDate(value), 'dd/MM/yyyy', { locale: es }) : '-',
+        value ? format(toLocalDate(value), 'dd/MM/yyyy') : '-',
     },
     {
       field: 'originalMinutes', headerName: t('corrections.columns.originalMinutes'), width: 130,
@@ -64,7 +63,7 @@ export function CorrectionTable({
     {
       field: 'createdAt', headerName: t('corrections.columns.created'), width: 140,
       renderCell: ({ value }) =>
-        value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm', { locale: es }) : '-',
+        value ? format(toLocalDate(value), 'dd/MM/yyyy HH:mm') : '-',
     },
   ];
 

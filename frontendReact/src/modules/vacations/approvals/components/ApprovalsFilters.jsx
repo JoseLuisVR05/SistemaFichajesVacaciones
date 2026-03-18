@@ -55,14 +55,16 @@ export function ApprovalsFilters({
           <MenuItem value="REJECTED">{t('common.status.rejected')}</MenuItem>
         </TextField>
         <DateField
-          label={t('vacations.approvals.columns.from')} type="date" value={fromDate}
+          label={t('vacations.approvals.columns.from')} 
+          value={fromDate}
           onChange={(e) => onFromDateChange(e.target.value)}
-          InputLabelProps={{ shrink: true }} size="small"
+          size="small"
         />
         <DateField
-          label={t('vacations.approvals.columns.to')} type="date" value={toDate}
+          label={t('vacations.approvals.columns.to')} 
+          value={toDate}
           onChange={(e) => onToDateChange(e.target.value)}
-          InputLabelProps={{ shrink: true }} size="small"
+          size="small"
         />
         <TextField
           select label={t('employees.columns.department')} value={departmentFilter}

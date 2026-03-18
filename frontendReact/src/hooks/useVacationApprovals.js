@@ -1,7 +1,6 @@
 // src/hooks/useVacationApprovals.js
 import { useState, useEffect, useCallback } from 'react';
 import { format, subDays } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { useAuth } from '../context/AuthContext';
 import { useRole } from './useRole';
 import {
@@ -81,13 +80,13 @@ export function useVacationApprovals() {
           id: r.requestId,
           ...r,
           startFormatted: r.startDate
-            ? format(toLocalDate(r.startDate), 'dd/MM/yyyy', { locale: es })
+            ? format(toLocalDate(r.startDate), 'dd/MM/yyyy')
             : '-',
           endFormatted: r.endDate
-            ? format(toLocalDate(r.endDate), 'dd/MM/yyyy', { locale: es })
+            ? format(toLocalDate(r.endDate), 'dd/MM/yyyy')
             : '-',
-          createdFormatted: r.createdAt
-            ? format(toLocalDate(r.createdAt), 'dd/MM/yyyy HH:mm', { locale: es })
+          createdAtFormatted: r.createdAt
+            ? format(toLocalDate(r.createdAt), 'dd/MM/yyyy HH:mm')
             : '-',
         }))
       );

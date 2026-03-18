@@ -57,9 +57,10 @@ export function CreateCorrectionDialog({ open, onClose, onSubmit, initialDate })
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <DateField
-            label={t('corrections.create.date')} type="date" value={form.date}
+            label={t('corrections.create.date')} 
+            value={form.date}
             onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-            InputLabelProps={{ shrink: true }} fullWidth
+            fullWidth
           />
           <TextField
             label={t('corrections.create.correctedMinutes')} type="number"

@@ -6,7 +6,6 @@ import { getCorrections } from '../../../services/correctionsService';
 import { useAuth } from '../../../context/AuthContext';
 import { format, subDays, isWeekend } from 'date-fns';
 import { toLocalDate } from '../../../utils/helpers/dateUtils';
-import { es, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { mapEntryError } from '../../../utils/helpers/backendErrors';
@@ -15,7 +14,6 @@ export default function TimeClockPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const currentLocale = i18n.language === 'es' ? es : enUS;
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [lastEntry, setLastEntry] = useState(null);
@@ -24,11 +22,11 @@ export default function TimeClockPage() {
 
   useEffect(() => {
     loadLastEntry();
-    checkRecentIncidents(i18n.language);
+    checkRecentIncidents();
     // Actualizar hora cada segundo
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [i18n.language]);
 
   const loadLastEntry = async () => {
     try {
@@ -40,11 +38,8 @@ export default function TimeClockPage() {
     }
   };
   // ── Req #4: detectar incidencia del día anterior ──────────────────────
-  const checkRecentIncidents  = async (language ='en') => {
+  const checkRecentIncidents  = async () => {
     try {
-
-      const currentLocale = language === 'es' ? es : enUS;
-      const datePattern   = language === 'es' ? "EEEE d 'de' MMMM" : "EEEE, MMMM d";
 
       // Buscar el último día laborable (hasta 4 días atrás para cubrir puentes)
       const candidates = [];
@@ -105,7 +100,7 @@ export default function TimeClockPage() {
 
         found.push({
           date: dayStr,
-          dateFormatted: format(day, datePattern, { locale: currentLocale }),
+          dateFormatted: format(day, 'dd/MM/yyyy'),
           type: incidentType,
           apiIncidentType,
           workedHours: workedH,
@@ -193,20 +188,20 @@ export default function TimeClockPage() {
           <Box>
             <Typography variant="body2" color="text.secondary">{t('timeclock.date')}</Typography>
             <Typography variant="h6" fontWeight="600">
-              {format(currentTime, "dd/MM/yyyy", { locale: currentLocale })}
+              {format(currentTime, "dd/MM/yyyy")}
             </Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">{t('timeclock.time')}</Typography>
             <Typography variant="h6" fontWeight="600" color="primary">
-              {format(currentTime, "HH:mm:ss", { locale: currentLocale })}
+              {format(currentTime, "HH:mm:ss")}
             </Typography>
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">{t('timeclock.lastEntry')}</Typography>
             <Typography variant="h6" fontWeight="600">
               {lastEntry 
-                ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.time), "HH:mm", { locale: currentLocale })}`
+                ? `${lastEntry.entryType} - ${format(toLocalDate(lastEntry.time), "HH:mm")}`
                 : t('timeclock.noEntries')
               }
             </Typography>
