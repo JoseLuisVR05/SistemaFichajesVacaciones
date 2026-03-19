@@ -16,10 +16,12 @@ public class TimeEntriesController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly ITimeSummaryService _summaryService;
-    public TimeEntriesController(AppDbContext db, ITimeSummaryService summaryService)
+    private readonly IEmployeeAuthorizationService _authService;
+    public TimeEntriesController(AppDbContext db, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService)
     {
         _db = db;
         _summaryService = summaryService;
+        _authService = authService;
     }
 
     /// <summary>
@@ -116,13 +118,8 @@ public class TimeEntriesController : ControllerBase
                 if(User.IsInRole("MANAGER"))
                 {
                     var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
-                    var subordinateIds = await _db.Employees
-                        .Where(e => e.ManagerEmployeeId == managerUser.EmployeeId)
-                        .Select(e => e.EmployeeId)
-                        .ToListAsync();
-
-                    if(!subordinateIds.Contains(employeeId.Value))
-
+                    
+                    if (!await _authService.IsManagerOfEmployeeAsync(managerUser.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
                 }
                 else
@@ -197,12 +194,8 @@ public class TimeEntriesController : ControllerBase
                 if (User.IsInRole("MANAGER"))
                 {
                     var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
-                    var subordinateIds = await _db.Employees
-                        .Where(e => e.ManagerEmployeeId == managerUser.EmployeeId)
-                        .Select(e => e.EmployeeId)
-                        .ToListAsync();
-
-                    if (!subordinateIds.Contains(employeeId.Value))
+                    
+                    if (!await _authService.IsManagerOfEmployeeAsync(managerUser.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
                 }
                 else

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 using SistemaFichajesVacaciones.Application.Interfaces;
 
@@ -17,17 +18,20 @@ public class VacationRequestsController : ControllerBase
     private readonly IVacationRequestService _requestService;
     private readonly IVacationBalanceService _balanceService;
     private readonly IAuditService _audit;
+    private readonly IEmployeeAuthorizationService _authService;
 
     public VacationRequestsController(
         AppDbContext db,
         IVacationRequestService requestService,
         IVacationBalanceService balanceService,
-        IAuditService audit)
+        IAuditService audit,
+        IEmployeeAuthorizationService authService)
     {
         _db = db;
         _requestService = requestService;
         _balanceService = balanceService;
         _audit = audit;
+        _authService = authService;
     }
 
     /// <summary>
@@ -182,7 +186,7 @@ public class VacationRequestsController : ControllerBase
         if (User.IsInRole("MANAGER") && !User.IsInRole("ADMIN") && !User.IsInRole("RRHH"))
         {
             var manager = await _db.Users.SingleAsync(u => u.UserId == userId);
-            if (request.Employee.ManagerEmployeeId != manager.EmployeeId)
+            if (!await _authService.IsManagerOfEmployeeAsync(manager.EmployeeId ?? 0, request.EmployeeId))
                 return Forbid();
         }
 
@@ -241,7 +245,7 @@ public class VacationRequestsController : ControllerBase
         if (User.IsInRole("MANAGER") && !User.IsInRole("ADMIN") && !User.IsInRole("RRHH"))
         {
             var manager = await _db.Users.SingleAsync(u => u.UserId == userId);
-            if (request.Employee.ManagerEmployeeId != manager.EmployeeId)
+            if (!await _authService.IsManagerOfEmployeeAsync(manager.EmployeeId ?? 0, request.EmployeeId))
                 return Forbid();
         }
 

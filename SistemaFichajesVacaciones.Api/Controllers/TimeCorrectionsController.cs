@@ -14,12 +14,14 @@ public class TimeCorrectionsController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
     private readonly ITimeSummaryService _summaryService;
+    private readonly IEmployeeAuthorizationService _authService;
 
-    public TimeCorrectionsController(AppDbContext db, IAuditService audit, ITimeSummaryService summaryService)
+    public TimeCorrectionsController(AppDbContext db, IAuditService audit, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService)
     {
         _db = db;
         _audit = audit;
         _summaryService = summaryService;
+        _authService = authService;
     }
 
     /// <summary>
@@ -97,7 +99,7 @@ public class TimeCorrectionsController : ControllerBase
                 .Select(u => u.EmployeeId)
                 .SingleOrDefaultAsync();
 
-            if (correction.Employee.ManagerEmployeeId != managerEmployeeId)
+            if (!await _authService.IsManagerOfEmployeeAsync(managerEmployeeId ?? 0, correction.EmployeeId))
                 return Forbid();
         }
 
@@ -163,8 +165,7 @@ public class TimeCorrectionsController : ControllerBase
                 .Select(u => u.EmployeeId)
                 .SingleOrDefaultAsync();
 
-            if (correction.Employee.ManagerEmployeeId != managerEmployeeId)
-            
+            if (!await _authService.IsManagerOfEmployeeAsync(managerEmployeeId ?? 0, correction.EmployeeId))
                 return Forbid();
         }
 

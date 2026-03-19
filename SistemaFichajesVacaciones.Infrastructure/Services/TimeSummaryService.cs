@@ -112,6 +112,19 @@ public class TimeSummaryService : ITimeSummaryService
             }
         }
 
+        // ── Agregar correcciones aprobadas ──────────────────────────────────
+        var approvedCorrections = await _db.TimeCorrections
+            .AsNoTracking()
+            .Where(tc => tc.EmployeeId == employeeId
+                    && tc.Date == dateOnly
+                    && tc.Status == "APPROVED")
+            .ToListAsync();
+
+        // Sumar el delta (diferencia) de cada corrección aprobada
+        int correctionMinutes = approvedCorrections
+            .Sum(tc => tc.CorrectedMinutes - (tc.OriginalMinutes ?? totalMinutes));
+        totalMinutes += correctionMinutes;  // Sumar todas las correcciones aprobadas
+
         // ── Tipo de incidencia (solo días pasados laborables con horario) ─────
         string? incidentType = null;
 

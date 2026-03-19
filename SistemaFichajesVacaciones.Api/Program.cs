@@ -84,6 +84,9 @@ builder.Services.AddScoped<IEmployeeImportService, EmployeeImportService>();
 // Registrar AuditService
 builder.Services.AddScoped<IAuditService, AuditService>();
 
+// Registrar AuthorizationService (lógica centralizada de autorización)
+builder.Services.AddScoped<IEmployeeAuthorizationService, EmployeeAuthorizationService>();
+
 // Servicios de Vacaciones (desde Application)
 builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
 builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();

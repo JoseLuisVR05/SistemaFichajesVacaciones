@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
@@ -15,15 +16,18 @@ public class VacationBalanceController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IVacationBalanceService _balanceService;
     private readonly IAuditService _audit;
+    private readonly IEmployeeAuthorizationService _authService;
 
     public VacationBalanceController(
         AppDbContext db,
         IVacationBalanceService balanceService,
-        IAuditService audit)
+        IAuditService audit,
+        IEmployeeAuthorizationService authService)
     {
         _db = db;
         _balanceService = balanceService;
         _audit = audit;
+        _authService = authService;
     }
 
     /// <summary>
@@ -51,12 +55,8 @@ public class VacationBalanceController : ControllerBase
                 if (User.IsInRole("MANAGER"))
                 {
                     var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
-                    var subordinateIds = await _db.Employees
-                        .Where(e => e.ManagerEmployeeId == managerUser.EmployeeId)
-                        .Select(e => e.EmployeeId)
-                        .ToListAsync();
-
-                    if (!subordinateIds.Contains(employeeId.Value))
+                    
+                    if (!await _authService.IsManagerOfEmployeeAsync(managerUser.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
                 }
                 else

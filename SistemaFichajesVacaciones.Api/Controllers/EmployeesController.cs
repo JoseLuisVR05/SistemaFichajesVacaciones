@@ -15,11 +15,13 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
 {
     private readonly AppDbContext _context;
     private readonly IEmployeeImportService _importService;
+    private readonly IEmployeeAuthorizationService _authService;
 
-    public EmployeesController(AppDbContext context, IEmployeeImportService importService)
+    public EmployeesController(AppDbContext context, IEmployeeImportService importService, IEmployeeAuthorizationService authService)
     {
         _context = context;
         _importService = importService;
+        _authService = authService;
     }
 
     [HttpGet]
@@ -81,9 +83,7 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
                 if(User.IsInRole("MANAGER"))
                 {
                     //MANAGER solo puede ver sus subordinador directos
-                    var isSubordinate =  await _context.Employees
-                        .AnyAsync(e => e.EmployeeId ==id
-                                    && e.ManagerEmployeeId == requistingUser.EmployeeId);
+                    var isSubordinate =  await _authService.IsManagerOfEmployeeAsync(requistingUser.EmployeeId ?? 0, id);
                     
                     // un MANAGER tambien puede ver su propio perfil
                     var isSelf = requistingUser.EmployeeId == id;

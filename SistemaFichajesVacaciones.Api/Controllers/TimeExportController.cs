@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 using System.Text;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
@@ -12,7 +13,13 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 public class TimeExportController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public TimeExportController(AppDbContext db) => _db = db;
+    private readonly IEmployeeAuthorizationService _authService;
+    
+    public TimeExportController(AppDbContext db, IEmployeeAuthorizationService authService)
+    {
+        _db = db;
+        _authService = authService;
+    }
 
     /// <summary>
     /// Exportar fichajes a CSV. ADMIN/RRHH pueden exportar de cualquier empleado.
@@ -48,12 +55,7 @@ public class TimeExportController : ControllerBase
             {
                 if (User.IsInRole("MANAGER"))
                 {
-                    var subordinateIds = await _db.Employees
-                        .Where(e => e.ManagerEmployeeId == user.EmployeeId)
-                        .Select(e => e.EmployeeId)
-                        .ToListAsync();
-
-                    if (!subordinateIds.Contains(employeeId.Value))
+                    if (!await _authService.IsManagerOfEmployeeAsync(user.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
                 }
                 else if (user.EmployeeId != employeeId.Value)

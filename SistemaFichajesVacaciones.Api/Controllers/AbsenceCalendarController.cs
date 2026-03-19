@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -11,7 +12,13 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 public class AbsenceCalendarController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public AbsenceCalendarController(AppDbContext db) => _db = db;
+    private readonly IEmployeeAuthorizationService _authService;
+    
+    public AbsenceCalendarController(AppDbContext db, IEmployeeAuthorizationService authService)
+    {
+        _db = db;
+        _authService = authService;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAbsences(
@@ -33,10 +40,7 @@ public class AbsenceCalendarController : ControllerBase
 
         if (!isAdminOrRrhh && User.IsInRole("MANAGER"))
         {
-            var subIds = await _db.Employees
-                .Where(e => e.ManagerEmployeeId == user.EmployeeId)
-                .Select(e => e.EmployeeId)
-                .ToListAsync();
+            var subIds = await _authService.GetManagerSubordinateIdsAsync(user.EmployeeId ?? 0);
             // El MANAGER tambien puede ver las suyas
             if(user.EmployeeId.HasValue)
                 subIds.Add(user.EmployeeId.Value);

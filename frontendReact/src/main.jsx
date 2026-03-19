@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ThemeProvider } from '@mui/material/styles'
@@ -29,9 +30,6 @@ function Root() {
     </ThemeProvider>
   );
 }
-
-import { useState, useEffect } from 'react'
-
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Root />
