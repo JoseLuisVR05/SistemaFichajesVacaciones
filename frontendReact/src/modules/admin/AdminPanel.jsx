@@ -5,7 +5,7 @@ import { Policy, Schedule, UploadFile, People } from '@mui/icons-material';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { SnackbarAlert } from '../../components/ui/SnackbarAlert';
 import { PoliciesTab }  from './tabs/PoliciesTab';
-import { SchedulesTab } from './tabs/SchedulesTab';
+import { SchedulesTab } from './tabs/schedules/SchedulesTab';
 import { ImportTab }    from './tabs/ImportTab';
 import { EmployeesTab } from './tabs/EmployeesTab';
 import { useTranslation } from 'react-i18next';
