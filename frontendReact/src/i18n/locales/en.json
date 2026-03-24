@@ -14,6 +14,8 @@
     "filter": "Filter",
     "refresh": "Refresh",
     "days": "Days",
+    "worked": "Worked",
+    "expected": "Expected",
     "status": {
       "active": "Active",
       "inactive": "Inactive",
@@ -106,7 +108,8 @@
       "wrongSequence": "Last entry was {{last}}. Expected {{expected}}",
       "noEmployee": "No employee assigned to this user",
       "invalidToken": "Invalid session, please log in again",
-      "generic": "Error registering entry"
+      "generic": "Error registering entry",
+      "loadingSummary": "Error loading day summary"
     },
     "incident": {
       "missing": "<strong>Incident detected:</strong> No entry was registered on {{date}}. If this was a mistake, you can request a correction.",
@@ -177,6 +180,10 @@
       "originalMinutesHelper": "Minutes currently on record",
       "correctedMinutes": "Corrected minutes (actual)",
       "correctedMinutesHelper": "Minutes that should be on record",
+      "deltaMinutes": "Difference in minutes",
+      "deltaMinutesHelper": "Minutes to add or subtract (e.g.: +30 for 30 more min, -15 for 15 less min)",
+      "daySummary": "Day summary",
+      "noDataForDate": "No data available for this date",
       "reason": "Reason for correction",
       "reasonPlaceholder": "E.g.: Forgot to clock out, left at 18:00",
       "submit": "Submit request"

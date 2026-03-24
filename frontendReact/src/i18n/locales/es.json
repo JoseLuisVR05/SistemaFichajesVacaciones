@@ -14,6 +14,8 @@
     "filter": "Filtrar",
     "refresh": "Recargar",
     "days": "Días",
+    "worked": "Trabajado",
+    "expected": "Esperado",
     "status": {
       "active": "Activo",
       "inactive": "Inactivo",
@@ -107,7 +109,8 @@
       "wrongSequence": "El último registro fue {{last}}. Se esperaba {{expected}}",
       "noEmployee": "Usuario sin empleado asignado",
       "invalidToken": "Sesión inválida, vuelve a iniciar sesión",
-      "generic": "Error al registrar fichaje"
+      "generic": "Error al registrar fichaje",
+      "loadingSummary": "Error cargando resumen del día"
     },
     "incident": {
       "missing": "<strong>Incidencia detectada:</strong> El {{date}} no se registró ningún fichaje. Si fue un error, puedes solicitar una corrección.",
@@ -176,6 +179,10 @@
       "originalMinutesHelper": "Minutos trabajados que figuran actualmente",
       "correctedMinutes": "Minutos corregidos (reales)",
       "correctedMinutesHelper": "Minutos que deberían figurar",
+      "deltaMinutes": "Diferencia en minutos",
+      "deltaMinutesHelper": "Minutos a sumar o restar (ej: +30 para 30 min más, -15 para 15 min menos)",
+      "daySummary": "Resumen del día",
+      "noDataForDate": "No hay datos disponibles para esta fecha",
       "reason": "Motivo de la corrección",
       "reasonPlaceholder": "Ej: Olvidé fichar la salida, salí a las 18:00",
       "submit": "Enviar solicitud"
