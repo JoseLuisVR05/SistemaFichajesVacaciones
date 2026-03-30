@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SistemaFichajesVacaciones.Application.DTOs;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 
@@ -29,25 +30,28 @@ public class WorkSchedulesController : ControllerBase
             .ThenInclude(t => t!.DayDetails)
             .Where(s => s.EmployeeId == employeeId)
             .OrderByDescending(s => s.ValidFrom)
-            .Select(s => new {
-                s.WorkScheduleId,
-                s.EmployeeId,
-                s.WorkScheduleTemplateId,
-                s.ValidFrom,
-                s.ValidTo,
-                template = s.WorkScheduleTemplate == null ? null : new {
-                    s.WorkScheduleTemplate.WorkScheduleTemplateId,
-                    s.WorkScheduleTemplate.Name,
-                    s.WorkScheduleTemplate.Description,
-                    dayDetails = s.WorkScheduleTemplate.DayDetails.Select(d => new {
-                        d.DayOfWeek,
-                        d.IsWorkDay,
-                        d.ExpectedStartTime,
-                        d.ExpectedEndTime,
-                        d.BreakMinutes
-                    })
+            .Select(s => new WorkScheduleDto
+            {
+                WorkScheduleId = s.WorkScheduleId,
+                EmployeeId = s.EmployeeId,
+                WorkScheduleTemplateId = s.WorkScheduleTemplateId ?? 0,
+                ValidFrom = s.ValidFrom,
+                ValidTo = s.ValidTo,
+                Template = s.WorkScheduleTemplate == null ? null : new WorkScheduleTemplateDto
+                {
+                    WorkScheduleTemplateId = s.WorkScheduleTemplate.WorkScheduleTemplateId,
+                    Name = s.WorkScheduleTemplate.Name,
+                    Description = s.WorkScheduleTemplate.Description,
+                    DayDetails = s.WorkScheduleTemplate.DayDetails.Select(d => new WorkScheduleDayDetailDto
+                    {
+                        DayOfWeek = d.DayOfWeek,
+                        IsWorkDay = d.IsWorkDay,
+                        ExpectedStartTime = d.ExpectedStartTime,
+                        ExpectedEndTime = d.ExpectedEndTime,
+                        BreakMinutes = d.BreakMinutes
+                    }).ToList()
                 },
-                s.Notes
+                Notes = s.Notes
             })
             .ToListAsync();
 

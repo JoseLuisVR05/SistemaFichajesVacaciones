@@ -37,7 +37,7 @@ public class TimeCorrectionsController : ControllerBase
             return BadRequest(new { message = "Usuario sin empleado asignado" });
 
         // Validar fecha no futura
-        if (dto.Date > DateTime.UtcNow.Date)
+        if (dto.Date > DateTime.Now.Date)  // ✅ Usar hora local
             return BadRequest(new { message = "No se puede corregir una fecha futura" });
 
         // Validar que no exista corrección pendiente para esa fecha

@@ -17,6 +17,8 @@ builder.Services.AddControllers()
     {
         // Esta opción ignora los ciclos y simplemente deja en 'null' la referencia repetida
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        // Convertir propiedades a camelCase en JSON (estándar web)
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
     
 builder.Services.AddEndpointsApiExplorer();

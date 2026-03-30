@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SistemaFichajesVacaciones.Application.DTOs;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
@@ -49,8 +50,8 @@ public class TimeEntriesController : ControllerBase
         if (!string.IsNullOrEmpty(dto.EntryType) && dto.EntryType != "IN" && dto.EntryType != "OUT")
             return BadRequest(new { message = "EntryType debe ser IN, OUT, o vacío" });
 
-        var now = DateTime.UtcNow;
-        var today = DateTime.UtcNow.Date;
+        var now = DateTime.Now;  // ✅ Usar hora local, no UTC
+        var today = DateTime.Now.Date;  // ✅ Hoy en hora local
 
         // Obtener último registro del día
         
@@ -61,14 +62,28 @@ public class TimeEntriesController : ControllerBase
             .OrderByDescending(e => e.Time)
             .FirstOrDefaultAsync();
 
-        // Si ambos tienen EntryType definido, validar secuencia IN -> OUT -> IN -> OUT
-        // Si alguno es vacío (terminal), saltamos esta validación
-        if (!string.IsNullOrEmpty(dto.EntryType) && lastEntry != null && !string.IsNullOrEmpty(lastEntry.EntryType))
+        // Validar secuencia usando pair inference
+        if (!string.IsNullOrEmpty(dto.EntryType) && lastEntry != null)
         {
-            if (lastEntry.EntryType == dto.EntryType)
+            // Deducir si el anterior fue IN u OUT usando pair inference
+            var allEntriesInDay = await _db.TimeEntries
+                .Where(e => e.EmployeeId == employeeId
+                    && e.Time != null
+                    && e.Time.Value.Date == today)
+                .OrderBy(e => e.Time)
+                .ToListAsync();
+
+            int indexOfLast = allEntriesInDay.FindIndex(e => e.TimeEntryId == lastEntry.TimeEntryId);
+            string lastInferredType = (indexOfLast >= 0 && indexOfLast % 2 == 0) ? "IN" : "OUT";
+
+            // Si último tiene tipo explícito, usarlo. Si no, usar deducido
+            string lastActualType = !string.IsNullOrEmpty(lastEntry.EntryType) ? lastEntry.EntryType : lastInferredType;
+            
+            // Validar que no sea el mismo tipo (debe alternar IN → OUT → IN)
+            if (lastActualType == dto.EntryType)
             {
-                var expected = lastEntry.EntryType == "IN" ? "OUT" : "IN";
-                return BadRequest(new { message = $"El último registro fue {lastEntry.EntryType}. Se esperaba {expected}" });
+                var expected = lastActualType == "IN" ? "OUT" : "IN";
+                return BadRequest(new { message = $"El último registro fue {lastActualType}. Se esperaba {expected}" });
             }
         }
 
@@ -146,6 +161,7 @@ public class TimeEntriesController : ControllerBase
         }
 
         var query = _db.TimeEntries
+            .Include(e => e.Employee)
             .Where(e => e.EmployeeId == targetEmployeeId);
 
         if (from.HasValue)
@@ -155,21 +171,43 @@ public class TimeEntriesController : ControllerBase
             query = query.Where(e => e.Time <= to.Value.AddDays(1).AddSeconds(-1));
 
         var entries = await query
-            .OrderByDescending(e => e.Time)
-            .Select(e => new
-            {
-                e.TimeEntryId,
-                e.EntryType,
-                time = e.Time,
-                e.Source,
-                e.Comment,
-                EmployeeName = e.Employee.FullName
-               
-            })
-
+            .OrderBy(e => e.Time)  // Ordenar ASC para pair inference
             .ToListAsync();
 
-        return Ok(entries);
+        // Calcular tipo de fichaje usando pair inference
+        var entriesWithType = new List<TimeEntryDto>();
+        var entriesByDate = entries.GroupBy(e => e.Time.Value.Date);
+
+        foreach (var dateGroup in entriesByDate)
+        {
+            var dayEntries = dateGroup.OrderBy(e => e.Time).ToList();
+            
+            for (int i = 0; i < dayEntries.Count; i++)
+            {
+                var entry = dayEntries[i];
+                // Pair inference: posición par (0,2,4...) = IN, impar (1,3,5...) = OUT
+                var inferredType = (i % 2 == 0) ? "IN" : "OUT";
+                // Usar EntryType si está definido, sino usar inferido
+                var displayType = string.IsNullOrEmpty(entry.EntryType) ? inferredType : entry.EntryType;
+
+                entriesWithType.Add(new TimeEntryDto
+                {
+                    TimeEntryId = entry.TimeEntryId,
+                    EntryType = displayType,
+                    EntryTypeSource = string.IsNullOrEmpty(entry.EntryType) ? "INFERRED" : "EXPLICIT",
+                    Time = entry.Time,
+                    Source = entry.Source,
+                    DeviceId = entry.DeviceId,
+                    Comment = entry.Comment,
+                    EmployeeName = entry.Employee.FullName
+                });
+            }
+        }
+
+        // Ordenar DESC para mostrar últimos primero
+        var result = entriesWithType.OrderByDescending(e => e.Time).ToList();
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -221,11 +259,11 @@ public class TimeEntriesController : ControllerBase
             targetEmployeeId = user.EmployeeId.Value;
         }
 
-        var fromDate = from ?? DateTime.UtcNow.AddDays(-30).Date;
-        var toDate = to ?? DateTime.UtcNow.Date;
+        var fromDate = from ?? DateTime.Now.AddDays(-30).Date;  // ✅ Hora local
+        var toDate = to ?? DateTime.Now.Date;  // ✅ Hora local
 
         // Calcular resúmenes para cada día del rango
-        var summaries = new List<object>();
+        var summaries = new List<TimeSummaryDto>();
 
         for (var d = fromDate; d <= toDate; d = d.AddDays(1))
         {
@@ -233,25 +271,25 @@ public class TimeEntriesController : ControllerBase
 
             if(summary != null)
             {
-                summaries.Add(new
+                summaries.Add(new TimeSummaryDto
                 {
-                    date = summary.Date,
-                    workedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
-                    expectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
-                    balanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2),
-                    incidentType = summary.IncidentType,
-                    hasOpenEntry = summary.HasOpenEntry,
-                    proposedCorrectionMinutes = summary.ExpectedMinutes
+                    Date = summary.Date,
+                    WorkedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
+                    ExpectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
+                    BalanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2),
+                    IncidentType = summary.IncidentType,
+                    HasOpenEntry = summary.HasOpenEntry,
+                    ProposedCorrectionMinutes = summary.ExpectedMinutes
                 });
             }
             else
             {
-                summaries.Add(new
+                summaries.Add(new TimeSummaryDto
                 {
-                    date = d,
-                    workedHours = 0.0,
-                    expectedHours = 0.0,
-                    balanceHours = 0.0
+                    Date = d,
+                    WorkedHours = 0.0,
+                    ExpectedHours = 0.0,
+                    BalanceHours = 0.0
                 });
             }
         }
