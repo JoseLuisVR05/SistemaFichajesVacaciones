@@ -105,7 +105,7 @@ public class TimeEntriesController : ControllerBase
         {
             message = $"Fichaje {dto.EntryType} registrado correctamente",
             timeEntryId = entry.TimeEntryId,
-            time = entry.Time
+            time = entry.Time?.ToUniversalTime()  // ✅ Convertir a UTC para que Frontend lo interprete correctamente
         });
     }
 
@@ -195,7 +195,7 @@ public class TimeEntriesController : ControllerBase
                     TimeEntryId = entry.TimeEntryId,
                     EntryType = displayType,
                     EntryTypeSource = string.IsNullOrEmpty(entry.EntryType) ? "INFERRED" : "EXPLICIT",
-                    Time = entry.Time,
+                    Time = entry.Time?.ToUniversalTime(),  // ✅ Convertir a UTC para que Frontend lo interprete correctamente
                     Source = entry.Source,
                     DeviceId = entry.DeviceId,
                     Comment = entry.Comment,
