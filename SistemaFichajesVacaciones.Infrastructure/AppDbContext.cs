@@ -22,8 +22,12 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLog => Set<AuditLog>();
     public DbSet<TimeCorrection> TimeCorrections => Set<TimeCorrection>();
     public DbSet<Calendar_Days> Calendar_Days => Set<Calendar_Days>();
+    public DbSet<CalendarTemplate> CalendarTemplates => Set<CalendarTemplate>();
     public DbSet<Employee_WorkSchedule> Employee_WorkSchedules => Set<Employee_WorkSchedule>();
-
+    public DbSet<Territory> Territories => Set<Territory>();
+    public DbSet<WorkScheduleTemplate> WorkScheduleTemplates => Set<WorkScheduleTemplate>();
+    public DbSet<WorkScheduleDayDetail> WorkScheduleDayDetails => Set<WorkScheduleDayDetail>();
+    public DbSet<TERMINALESals> TERMINALESals => Set<TERMINALESals>();
     // Vacaciones
     public DbSet<VacationPolicies> VacationPolicies => Set<VacationPolicies>();
     public DbSet<Employee_VacationBalance> EmployeeVacationBalances => Set<Employee_VacationBalance>();
@@ -63,6 +67,15 @@ public class AppDbContext : DbContext
                 .WithMany(e => e.Subordinates)
                 .HasForeignKey(e => e.ManagerEmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Relación con Territory (país/Localización del empleado)
+            entity.HasOne(e => e.Territory)
+                .WithMany()
+                .HasForeignKey(e => e.TerritoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Índice para búsquedas por territorio
+            entity.HasIndex(e => e.TerritoryId);
         });
 
        // Configuración básica de Users
@@ -221,12 +234,68 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict); 
         });
 
-        // Configuración de Calendar_Days
+        // Configuración de CalendarTemplate
+        modelBuilder.Entity<CalendarTemplate>(entity =>
+        {
+            entity.HasKey(e => e.CalendarTemplateId);
+            
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+            
+            entity.Property(e => e.Year)
+                .IsRequired();
+            
+            entity.Property(e => e.IsDefault)
+                .HasDefaultValue(false);
+            
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+            
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            // FK a Territory
+            entity.HasOne<Territory>()
+                .WithMany()
+                .HasForeignKey(e => e.TerritoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            // Navegación a Calendar_Days
+            entity.HasMany(e => e.CalendarDays)
+                .WithOne(d => d.CalendarTemplate)
+                .HasForeignKey(d => d.CalendarTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Índices
+            entity.HasIndex(e => e.TerritoryId);
+            entity.HasIndex(e => new { e.TerritoryId, e.Year });
+        });
+
+        // Configuración de Calendar_Days (MODIFICADA: PK compuesta para jerarquía)
         modelBuilder.Entity<Calendar_Days>(entity =>
         {
-            entity.HasKey(e => e.Date);
+            // PK compuesta: (CalendarTemplateId, Date)
+            // Permite múltiples registros por fecha en diferentes templates (herencia jerárquica)
+            entity.HasKey(e => new { e.CalendarTemplateId, e.Date });
+            
+            entity.Property(e => e.Date)
+                .HasColumnType("date");
+            
             entity.Property(e => e.HolidayName)
                 .HasMaxLength(200);
+            
+            // FK a CalendarTemplate 
+            entity.HasOne(e => e.CalendarTemplate)
+                .WithMany(c => c.CalendarDays)
+                .HasForeignKey(e => e.CalendarTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Índice para búsquedas por fecha rápidas
+            entity.HasIndex(e => e.Date);
         });
 
         // Configuración de Employee_WorkSchedule
@@ -239,6 +308,15 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Relación con WorkScheduleTemplate (plantilla de horario)
+            entity.HasOne(e => e.WorkScheduleTemplate)
+                .WithMany()
+                .HasForeignKey(e => e.WorkScheduleTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Índice para búsquedas por template
+            entity.HasIndex(e => e.WorkScheduleTemplateId);
         });
 
         // VACACIONES
@@ -376,6 +454,139 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Date);
         });
 
+        // Configuración de Territory
+        modelBuilder.Entity<Territory>(entity =>
+        {
+            entity.HasKey(e => e.TerritoryId);
+            
+            entity.Property(e => e.CountryCode)
+                .IsRequired()
+                .HasMaxLength(2);
+            
+            entity.Property(e => e.CountryName)
+                .IsRequired()
+                .HasMaxLength(100);
+            
+            entity.Property(e => e.Location)
+                .HasMaxLength(100);
+            
+            entity.Property(e => e.UTC)
+                .HasDefaultValue(1);
+            
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+            
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            // Índices para búsquedas frecuentes
+            entity.HasIndex(e => e.CountryCode);
+            entity.HasIndex(e => new { e.CountryCode, e.Location });
+        });
+
+        // Configuración de WorkScheduleTemplate
+        modelBuilder.Entity<WorkScheduleTemplate>(entity =>
+        {
+            entity.HasKey(e => e.WorkScheduleTemplateId);
+            
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+            
+            entity.Property(e => e.Description)
+                .HasMaxLength(500);
+            
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+            
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            // FK a Territory
+            entity.HasOne<Territory>()
+                .WithMany()
+                .HasForeignKey(e => e.TerritoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            // Navegación a DayDetails
+            entity.HasMany(e => e.DayDetails)
+                .WithOne(d => d.WorkScheduleTemplate)
+                .HasForeignKey(d => d.WorkScheduleTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Índice
+            entity.HasIndex(e => e.TerritoryId);
+        });
+
+        // Configuración de WorkScheduleDayDetail
+        modelBuilder.Entity<WorkScheduleDayDetail>(entity =>
+        {
+            entity.HasKey(e => e.WorkScheduleDayDetailId);
+            
+            entity.Property(e => e.DayOfWeek)
+                .IsRequired();
+            
+            entity.Property(e => e.IsWorkDay)
+                .HasDefaultValue(true);
+            
+            entity.Property(e => e.ExpectedStartTime)
+                .HasColumnType("time");
+            
+            entity.Property(e => e.ExpectedEndTime)
+                .HasColumnType("time");
+            
+            entity.Property(e => e.BreakMinutes)
+                .HasDefaultValue(60);
+            
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            
+            // Índice compuesto unique (solo 1 fila por día por template)
+            entity.HasIndex(e => new { e.WorkScheduleTemplateId, e.DayOfWeek })
+                .IsUnique();
+        });
+
+        // Configuración de TERMINALESals (tabla existente)
+        modelBuilder.Entity<TERMINALESals>(entity =>
+        {
+            entity.ToTable("TERMINALESals");  // Nombre exacto de la tabla en BD
+            
+            entity.HasKey(e => e.Codigo);
+            
+            entity.Property(e => e.Codigo)
+                .IsRequired()
+                .HasMaxLength(2);
+            
+            entity.Property(e => e.IP)
+                .HasMaxLength(30);
+            
+            entity.Property(e => e.Puerto)
+                .HasMaxLength(5);
+            
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(30);
+            
+            entity.Property(e => e.NumeroSerie)
+                .HasMaxLength(20);
+            
+            // FK a Territory (nullable para datos existentes sin mapping)
+            entity.HasOne(e => e.Territory)
+                .WithMany()
+                .HasForeignKey(e => e.TerritoryId)
+                .OnDelete(DeleteBehavior.Restrict);  // No borrar Territory si tiene terminales
+            
+            // Índice en TerritoryId para búsquedas rápidas
+            entity.HasIndex(e => e.TerritoryId);
+        });
+
     }           
 }
-    

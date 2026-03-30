@@ -45,9 +45,9 @@ public class TimeEntriesController : ControllerBase
 
         var employeeId = user.Employee.EmployeeId;
 
-        // Validar que el tipo sea IN o OUT
-        if (dto.EntryType != "IN" && dto.EntryType != "OUT")
-            return BadRequest(new { message = "EntryType debe ser IN o OUT" });
+        // Validar que el tipo sea IN, OUT, o vacío (para sincronización de terminal)
+        if (!string.IsNullOrEmpty(dto.EntryType) && dto.EntryType != "IN" && dto.EntryType != "OUT")
+            return BadRequest(new { message = "EntryType debe ser IN, OUT, o vacío" });
 
         var now = DateTime.UtcNow;
         var today = DateTime.UtcNow.Date;
@@ -61,11 +61,15 @@ public class TimeEntriesController : ControllerBase
             .OrderByDescending(e => e.Time)
             .FirstOrDefaultAsync();
 
-        // Validar secuencia IN -> OUT -> IN -> OUT
-        if (lastEntry != null && lastEntry.EntryType == dto.EntryType)
+        // Si ambos tienen EntryType definido, validar secuencia IN -> OUT -> IN -> OUT
+        // Si alguno es vacío (terminal), saltamos esta validación
+        if (!string.IsNullOrEmpty(dto.EntryType) && lastEntry != null && !string.IsNullOrEmpty(lastEntry.EntryType))
         {
-            var expected = lastEntry.EntryType == "IN" ? "OUT" : "IN";
-            return BadRequest(new { message = $"El último registro fue {lastEntry.EntryType}. Se esperaba {expected}" });
+            if (lastEntry.EntryType == dto.EntryType)
+            {
+                var expected = lastEntry.EntryType == "IN" ? "OUT" : "IN";
+                return BadRequest(new { message = $"El último registro fue {lastEntry.EntryType}. Se esperaba {expected}" });
+            }
         }
 
         var entry = new TimeEntry

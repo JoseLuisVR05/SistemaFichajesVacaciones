@@ -25,16 +25,28 @@ public class WorkSchedulesController : ControllerBase
     public async Task<IActionResult> GetSchedules([FromQuery] int employeeId)
     {
         var schedules = await _db.Employee_WorkSchedules
+            .Include(s => s.WorkScheduleTemplate)
+            .ThenInclude(t => t!.DayDetails)
             .Where(s => s.EmployeeId == employeeId)
             .OrderByDescending(s => s.ValidFrom)
             .Select(s => new {
                 s.WorkScheduleId,
                 s.EmployeeId,
+                s.WorkScheduleTemplateId,
                 s.ValidFrom,
                 s.ValidTo,
-                expectedStartTime = s.ExpectedStartTime.ToString(@"hh\:mm"),
-                expectedEndTime   = s.ExpectedEndTime.ToString(@"hh\:mm"),
-                s.BreakMinutes,
+                template = s.WorkScheduleTemplate == null ? null : new {
+                    s.WorkScheduleTemplate.WorkScheduleTemplateId,
+                    s.WorkScheduleTemplate.Name,
+                    s.WorkScheduleTemplate.Description,
+                    dayDetails = s.WorkScheduleTemplate.DayDetails.Select(d => new {
+                        d.DayOfWeek,
+                        d.IsWorkDay,
+                        d.ExpectedStartTime,
+                        d.ExpectedEndTime,
+                        d.BreakMinutes
+                    })
+                },
                 s.Notes
             })
             .ToListAsync();
@@ -43,61 +55,69 @@ public class WorkSchedulesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateSchedule([FromBody] ScheduleDto dto)
+    public async Task<IActionResult> CreateSchedule([FromBody] ScheduleAssignmentDto dto)
     {
         var userId = int.Parse(User.FindFirst("userId")!.Value);
 
-        if (!TimeSpan.TryParse(dto.ExpectedStartTime, out var start) ||
-            !TimeSpan.TryParse(dto.ExpectedEndTime, out var end))
-            return BadRequest(new { message = "Formato de hora inválido. Use HH:mm" });
+        // Validate employee exists
+        var employee = await _db.Employees.FindAsync(dto.EmployeeId);
+        if (employee == null)
+            return NotFound(new { message = "Empleado no encontrado" });
+
+        // Validate WorkScheduleTemplate exists
+        var template = await _db.WorkScheduleTemplates.FindAsync(dto.WorkScheduleTemplateId);
+        if (template == null)
+            return NotFound(new { message = "Plantilla de horario no encontrada" });
 
         var schedule = new Employee_WorkSchedule
         {
-            EmployeeId        = dto.EmployeeId,
-            ValidFrom         = dto.ValidFrom,
-            ValidTo           = dto.ValidTo,
-            ExpectedStartTime = start,
-            ExpectedEndTime   = end,
-            BreakMinutes      = dto.BreakMinutes,
-            Notes             = dto.Notes,
-            CreatedAt         = DateTime.UtcNow,
-            UpdatedAt         = DateTime.UtcNow
+            EmployeeId            = dto.EmployeeId,
+            WorkScheduleTemplateId = dto.WorkScheduleTemplateId,
+            ValidFrom             = dto.ValidFrom,
+            ValidTo               = dto.ValidTo,
+            Notes                 = dto.Notes,
+            CreatedAt             = DateTime.UtcNow,
+            UpdatedAt             = DateTime.UtcNow
         };
 
         _db.Employee_WorkSchedules.Add(schedule);
         await _db.SaveChangesAsync();
         await _audit.LogAsync("WorkSchedule", schedule.WorkScheduleId, "CREATE", null, schedule, userId);
 
-        return Ok(new { message = "Horario creado", workScheduleId = schedule.WorkScheduleId });
+        return Ok(new { message = "Asignación de horario creada", workScheduleId = schedule.WorkScheduleId });
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateSchedule(int id, [FromBody] ScheduleDto dto)
+    public async Task<IActionResult> UpdateSchedule(int id, [FromBody] ScheduleAssignmentDto dto)
     {
         var userId   = int.Parse(User.FindFirst("userId")!.Value);
         var schedule = await _db.Employee_WorkSchedules.FindAsync(id);
-        if (schedule == null) return NotFound(new { message = "Horario no encontrado" });
+        if (schedule == null) return NotFound(new { message = "Asignación de horario no encontrada" });
 
-        if (!TimeSpan.TryParse(dto.ExpectedStartTime, out var start) ||
-            !TimeSpan.TryParse(dto.ExpectedEndTime, out var end))
-            return BadRequest(new { message = "Formato de hora inválido. Use HH:mm" });
+        // Validate WorkScheduleTemplate exists if changed
+        if (dto.WorkScheduleTemplateId != schedule.WorkScheduleTemplateId)
+        {
+            var template = await _db.WorkScheduleTemplates.FindAsync(dto.WorkScheduleTemplateId);
+            if (template == null)
+                return NotFound(new { message = "Plantilla de horario no encontrada" });
+        }
 
         var oldValue = new {
-            schedule.ValidFrom, schedule.ValidTo,
-            schedule.ExpectedStartTime, schedule.ExpectedEndTime, schedule.BreakMinutes
+            schedule.WorkScheduleTemplateId,
+            schedule.ValidFrom,
+            schedule.ValidTo,
+            schedule.Notes
         };
 
-        schedule.ValidFrom         = dto.ValidFrom;
-        schedule.ValidTo           = dto.ValidTo;
-        schedule.ExpectedStartTime = start;
-        schedule.ExpectedEndTime   = end;
-        schedule.BreakMinutes      = dto.BreakMinutes;
-        schedule.Notes             = dto.Notes;
-        schedule.UpdatedAt         = DateTime.UtcNow;
+        schedule.WorkScheduleTemplateId = dto.WorkScheduleTemplateId;
+        schedule.ValidFrom            = dto.ValidFrom;
+        schedule.ValidTo              = dto.ValidTo;
+        schedule.Notes                = dto.Notes;
+        schedule.UpdatedAt            = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("WorkSchedule", id, "UPDATE", oldValue,
-            new { schedule.ValidFrom, schedule.ValidTo }, userId);
+            new { schedule.WorkScheduleTemplateId, schedule.ValidFrom, schedule.ValidTo }, userId);
 
         return Ok(new { message = "Horario actualizado" });
     }
@@ -117,12 +137,10 @@ public class WorkSchedulesController : ControllerBase
     }
 }
 
-public record ScheduleDto(
+public record ScheduleAssignmentDto(
     int      EmployeeId,
+    int      WorkScheduleTemplateId,
     DateTime ValidFrom,
     DateTime? ValidTo,
-    string   ExpectedStartTime,
-    string   ExpectedEndTime,
-    int      BreakMinutes,
     string?  Notes
 );

@@ -10,6 +10,8 @@ namespace SistemaFichajesVacaciones.Domain.Entities;
         public string? BusinessUnit { get; set; }
         public string? Department { get; set; }
         public int? ManagerEmployeeId { get; set; }
+        public int? TerritoryId { get; set; }
+        public int? CalendarTemplateId { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -19,5 +21,7 @@ namespace SistemaFichajesVacaciones.Domain.Entities;
         // Navegación
         public Employee? Manager { get; set; }
         public ICollection<Employee> Subordinates { get; set; } = new List<Employee>();
+        public Territory? Territory { get; set; }
+        public CalendarTemplate? CalendarTemplate { get; set; }
     }
 

@@ -29,16 +29,52 @@ public class TimeSummaryService : ITimeSummaryService
         var dateOnly = date.Date;
         var nextDay = dateOnly.AddDays(1);
 
-        // Verificar si es festivo o fin de semana
-        var calendarDay = await _db.Calendar_Days
+        // Obtener datos del empleado (Territory y Calendar)
+        var employee = await _db.Employees
             .AsNoTracking()
-            .SingleOrDefaultAsync(c => c.Date == dateOnly);
+            .Include(e => e.Territory)
+            .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+        if (employee == null)
+            return null;
+
+        // ── LÓGICA SMART: Obtener CalendarTemplate ──────────────────────────
+        CalendarTemplate? calendarTemplate = null;
+
+        if (employee.CalendarTemplateId.HasValue)
+        {
+            // Empleado con asignación especial de calendario
+            calendarTemplate = await _db.CalendarTemplates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct => ct.CalendarTemplateId == employee.CalendarTemplateId);
+        }
+        else if (employee.TerritoryId.HasValue)
+        {
+            // Usar calendario default del territorio
+            calendarTemplate = await _db.CalendarTemplates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct => ct.TerritoryId == employee.TerritoryId
+                                        && ct.Year == DateTime.UtcNow.Year
+                                        && ct.IsDefault == true);
+        }
+
+        // ── Verificar si es festivo o fin de semana ────────────────────────
+        Calendar_Days? calendarDay = null;
+        if (calendarTemplate != null)
+        {
+            calendarDay = await _db.Calendar_Days
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CalendarTemplateId == calendarTemplate.CalendarTemplateId
+                                       && c.Date == dateOnly);
+        }
 
         bool isWorkingDay = calendarDay == null || (!calendarDay.IsWeekend && !calendarDay.IsHoliday);
 
         // Obtener horario del empleado para esa fecha
         var schedule = await _db.Employee_WorkSchedules
             .AsNoTracking()
+            .Include(s => s.WorkScheduleTemplate)
+            .ThenInclude(t => t!.DayDetails)
             .Where(s => s.EmployeeId == employeeId
                 && s.ValidFrom <= dateOnly
                 && (s.ValidTo == null || s.ValidTo >= dateOnly))
@@ -50,11 +86,25 @@ public class TimeSummaryService : ITimeSummaryService
 
         if (isWorkingDay)
         {
-            if (schedule != null)
+            if (schedule != null && schedule.WorkScheduleTemplate != null)
             {
-                var workDuration = schedule.ExpectedEndTime - schedule.ExpectedStartTime;
-                expectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - schedule.BreakMinutes;
-                endTimeOfDay = schedule.ExpectedEndTime;
+                // Obtener el detalle del horario para el día específico
+                int dayOfWeek = (int)dateOnly.DayOfWeek == 0 ? 6 : (int)dateOnly.DayOfWeek - 1; // Convert to 0=Mon, 6=Sun
+                var dayDetail = schedule.WorkScheduleTemplate.DayDetails
+                    .FirstOrDefault(d => d.DayOfWeek == dayOfWeek);
+
+                if (dayDetail != null && dayDetail.IsWorkDay && dayDetail.ExpectedStartTime.HasValue && dayDetail.ExpectedEndTime.HasValue)
+                {
+                    var startTime = dayDetail.ExpectedStartTime.Value;
+                    var endTime = dayDetail.ExpectedEndTime.Value;
+                    var workDuration = endTime.ToTimeSpan() - startTime.ToTimeSpan();
+                    expectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - dayDetail.BreakMinutes;
+                    endTimeOfDay = endTime.ToTimeSpan();
+                }
+                else
+                {
+                    expectedMinutes = 0; // No work day or invalid schedule
+                }
             }
             else
             {
@@ -74,41 +124,64 @@ public class TimeSummaryService : ITimeSummaryService
 
         int totalMinutes = 0;
         bool hasOpenEntry = false;
-        TimeEntry? lastIn = null;
 
-        foreach (var entry in entries)
+        if (entries.Count == 0)
         {
-            if (entry.EntryType == "IN")
-            {
-                lastIn = entry;
-            }
-            else if (entry.EntryType == "OUT" && lastIn != null)
-            {
-                totalMinutes += (int)Math.Round((entry.Time!.Value - lastIn.Time!.Value).TotalMinutes);
-                lastIn = null;
-            }
+            // Ningún fichaje en el día
+            totalMinutes = 0;
         }
-
-        // Entrada sin cerrar
-        if (lastIn != null)
+        else if (entries.Count == 1)
         {
+            // Un solo fichaje: asumir que es entrada sin cerrar
             hasOpenEntry = true;
-
             if (dateOnly == DateTime.UtcNow.Date)
             {
-                // HOY: sumar tiempo hasta ahora (balance en tiempo real)
-                totalMinutes += (int)Math.Round((DateTime.UtcNow - lastIn.Time!.Value).TotalMinutes);
+                // HOY: suma tiempo desde el fichaje hasta AHORA
+                totalMinutes = (int)Math.Round((DateTime.UtcNow - entries[0].Time!.Value).TotalMinutes);
             }
             else
             {
-                // Día pasado: cortar en fin de jornada del horario
-                // Preserva los pares IN/OUT cerrados anteriores del mismo día
+                // Día pasado: corta en fin de jornada del horario
                 var cutoff = dateOnly.Add(endTimeOfDay);
-                if (cutoff > lastIn.Time!.Value)
-                    totalMinutes += (int)Math.Round((cutoff - lastIn.Time.Value).TotalMinutes);
+                if (cutoff > entries[0].Time!.Value)
+                    totalMinutes = (int)Math.Round((cutoff - entries[0].Time.Value).TotalMinutes);
 
                 // Nunca superar los minutos esperados
                 totalMinutes = Math.Min(totalMinutes, expectedMinutes);
+            }
+        }
+        else
+        {
+            // 2 o más fichajes: asumir pares entrada-salida
+            // Primero=entrada, segundo=salida, tercero=entrada de nuevo, etc.
+            for (int i = 0; i < entries.Count - 1; i += 2)
+            {
+                var entrada = entries[i].Time!.Value;
+                var salida = entries[i + 1].Time!.Value;
+                totalMinutes += (int)Math.Round((salida - entrada).TotalMinutes);
+            }
+
+            // Si hay número impar de fichajes, el último quedó sin cerrar
+            if (entries.Count % 2 == 1)
+            {
+                hasOpenEntry = true;
+                var lastEntry = entries[entries.Count - 1];
+
+                if (dateOnly == DateTime.UtcNow.Date)
+                {
+                    // HOY: suma tiempo desde el último fichaje hasta AHORA
+                    totalMinutes += (int)Math.Round((DateTime.UtcNow - lastEntry.Time!.Value).TotalMinutes);
+                }
+                else
+                {
+                    // Día pasado: corta en fin de jornada del horario
+                    var cutoff = dateOnly.Add(endTimeOfDay);
+                    if (cutoff > lastEntry.Time!.Value)
+                        totalMinutes += (int)Math.Round((cutoff - lastEntry.Time.Value).TotalMinutes);
+
+                    // Nunca superar los minutos esperados
+                    totalMinutes = Math.Min(totalMinutes, expectedMinutes);
+                }
             }
         }
 
@@ -219,55 +292,70 @@ public class TimeSummaryService : ITimeSummaryService
             return validation;
         }
 
-        //Validar secuencia
-        TimeEntry? lastIn = null;
+        //Validar secuencia - Inferencia de pares entrada-salida
         int totalMinutes = 0;
 
-        foreach( var entry in entries)
+        if (entries.Count > 0)
         {
-            if(entry.EntryType == "IN")
+            // 2 o más fichajes: asumir pares entrada-salida
+            // Primero=entrada, segundo=salida, tercero=entrada, etc.
+            for (int i = 0; i < entries.Count - 1; i += 2)
             {
-                if(lastIn != null)
+                var entrada = entries[i].Time!.Value;
+                var salida = entries[i + 1].Time!.Value;
+                var span = salida - entrada;
+                totalMinutes += (int)span.TotalMinutes;
+
+                //Validar duraciones sospechosas
+                if (span.TotalHours > 12)
                 {
-                    validation.HasSequenceErrors = true;
-                    validation.Warnings.Add($"Entrada duplicada detectada a las {entry.Time!.Value:HH:mm}");
+                    validation.Warnings.Add($"Sesion muy larga detectada: {span.TotalHours:F1}h");
                 }
-                
-                lastIn = entry;
             }
-            else if (entry.EntryType == "OUT")
+
+            // Si hay número impar, el último fichaje quedó sin cerrar
+            if (entries.Count % 2 == 1)
             {
-                if(lastIn == null)
-                {
-                    validation.HasSequenceErrors = true;
-                    validation.Warnings.Add($"Salida sin entrada previa a las {entry.Time!.Value:HH:mm}");
-                }
-                else
-                {
-                    var span = entry.Time!.Value - lastIn.Time!.Value;
-                    totalMinutes += (int)span.TotalMinutes;
-
-                    //Validar duraciones sospechosas
-                    if(span.TotalHours >12)
-                    {
-                        validation.Warnings.Add($"Sesion muy larga detectada: {span.TotalHours:F1}h");
-                    }
-
-                    lastIn = null;
-                }
+                validation.HasOpenEntry = true;
+                var lastEntry = entries[entries.Count - 1];
+                validation.Warnings.Add($"Entrada sin cierre desde las {lastEntry.Time!.Value:HH:mm}");
             }
         }
 
-        if(lastIn != null)
-        {
-            validation.HasOpenEntry = true;
-            validation.Warnings.Add($"Entrada sin salida desde las {lastIn.Time!.Value:HH:mm}");
-        }
-
-        //Obtener minutos esperados
-        var calendarDay = await _db.Calendar_Days
+        //Obtener minutos esperados - LÓGICA SMART para Calendar
+        var employee = await _db.Employees
             .AsNoTracking()
-            .SingleOrDefaultAsync(c => c.Date == dateOnly);
+            .Include(e => e.Territory)
+            .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+        if (employee == null)
+            return validation;
+
+        CalendarTemplate? calendarTemplate = null;
+
+        if (employee.CalendarTemplateId.HasValue)
+        {
+            calendarTemplate = await _db.CalendarTemplates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct => ct.CalendarTemplateId == employee.CalendarTemplateId);
+        }
+        else if (employee.TerritoryId.HasValue)
+        {
+            calendarTemplate = await _db.CalendarTemplates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct => ct.TerritoryId == employee.TerritoryId
+                                        && ct.Year == DateTime.UtcNow.Year
+                                        && ct.IsDefault == true);
+        }
+
+        Calendar_Days? calendarDay = null;
+        if (calendarTemplate != null)
+        {
+            calendarDay = await _db.Calendar_Days
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CalendarTemplateId == calendarTemplate.CalendarTemplateId
+                                       && c.Date == dateOnly);
+        }
         
         bool isWorkingDay = calendarDay == null || (!calendarDay.IsWeekend && !calendarDay.IsHoliday);
 
@@ -275,20 +363,32 @@ public class TimeSummaryService : ITimeSummaryService
         {
             var schedule = await _db.Employee_WorkSchedules
                 .AsNoTracking()
-                .Where(s => s.EmployeeId == employeeId
-                    && s.ValidFrom <= dateOnly
-                    &&(s.ValidTo == null || s.ValidTo >=dateOnly))
-                .OrderByDescending(s => s.ValidFrom)
-                .FirstOrDefaultAsync();
-            
-            if (schedule != null)
-            {
-                var workDuration = schedule.ExpectedEndTime - schedule.ExpectedStartTime;
-                validation.ExpectedMinutes = (int)workDuration.TotalMinutes - schedule.BreakMinutes;
-            }
-            else
-            {
-                validation.ExpectedMinutes = 480; // 8 horas por defecto
+                    .Include(s => s.WorkScheduleTemplate)
+                    .ThenInclude(t => t!.DayDetails)
+                    .Where(s => s.EmployeeId == employeeId
+                        && s.ValidFrom <= dateOnly
+                        &&(s.ValidTo == null || s.ValidTo >=dateOnly))
+                    .OrderByDescending(s => s.ValidFrom)
+                    .FirstOrDefaultAsync();
+                
+                if (schedule != null && schedule.WorkScheduleTemplate != null)
+                {
+                    // Obtener el detalle del horario para el día específico
+                    int dayOfWeek = (int)dateOnly.DayOfWeek == 0 ? 6 : (int)dateOnly.DayOfWeek - 1; // Convert to 0=Mon, 6=Sun
+                    var dayDetail = schedule.WorkScheduleTemplate.DayDetails
+                        .FirstOrDefault(d => d.DayOfWeek == dayOfWeek);
+
+                    if (dayDetail != null && dayDetail.IsWorkDay && dayDetail.ExpectedStartTime.HasValue && dayDetail.ExpectedEndTime.HasValue)
+                    {
+                        var startTime = dayDetail.ExpectedStartTime.Value;
+                        var endTime = dayDetail.ExpectedEndTime.Value;
+                        var workDuration = endTime.ToTimeSpan() - startTime.ToTimeSpan();
+                        validation.ExpectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - dayDetail.BreakMinutes;
+                    }
+                    else
+                    {
+                        validation.ExpectedMinutes = 0; // No work day
+                    }
             }
         }
 

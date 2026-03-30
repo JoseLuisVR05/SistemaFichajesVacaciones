@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SistemaFichajesVacaciones.Infrastructure;
 
@@ -11,9 +12,11 @@ using SistemaFichajesVacaciones.Infrastructure;
 namespace SistemaFichajesVacaciones.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325151545_AddTERMINALESalsMapping")]
+    partial class AddTERMINALESalsMapping
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,9 +107,6 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CalendarTemplateId"));
 
-                    b.Property<string>("CityCode")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -122,17 +122,10 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("RegionCode")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("TerritoryId")
                         .HasColumnType("int");
@@ -156,11 +149,11 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
 
             modelBuilder.Entity("SistemaFichajesVacaciones.Domain.Entities.Calendar_Days", b =>
                 {
-                    b.Property<int>("CalendarTemplateId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("Date")
                         .HasColumnType("date");
+
+                    b.Property<int?>("CalendarTemplateId")
+                        .HasColumnType("int");
 
                     b.Property<string>("HolidayName")
                         .HasMaxLength(200)
@@ -172,9 +165,13 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                     b.Property<bool>("IsWeekend")
                         .HasColumnType("bit");
 
-                    b.HasKey("CalendarTemplateId", "Date");
+                    b.HasKey("Date");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("CalendarTemplateId", "Date")
+                        .IsUnique()
+                        .HasFilter("[CalendarTemplateId] IS NOT NULL");
 
                     b.ToTable("Calendar_Days");
                 });
@@ -189,9 +186,6 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
 
                     b.Property<string>("BusinessUnit")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CalendarTemplateId")
-                        .HasColumnType("int");
 
                     b.Property<string>("Company")
                         .HasColumnType("nvarchar(max)");
@@ -229,15 +223,10 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("TerritoryId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("EmployeeId");
-
-                    b.HasIndex("CalendarTemplateId");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -246,8 +235,6 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                         .IsUnique();
 
                     b.HasIndex("ManagerEmployeeId");
-
-                    b.HasIndex("TerritoryId");
 
                     b.ToTable("Employees");
                 });
@@ -299,11 +286,20 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkScheduleId"));
 
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
+
+                    b.Property<TimeSpan>("ExpectedEndTime")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("ExpectedStartTime")
+                        .HasColumnType("time");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
@@ -317,12 +313,7 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                     b.Property<DateTime?>("ValidTo")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("WorkScheduleTemplateId")
-                        .HasColumnType("int");
-
                     b.HasKey("WorkScheduleId");
-
-                    b.HasIndex("WorkScheduleTemplateId");
 
                     b.HasIndex("EmployeeId", "ValidFrom");
 
@@ -1026,33 +1017,19 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                     b.HasOne("SistemaFichajesVacaciones.Domain.Entities.CalendarTemplate", "CalendarTemplate")
                         .WithMany("CalendarDays")
                         .HasForeignKey("CalendarTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CalendarTemplate");
                 });
 
             modelBuilder.Entity("SistemaFichajesVacaciones.Domain.Entities.Employee", b =>
                 {
-                    b.HasOne("SistemaFichajesVacaciones.Domain.Entities.CalendarTemplate", "CalendarTemplate")
-                        .WithMany()
-                        .HasForeignKey("CalendarTemplateId");
-
                     b.HasOne("SistemaFichajesVacaciones.Domain.Entities.Employee", "Manager")
                         .WithMany("Subordinates")
                         .HasForeignKey("ManagerEmployeeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("SistemaFichajesVacaciones.Domain.Entities.Territory", "Territory")
-                        .WithMany()
-                        .HasForeignKey("TerritoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("CalendarTemplate");
-
                     b.Navigation("Manager");
-
-                    b.Navigation("Territory");
                 });
 
             modelBuilder.Entity("SistemaFichajesVacaciones.Domain.Entities.Employee_VacationBalance", b =>
@@ -1082,14 +1059,7 @@ namespace SistemaFichajesVacaciones.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SistemaFichajesVacaciones.Domain.Entities.WorkScheduleTemplate", "WorkScheduleTemplate")
-                        .WithMany()
-                        .HasForeignKey("WorkScheduleTemplateId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Employee");
-
-                    b.Navigation("WorkScheduleTemplate");
                 });
 
             modelBuilder.Entity("SistemaFichajesVacaciones.Domain.Entities.EmployeesStaging", b =>
