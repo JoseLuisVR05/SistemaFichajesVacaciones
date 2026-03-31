@@ -541,8 +541,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.ExpectedEndTime)
                 .HasColumnType("time");
             
-            entity.Property(e => e.BreakMinutes)
-                .HasDefaultValue(60);
+            // NO usar HasDefaultValue para BreakMinutes - permite valores 0
+            // La BD tiene DEFAULT ((60)) pero EF Core debe poder insertar 0 explícitamente
+            entity.Property(e => e.BreakMinutes);
             
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");

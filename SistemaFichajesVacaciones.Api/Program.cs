@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.OpenApi.Models;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.Services;
+using SistemaFichajesVacaciones.Api.JsonConverters;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         // Convertir propiedades a camelCase en JSON (estándar web)
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        // Agregar converter personalizado para TimeOnly
+        options.JsonSerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
     });
     
 builder.Services.AddEndpointsApiExplorer();

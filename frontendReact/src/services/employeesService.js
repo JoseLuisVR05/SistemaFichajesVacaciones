@@ -5,6 +5,12 @@ export const getEmployees = async() =>{
     return data
 };
 
+export const searchEmployees = async(searchTerm) =>{
+  // Búsqueda en backend - solo retorna empleados que coincidan
+  const { data } = await api.get(`/employees/search?term=${encodeURIComponent(searchTerm)}`);
+  return data;
+};
+
 export const getEmployee = async(id) =>{
     const { data } = await api.get(`/employees/${id}`);
     return data;
