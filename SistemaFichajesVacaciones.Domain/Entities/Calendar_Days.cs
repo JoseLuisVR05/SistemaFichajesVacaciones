@@ -12,6 +12,8 @@ public class Calendar_Days
     
     public string? HolidayName { get; set; }
     
+    public bool IsGlobal { get; set; } = false;  // Si true, aplica a TODOS los empleados (1 ene, 25 dic, etc)
+    
     // Navegación
     public CalendarTemplate? CalendarTemplate { get; set; }
 }

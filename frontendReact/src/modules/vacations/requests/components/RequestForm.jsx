@@ -20,13 +20,25 @@ import { DateField } from '../../../../components/ui';
  * @param {function} onSubmit      - Callback al pulsar "Enviar" (autoSubmit=true)
  * @param {function} onSaveDraft   - Callback al pulsar "Guardar borrador" (autoSubmit=false)
  * @param {function} onCancel      - Callback al pulsar "Cancelar"
+ * @param {array}    holidaysList  - Array de fechas festivas (formato: 'YYYY-MM-DD' o propiedades que validen con isHoliday)
  */
 
 const isWekend = (dateStr) => {
   if (!dateStr) return false;
   const day = new Date(dateStr + 'T00:00:00').getDay();
   return day === 0 || day === 6;
-}
+};
+
+const isHoliday = (dateStr, holidaysList = []) => {
+  if (!dateStr || !holidaysList.length) return false;
+  return holidaysList.some(h => (h.date || h) === dateStr);
+};
+
+const getHolidayName = (dateStr, holidaysList = []) => {
+  if (!dateStr || !holidaysList.length) return null;
+  const holiday = holidaysList.find(h => (h.date || h) === dateStr);
+  return holiday?.name || null;
+};
 
 export function RequestForm({
   form,
@@ -37,15 +49,25 @@ export function RequestForm({
   onSubmit,
   onSaveDraft,
   onCancel,
+  holidaysList = [],
 }) {
 
   const { t } = useTranslation();
 
-  // Si alguna de las fechas es fin de semaana, bloqueamos todo
-
+  // Validar fin de semana
   const startIsWeekend = isWekend(form.startDate);
   const endIsWeekend = isWekend(form.endDate);
   const hasWeekend = startIsWeekend || endIsWeekend;
+
+  // Validar festivos
+  const startIsHoliday = isHoliday(form.startDate, holidaysList);
+  const endIsHoliday = isHoliday(form.endDate, holidaysList);
+  const hasHoliday = startIsHoliday || endIsHoliday;
+  const holidayName = getHolidayName(form.startDate, holidaysList) || getHolidayName(form.endDate, holidaysList);
+
+  // Validaciones adicionales del backend
+  const hasNoWorkingDays = validation?.workingDays === 0;
+  const hasInvalidDates = form.startDate && form.endDate && new Date(form.endDate) < new Date(form.startDate);
   
   return (
     <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -94,7 +116,7 @@ export function RequestForm({
               <Button
                 variant="contained"
                 onClick={onSubmit}
-                disabled={!validation?.isValid || creating || hasWeekend }
+                disabled={!validation?.isValid || creating || hasWeekend || hasHoliday || hasNoWorkingDays || hasInvalidDates}
                 startIcon={creating ? <CircularProgress size={16} /> : <Send />}
               >
                 {t('vacations.form.submit')}
@@ -102,7 +124,7 @@ export function RequestForm({
               <Button
                 variant="outlined"
                 onClick={onSaveDraft}
-                disabled={!validation?.isValid || creating || hasWeekend}
+                disabled={!validation?.isValid || creating || hasWeekend || hasHoliday || hasNoWorkingDays || hasInvalidDates}
               >
                 {t('vacations.form.saveDraft')}
               </Button>
@@ -125,10 +147,16 @@ export function RequestForm({
             <CircularProgress size={24} sx={{ display: 'block', mx: 'auto', my: 2 }} />
           )}
 
-          {!validation && !validating && !hasWeekend && (
+          {!validation && !validating && !hasWeekend && !hasHoliday && !hasInvalidDates && !hasNoWorkingDays && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
               {t('vacations.form.calculation.hint')}
             </Typography>
+          )}
+
+          {hasInvalidDates && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {t('vacations.form.errors.invalidDatesAlert')}
+            </Alert>
           )}
 
           {hasWeekend && (
@@ -137,7 +165,19 @@ export function RequestForm({
             </Alert>
           )}
 
-          {validation && !hasWeekend && (
+          {hasHoliday && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {t('vacations.form.errors.holidayAlert')}: <strong>{holidayName}</strong>
+            </Alert>
+          )}
+
+          {hasNoWorkingDays && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {t('vacations.form.errors.noWorkingDaysAlert')}
+            </Alert>
+          )}
+
+          {validation && !hasWeekend && !hasHoliday && !hasNoWorkingDays && !hasInvalidDates && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2">{t('vacations.form.calculation.workingDays')}</Typography>

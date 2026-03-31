@@ -21,7 +21,7 @@ public interface IVacationRequestService
     /// <param name="startDate">Fecha inicio (inclusive)</param>
     /// <param name="endDate">Fecha fin (inclusive)</param>
     /// <returns>Número de días laborables (puede ser decimal por medios días)</returns>
-    Task<decimal> CalculateWorkingDaysAsync(DateTime startDate, DateTime endDate);
+    Task<decimal> CalculateWorkingDaysAsync(DateTime startDate, DateTime endDate, int? employeeId = null);
     
     /// <summary>
     /// Valida si una solicitud de vacaciones es viable.
@@ -83,4 +83,14 @@ public class ValidationResult
     public List<string> Warnings { get; set; } = new(); // Advertencias no bloqueantes
     public decimal WorkingDays { get; set; }          // Días laborables calculados
     public decimal AvailableDays { get; set; }        // Días disponibles del empleado
+    public List<HolidayInfo> Holidays { get; set; } = new(); // Festivos en el rango seleccionado
+}
+
+/// <summary>
+/// Información de un día festivo
+/// </summary>
+public class HolidayInfo
+{
+    public DateTime Date { get; set; }
+    public string Name { get; set; }
 }

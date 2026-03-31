@@ -436,7 +436,8 @@ public class VacationRequestsController : ControllerBase
             workingDays = validation.WorkingDays,
             availableDays = validation.AvailableDays,
             errors = validation.Errors,
-            warnings = validation.Warnings
+            warnings = validation.Warnings,
+            holidays = validation.Holidays.Select(h => new { date = h.Date.ToString("yyyy-MM-dd"), name = h.Name }).ToList()
         });
     }
 }

@@ -246,7 +246,10 @@
       "type": "Tipo",
       "errors": {
         "weekend": "No se permiten fines de semana",
-        "weekendAlert": "La fecha de inicio o fin cae en fin de semana. Selecciona solo días laborables."
+        "weekendAlert": "La fecha de inicio o fin cae en fin de semana. Selecciona solo días laborables.",
+        "invalidDatesAlert": "La fecha de fin no puede ser anterior a la de inicio",
+        "noWorkingDaysAlert": "El período seleccionado no incluye días laborables",
+        "holidayAlert": "El período seleccionado incluye festivos"
       },
       "types": {
         "vacation": "Vacaciones",

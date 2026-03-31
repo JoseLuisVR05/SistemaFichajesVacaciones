@@ -25,16 +25,71 @@ public class VacationRequestService : IVacationRequestService
     }
 
     /// <summary>
-    /// Calcula cuántos días LABORABLES hay entre dos fechas.
-    /// ALGORITMO:
-    /// 1. Genera lista de todos los días en el rango (fecha por fecha)
-    /// 2. Consulta Calendar_Days para obtener festivos/fines de semana
-    /// 3. Por cada día:
-    ///    - Si está en Calendar_Days: usa flags IsWeekend/IsHoliday
-    ///    - Si NO está: asume sábado/domingo = no laborable
-    /// 4. Suma solo días laborables
+    /// Obtiene TODOS los festivos del empleado de forma jerárquica.
+    /// ORDEN: GLOBAL → NATIONAL → REGIONAL → CITY
     /// </summary>
-    public async Task<decimal> CalculateWorkingDaysAsync(DateTime startDate, DateTime endDate)
+    private async Task<List<Calendar_Days>> GetEmployeeHolidaysAsync(int employeeId, DateTime startDate, DateTime endDate)
+    {
+        // 1. Obtener employee y su CalendarTemplate
+        var employee = await _db.Employees
+            .Include(e => e.CalendarTemplate)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+        if (employee?.CalendarTemplate == null || !employee.TerritoryId.HasValue)
+            return new List<Calendar_Days>();
+
+        var empTemplate = employee.CalendarTemplate;
+        var territoryId = employee.TerritoryId.Value;
+
+        // 2. Obtener TODOS los calendarios del territorio del empleado (NATIONAL + REGIONAL + CITY)
+        var relevantTemplates = await _db.CalendarTemplates
+            .AsNoTracking()
+            .Where(ct => ct.IsActive 
+                      && ct.TerritoryId == territoryId
+                      && (
+                        // NATIONAL (mismo territory)
+                        (ct.Level == "NATIONAL") ||
+                        // REGIONAL (mismo territory + mismo region si aplica)
+                        (ct.Level == "REGIONAL" && ct.RegionCode == empTemplate.RegionCode) ||
+                        // CITY (mismo territory + misma city)
+                        (ct.Level == "CITY" && ct.CityCode == empTemplate.CityCode)
+                      ))
+            .Select(ct => ct.CalendarTemplateId)
+            .ToListAsync();
+
+        // 3. Obtener todos los dias festivos de esos calendarios en el rango
+        var holidays = await _db.Calendar_Days
+            .Where(cd => relevantTemplates.Contains(cd.CalendarTemplateId)
+                      && cd.IsHoliday
+                      && cd.Date >= startDate.Date 
+                      && cd.Date <= endDate.Date)
+            .AsNoTracking()
+            .ToListAsync();
+
+        // 4. Obtener también festivos globales (IsGlobal en Calendar_Days)
+        var globalHolidays = await _db.Calendar_Days
+            .Where(cd => cd.IsGlobal 
+                      && cd.IsHoliday
+                      && cd.Date >= startDate.Date 
+                      && cd.Date <= endDate.Date)
+            .AsNoTracking()
+            .ToListAsync();
+
+        // Combinar y eliminar duplicados por fecha
+        var combined = holidays.Concat(globalHolidays)
+            .GroupBy(h => h.Date)
+            .Select(g => g.First())
+            .ToList();
+
+        return combined;
+    }
+
+    /// <summary>
+    /// Calcula cuántos días LABORABLES hay entre dos fechas.
+    /// Usa la jerarquía de calendarios del empleado (GLOBAL → NATIONAL → REGIONAL → CITY)
+    /// </summary>
+    public async Task<decimal> CalculateWorkingDaysAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
     {
         // Validación básica: fin debe ser >= inicio
         if (endDate < startDate)
@@ -50,39 +105,35 @@ public class VacationRequestService : IVacationRequestService
         if (!days.Any())
             return 0;
 
-        // 2. Consultar Calendar_Days para el rango completo
-        // UNA SOLA QUERY en lugar de consultar día por día (rendimiento)
-        var calendarDays = await _db.Calendar_Days
-            .Where(c => c.Date >= startDate.Date && c.Date <= endDate.Date)
-            .ToListAsync();
+        // 2. Obtener festivos del empleado (jerárquicamente)
+        var holidays = employeeId.HasValue 
+            ? await GetEmployeeHolidaysAsync(employeeId.Value, startDate, endDate)
+            : new List<Calendar_Days>();
 
         // 3. Convertir a diccionario para búsqueda rápida O(1)
-        var calendarDict = calendarDays.ToDictionary(c => c.Date);
+        var holidayDict = holidays.ToDictionary(h => h.Date);
 
         decimal workingDays = 0;
 
         // 4. Iterar cada día y determinar si es laborable
         foreach (var date in days)
         {
-            // ¿Existe este día en Calendar_Days?
-            if (calendarDict.TryGetValue(date, out var calDay))
+            bool isWorkingDay = true;
+
+            // Verificar si es fin de semana
+            if (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
             {
-                // SÍ existe: usar flags de la BD
-                // Es laborable si NO es fin de semana NI festivo
-                if (!calDay.IsWeekend && !calDay.IsHoliday)
-                {
-                    workingDays += 1.0m;
-                }
+                isWorkingDay = false;
             }
-            else
+            // Verificar si es festivo
+            else if (holidayDict.TryGetValue(date, out _))
             {
-                // NO existe en Calendar_Days: aplicar regla por defecto
-                // Sábado/domingo = no laborable, resto sí
-                if (date.DayOfWeek != DayOfWeek.Saturday && 
-                    date.DayOfWeek != DayOfWeek.Sunday)
-                {
-                    workingDays += 1.0m;
-                }
+                isWorkingDay = false;
+            }
+
+            if (isWorkingDay)
+            {
+                workingDays += 1.0m;
             }
         }
 
@@ -127,9 +178,31 @@ public class VacationRequestService : IVacationRequestService
         }
 
         // ──────────────────────────────────────────────────
+        // RECOPILACIÓN: Obtener TODOS los festivos del rango
+        // ──────────────────────────────────────────────────
+        // 1. Obtener el territorio del empleado
+        var employee = await _db.Employees
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+        if (employee?.TerritoryId == null)
+        {
+            result.Errors.Add("El empleado no tiene territorio asignado");
+            return result;
+        }
+
+        // 2. Obtener festivos del empleado (jerárquicamente: GLOBAL → NATIONAL → REGIONAL → CITY)
+        var holidaysList = await GetEmployeeHolidaysAsync(employeeId, startDate, endDate);
+        var holidaysInRange = holidaysList
+            .Select(c => new HolidayInfo { Date = c.Date, Name = c.HolidayName ?? "Festivo" })
+            .ToList();
+
+        result.Holidays = holidaysInRange;
+
+        // ──────────────────────────────────────────────────
         // VALIDACIÓN 3: Calcular días laborables
         // ──────────────────────────────────────────────────
-        var workingDays = await CalculateWorkingDaysAsync(startDate, endDate);
+        var workingDays = await CalculateWorkingDaysAsync(startDate, endDate, employeeId);
         result.WorkingDays = workingDays;
 
         // Advertencia: si el rango no incluye ningún día laborable

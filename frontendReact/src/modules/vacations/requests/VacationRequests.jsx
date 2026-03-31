@@ -41,6 +41,7 @@ export default function VacationRequests() {
 
   // ── Datos: hook de solicitudes y saldo ────────────────────────────────────
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [holidays, setHolidays] = useState([]);
 
   const {
     requests: rows,
@@ -70,7 +71,14 @@ export default function VacationRequests() {
       setValidating(true);
       setValidation(null);
       try {
-        setValidation(await validateVacationDates(form.startDate, form.endDate));
+        const result = await validateVacationDates(form.startDate, form.endDate);
+        setValidation(result);
+        // Extraer festivos del resultado
+        if (result.holidays && result.holidays.length > 0) {
+          setHolidays(result.holidays);
+        } else {
+          setHolidays([]);
+        }
       } catch {
         setValidation({
           isValid: false,
@@ -79,6 +87,7 @@ export default function VacationRequests() {
           workingDays: 0,
           availableDays: 0,
         });
+        setHolidays([]);
       } finally {
         setValidating(false);
       }
@@ -126,6 +135,7 @@ export default function VacationRequests() {
       showSnack(err.response?.data?.message || 'Error al enviar', 'error');
     }
   };
+  
 
   const handleCancel = async (requestId) => {
     try {
@@ -148,6 +158,7 @@ export default function VacationRequests() {
       ? format(toLocalDate(r.endDate), 'dd/MM/yyyy')
       : '-',
   }));
+
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -178,6 +189,7 @@ export default function VacationRequests() {
           onSubmit={() => handleCreate(true)}
           onSaveDraft={() => handleCreate(false)}
           onCancel={() => { setForm(EMPTY_FORM); setValidation(null); }}
+          holidaysList={holidays}
         />
       )}
 

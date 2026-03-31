@@ -12,6 +12,8 @@ public class WorkScheduleTemplate
     
     public bool IsActive { get; set; } = true;
     
+    public bool IsDefault { get; set; } = false;  // True = horario por defecto del territorio
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     

@@ -248,7 +248,10 @@
       "type": "Type",
       "errors": {
         "weekend": "Weekends are not allowed",
-        "weekendAlert": "Start or end date falls on a weekend. Please select working days only."
+        "weekendAlert": "Start or end date falls on a weekend. Please select working days only.",
+        "invalidDatesAlert": "End date cannot be before start date",
+        "noWorkingDaysAlert": "The selected period does not include working days",
+        "holidayAlert": "The selected period includes holidays"
       },
       "types": {
         "vacation": "Vacation",

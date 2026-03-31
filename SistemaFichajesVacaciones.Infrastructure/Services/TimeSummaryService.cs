@@ -86,6 +86,31 @@ public class TimeSummaryService : ITimeSummaryService
 
         if (isWorkingDay)
         {
+            // 1. BUSCAR SI TIENE EXCEPCIÓN (Employee_WorkSchedule vigente)
+            if (schedule == null)
+            {
+                // 2. SI NO TIENE EXCEPCIÓN, USAR DEFAULT DEL TERRITORIO
+                if (employee?.TerritoryId.HasValue == true)
+                {
+                    var defaultTemplate = await _db.WorkScheduleTemplates
+                        .AsNoTracking()
+                        .Include(t => t.DayDetails)
+                        .FirstOrDefaultAsync(t => 
+                            t.TerritoryId == employee.TerritoryId
+                            && t.IsDefault == true
+                            && t.IsActive == true);
+                    
+                    if (defaultTemplate != null)
+                    {
+                        schedule = new Employee_WorkSchedule 
+                        { 
+                            WorkScheduleTemplate = defaultTemplate 
+                        };
+                    }
+                }
+            }
+
+            // 3. CALCULAR MINUTOS ESPERADOS
             if (schedule != null && schedule.WorkScheduleTemplate != null)
             {
                 // Obtener el detalle del horario para el día específico
@@ -144,7 +169,7 @@ public class TimeSummaryService : ITimeSummaryService
                 // Día pasado: corta en fin de jornada del horario
                 var cutoff = dateOnly.Add(endTimeOfDay);
                 if (cutoff > entries[0].Time!.Value)
-                    totalMinutes = (int)Math.Round((cutoff - entries[0].Time.Value).TotalMinutes);
+                    totalMinutes = (int)Math.Round((cutoff - entries[0].Time!.Value).TotalMinutes);
 
                 // Nunca superar los minutos esperados
                 totalMinutes = Math.Min(totalMinutes, expectedMinutes);
@@ -388,6 +413,35 @@ public class TimeSummaryService : ITimeSummaryService
                     else
                     {
                         validation.ExpectedMinutes = 0; // No work day
+                    }
+                }
+                else
+                {
+                    // Si no tiene excepción, usar DEFAULT del territorio
+                    if (employee.TerritoryId.HasValue)
+                    {
+                        var defaultTemplate = await _db.WorkScheduleTemplates
+                            .AsNoTracking()
+                            .Include(t => t.DayDetails)
+                            .FirstOrDefaultAsync(t => 
+                                t.TerritoryId == employee.TerritoryId
+                                && t.IsDefault == true
+                                && t.IsActive == true);
+                        
+                        if (defaultTemplate != null)
+                        {
+                            int dayOfWeek = (int)dateOnly.DayOfWeek == 0 ? 6 : (int)dateOnly.DayOfWeek - 1;
+                            var dayDetail = defaultTemplate.DayDetails
+                                .FirstOrDefault(d => d.DayOfWeek == dayOfWeek);
+                            
+                            if (dayDetail != null && dayDetail.IsWorkDay && dayDetail.ExpectedStartTime.HasValue && dayDetail.ExpectedEndTime.HasValue)
+                            {
+                                var startTime = dayDetail.ExpectedStartTime.Value;
+                                var endTime = dayDetail.ExpectedEndTime.Value;
+                                var workDuration = endTime.ToTimeSpan() - startTime.ToTimeSpan();
+                                validation.ExpectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - dayDetail.BreakMinutes;
+                            }
+                        }
                     }
             }
         }
