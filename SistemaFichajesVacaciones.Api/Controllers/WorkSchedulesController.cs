@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Application.DTOs;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
 [ApiController]
 [Route("api/schedules")]
 [Authorize]
-[RequireRole("ADMIN", "RRHH")]
+[RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
 public class WorkSchedulesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -115,7 +116,7 @@ public class WorkSchedulesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateSchedule([FromBody] ScheduleAssignmentDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
 
         // Validate employee exists
         var employee = await _db.Employees.FindAsync(dto.EmployeeId);
@@ -152,7 +153,7 @@ public class WorkSchedulesController : ControllerBase
     [HttpPost("assign")]
     public async Task<IActionResult> AssignTemplateToEmployee([FromBody] AssignTemplateToEmployeeDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
 
         // Validar empleado existe
         var employee = await _db.Employees.FindAsync(dto.EmployeeId);
@@ -210,7 +211,7 @@ public class WorkSchedulesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateSchedule(int id, [FromBody] ScheduleAssignmentDto dto)
     {
-        var userId   = int.Parse(User.FindFirst("userID")!.Value);
+        var userId   = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var schedule = await _db.Employee_WorkSchedules.FindAsync(id);
         if (schedule == null) return NotFound(new { message = "Asignación de horario no encontrada" });
 
@@ -245,7 +246,7 @@ public class WorkSchedulesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSchedule(int id)
     {
-        var userId   = int.Parse(User.FindFirst("userID")!.Value);
+        var userId   = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var schedule = await _db.Employee_WorkSchedules.FindAsync(id);
         if (schedule == null) return NotFound(new { message = "Horario no encontrado" });
 

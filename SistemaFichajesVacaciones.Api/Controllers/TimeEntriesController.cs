@@ -2,10 +2,13 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using SistemaFichajesVacaciones.Application.DTOs;
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
@@ -18,11 +21,13 @@ public class TimeEntriesController : ControllerBase
     private readonly AppDbContext _db;
     private readonly ITimeSummaryService _summaryService;
     private readonly IEmployeeAuthorizationService _authService;
-    public TimeEntriesController(AppDbContext db, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService)
+    private readonly TimeTrackingOptions _timeOptions;
+    public TimeEntriesController(AppDbContext db, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService, IOptions<TimeTrackingOptions> timeOptions)
     {
         _db = db;
         _summaryService = summaryService;
         _authService = authService;
+        _timeOptions = timeOptions.Value;
     }
 
     /// <summary>
@@ -32,7 +37,7 @@ public class TimeEntriesController : ControllerBase
     public async Task<IActionResult> RegisterEntry([FromBody] RegisterEntryDto dto)
     {
         // Obtener userId del token JWT
-        var userIdClaim = User.FindFirst("userID")?.Value;
+        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { message = "Token inválido" });
 
@@ -101,6 +106,9 @@ public class TimeEntriesController : ControllerBase
         _db.TimeEntries.Add(entry);
         await _db.SaveChangesAsync();
 
+        // Recalcular resumen diario tras cada fichaje
+        await _summaryService.CalculateDailySummaryAsync(employeeId, now.Date);
+
         return Ok(new
         {
             message = $"Fichaje {dto.EntryType} registrado correctamente",
@@ -121,7 +129,7 @@ public class TimeEntriesController : ControllerBase
 
         {
         // Si no se especifica employeeId, usar el del usuario autenticado
-        var userIdClaim = User.FindFirst("userID")?.Value;
+        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
@@ -130,11 +138,11 @@ public class TimeEntriesController : ControllerBase
         if (employeeId.HasValue)
         {
             // Solo ADMIN y RRHH pueden ver fichajes de otros
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
             
             if (!isAdminOrRrhh)
             {
-                if(User.IsInRole("MANAGER"))
+                if(User.IsInRole(AppRoles.Manager))
                 {
                     var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
                     
@@ -176,7 +184,7 @@ public class TimeEntriesController : ControllerBase
 
         // Calcular tipo de fichaje usando pair inference
         var entriesWithType = new List<TimeEntryDto>();
-        var entriesByDate = entries.GroupBy(e => e.Time.Value.Date);
+        var entriesByDate = entries.GroupBy(e => e.Time!.Value.Date);
 
         foreach (var dateGroup in entriesByDate)
         {
@@ -219,7 +227,7 @@ public class TimeEntriesController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        var userIdClaim = User.FindFirst("userID")?.Value;
+        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
 
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
 
@@ -229,11 +237,11 @@ public class TimeEntriesController : ControllerBase
 
         if (employeeId.HasValue)
         {
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
             
             if (!isAdminOrRrhh)
             {
-                if (User.IsInRole("MANAGER"))
+                if (User.IsInRole(AppRoles.Manager))
                 {
                     var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
                     
@@ -259,7 +267,7 @@ public class TimeEntriesController : ControllerBase
             targetEmployeeId = user.EmployeeId.Value;
         }
 
-        var fromDate = from ?? DateTime.Now.AddDays(-30).Date;  // ✅ Hora local
+        var fromDate = from ?? DateTime.Now.AddDays(-_timeOptions.DefaultQueryRangeDays).Date;  // ✅ Hora local
         var toDate = to ?? DateTime.Now.Date;  // ✅ Hora local
 
         // Calcular resúmenes para cada día del rango
@@ -295,6 +303,45 @@ public class TimeEntriesController : ControllerBase
         }
         
         return Ok(summaries);
+    }
+
+    /// <summary>
+    /// Recalcular TimeDailySummaries para empleados con fichajes sin summary.
+    /// Cubre fichajes insertados externamente (terminales físicos).
+    /// </summary>
+    [HttpPost("recalculate-summaries")]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Rrhh}")]
+    public async Task<IActionResult> RecalculateMissingSummaries([FromQuery] DateTime? from, [FromQuery] DateTime? to)
+    {
+        var fromDate = from?.Date ?? DateTime.Now.AddDays(-7).Date;
+        var toDate = to?.Date ?? DateTime.Now.Date;
+
+        // Buscar combinaciones (EmployeeId, Date) con fichajes pero SIN summary
+        var entriesWithoutSummary = await _db.TimeEntries
+            .Where(e => e.Time != null && e.Time.Value.Date >= fromDate && e.Time.Value.Date <= toDate)
+            .Select(e => new { e.EmployeeId, Date = e.Time!.Value.Date })
+            .Distinct()
+            .ToListAsync();
+
+        var existingSummaries = await _db.TimeDailySummaries
+            .Where(s => s.Date >= fromDate && s.Date <= toDate)
+            .Select(s => new { s.EmployeeId, s.Date })
+            .ToListAsync();
+
+        var existingSet = existingSummaries.ToHashSet();
+
+        var missing = entriesWithoutSummary
+            .Where(e => !existingSet.Contains(new { e.EmployeeId, e.Date }))
+            .ToList();
+
+        int calculated = 0;
+        foreach (var m in missing)
+        {
+            await _summaryService.CalculateDailySummaryAsync(m.EmployeeId, m.Date);
+            calculated++;
+        }
+
+        return Ok(new { message = $"Recalculados {calculated} resúmenes faltantes", from = fromDate, to = toDate, total = calculated });
     }
 
 public record RegisterEntryDto(string EntryType, string? Comment);

@@ -1,3 +1,5 @@
+using SistemaFichajesVacaciones.Domain.Constants;
+
 namespace SistemaFichajesVacaciones.Application.DTOs.Vacations;
 
 /// <summary>
@@ -51,7 +53,7 @@ public class VacationRequestResponseDto
     public DateTime EndDate { get; set; }
     public decimal RequestedDays { get; set; }
     public string Type { get; set; } = "VACATION";
-    public string Status { get; set; } = "DRAFT";
+    public string Status { get; set; } = VacationStatus.Draft;
     public string? ApproverComment { get; set; }
     public DateTime? SubmittedAt { get; set; }
     public DateTime? DecisionAt { get; set; }

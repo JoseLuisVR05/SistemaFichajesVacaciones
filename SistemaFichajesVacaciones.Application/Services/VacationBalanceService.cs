@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Application.Interfaces;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Application.Services;
 
@@ -125,7 +126,7 @@ public class VacationBalanceService : IVacationBalanceService
         // - StartDate.Year: solicitudes que inician en ese año fiscal
         var usedDays = await _db.VacationRequests
             .Where(r => r.EmployeeId == employeeId
-                     && r.Status == "APPROVED"
+                     && r.Status == VacationStatus.Approved
                      && r.StartDate.Year == year)
             .SumAsync(r => r.RequestedDays);  // Suma el campo RequestedDays
 

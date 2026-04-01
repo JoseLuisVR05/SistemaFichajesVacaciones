@@ -5,12 +5,17 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.Services;
 using SistemaFichajesVacaciones.Api.JsonConverters;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Options
+builder.Services.Configure<TimeTrackingOptions>(builder.Configuration.GetSection(TimeTrackingOptions.SectionName));
+builder.Services.Configure<VacationOptions>(builder.Configuration.GetSection(VacationOptions.SectionName));
 
 // Aqui se añaden los servicios
 builder.Services.AddControllers()

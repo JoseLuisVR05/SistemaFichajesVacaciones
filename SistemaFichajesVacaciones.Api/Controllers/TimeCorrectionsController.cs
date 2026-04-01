@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 // Api/Controllers/TimeCorrectionsController.cs
 [ApiController]
@@ -15,13 +18,15 @@ public class TimeCorrectionsController : ControllerBase
     private readonly IAuditService _audit;
     private readonly ITimeSummaryService _summaryService;
     private readonly IEmployeeAuthorizationService _authService;
+    private readonly TimeTrackingOptions _timeOptions;
 
-    public TimeCorrectionsController(AppDbContext db, IAuditService audit, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService)
+    public TimeCorrectionsController(AppDbContext db, IAuditService audit, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService, IOptions<TimeTrackingOptions> timeOptions)
     {
         _db = db;
         _audit = audit;
         _summaryService = summaryService;
         _authService = authService;
+        _timeOptions = timeOptions.Value;
     }
 
     /// <summary>
@@ -30,7 +35,7 @@ public class TimeCorrectionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> RequestCorrection([FromBody] CreateCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var user = await _db.Users.Include(u => u.Employee).SingleAsync(u => u.UserId == userId);
         
         if (user.EmployeeId == null)
@@ -44,7 +49,7 @@ public class TimeCorrectionsController : ControllerBase
         var existingPending = await _db.TimeCorrections
             .AnyAsync(tc => tc.EmployeeId == user.EmployeeId.Value 
                          && tc.Date == dto.Date 
-                         && tc.Status == "PENDING");
+                         && tc.Status == CorrectionStatus.Pending);
         
         if (existingPending)
             return BadRequest(new { message = "Ya existe una corrección pendiente para esta fecha" });
@@ -60,7 +65,7 @@ public class TimeCorrectionsController : ControllerBase
             OriginalMinutes = originalMinutes,
             CorrectedMinutes = dto.CorrectedMinutes,
             Reason = dto.Reason,
-            Status = "PENDING",
+            Status = CorrectionStatus.Pending,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -77,10 +82,10 @@ public class TimeCorrectionsController : ControllerBase
     /// Aprobar corrección (solo ADMIN, RRHH, MANAGER)
     /// </summary>
     [HttpPost("{id}/approve")]
-    [RequireRole("ADMIN", "RRHH", "MANAGER")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> ApproveCorrection(int id)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var correction = await _db.TimeCorrections
             .Include(tc => tc.Employee)
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -88,11 +93,11 @@ public class TimeCorrectionsController : ControllerBase
         if (correction == null)
             return NotFound(new { message = "Corrección no encontrada" });
 
-        if (correction.Status != "PENDING")
+        if (correction.Status != CorrectionStatus.Pending)
             return BadRequest(new { message = "La corrección ya fue procesada" });
 
         // Si es MANAGER, verificar que sea el manager del empleado
-        if (User.IsInRole("MANAGER") && !User.IsInRole("ADMIN") && !User.IsInRole("RRHH"))
+        if (User.IsInRole(AppRoles.Manager) && !User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Rrhh))
         {
             var managerEmployeeId = await _db.Users
                 .Where(u => u.UserId == userId)
@@ -105,7 +110,7 @@ public class TimeCorrectionsController : ControllerBase
 
         var oldValue = new { correction.Status };
         
-        correction.Status = "APPROVED";
+        correction.Status = CorrectionStatus.Approved;
         correction.ApprovedByUserId = userId;
         correction.ApprovedAt = DateTime.UtcNow;
         correction.UpdatedAt = DateTime.UtcNow;
@@ -126,7 +131,7 @@ public class TimeCorrectionsController : ControllerBase
                 EmployeeId = correction.EmployeeId,
                 Date = correction.Date,
                 WorkedMinutes = correction.CorrectedMinutes,
-                ExpectedMinutes = 480,
+                ExpectedMinutes = _timeOptions.DefaultWorkdayMinutes,
                 LastCalculatedAt = DateTime.UtcNow
             };
 
@@ -143,10 +148,10 @@ public class TimeCorrectionsController : ControllerBase
     /// Rechazar corrección
     /// </summary>
     [HttpPost("{id}/reject")]
-    [RequireRole("ADMIN", "RRHH", "MANAGER")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> RejectCorrection(int id, [FromBody] RejectCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var correction = await _db.TimeCorrections
             .Include(tc => tc.Employee)
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -154,11 +159,11 @@ public class TimeCorrectionsController : ControllerBase
         if (correction == null)
             return NotFound();
 
-        if (correction.Status != "PENDING")
+        if (correction.Status != CorrectionStatus.Pending)
             return BadRequest(new { message = "La corrección ya fue procesada" });
 
         // Verificar permisos igual que en approve
-        if (User.IsInRole("MANAGER") && !User.IsInRole("ADMIN") && !User.IsInRole("RRHH"))
+        if (User.IsInRole(AppRoles.Manager) && !User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Rrhh))
         {
             var managerEmployeeId = await _db.Users
                 .Where(u => u.UserId == userId)
@@ -171,7 +176,7 @@ public class TimeCorrectionsController : ControllerBase
 
         var oldValue = new { correction.Status };
         
-        correction.Status = "REJECTED";
+        correction.Status = CorrectionStatus.Rejected;
         correction.ApprovedByUserId = userId;
         correction.ApprovedAt = DateTime.UtcNow;
         correction.Reason += $"\n[REJECTION_REASON]: {dto.RejectionReason}";
@@ -195,11 +200,11 @@ public class TimeCorrectionsController : ControllerBase
         [FromQuery] bool includeOwn = false)
         
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
-        var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
-        var isManager = User.IsInRole("MANAGER");
+        var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
+        var isManager = User.IsInRole(AppRoles.Manager);
 
         IQueryable<TimeCorrection> query = _db.TimeCorrections
             .Include(tc => tc.Employee);
@@ -302,7 +307,7 @@ public class TimeCorrectionsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCorrection(int id, [FromBody] UpdateCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var correction = await _db.TimeCorrections
@@ -315,7 +320,7 @@ public class TimeCorrectionsController : ControllerBase
         if (correction.EmployeeId != user.EmployeeId)
             return Forbid();
 
-        if (correction.Status != "PENDING")
+        if (correction.Status != CorrectionStatus.Pending)
             return BadRequest(new { message = "Solo se pueden editar correcciones pendientes" });
 
         var oldValue = new { correction.CorrectedMinutes, correction.Reason };
@@ -339,7 +344,7 @@ public class TimeCorrectionsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCorrection(int id)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var correction = await _db.TimeCorrections
@@ -351,7 +356,7 @@ public class TimeCorrectionsController : ControllerBase
         if (correction.EmployeeId != user.EmployeeId)
             return Forbid();
 
-        if (correction.Status != "PENDING")
+        if (correction.Status != CorrectionStatus.Pending)
             return BadRequest(new { message = "Solo se pueden cancelar correcciones pendientes" });
 
         _db.TimeCorrections.Remove(correction);

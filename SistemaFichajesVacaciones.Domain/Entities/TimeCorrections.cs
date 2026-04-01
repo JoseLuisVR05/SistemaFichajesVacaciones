@@ -1,3 +1,5 @@
+using SistemaFichajesVacaciones.Domain.Constants;
+
 namespace SistemaFichajesVacaciones.Domain.Entities;
 
 public class TimeCorrection
@@ -8,7 +10,7 @@ public class TimeCorrection
     public int? OriginalMinutes { get; set; }
     public int CorrectedMinutes { get; set; }
     public string Reason { get; set; } = string.Empty;
-    public string Status { get; set; } = "PENDING"; // PENDING, APPROVED, REJECTED
+    public string Status { get; set; } = CorrectionStatus.Pending; // PENDING, APPROVED, REJECTED
     public int? ApprovedByUserId { get; set; }
     public DateTime? ApprovedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Application.Interfaces;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Application.Services;
 
@@ -17,11 +20,13 @@ public class VacationRequestService : IVacationRequestService
 {
     private readonly AppDbContext _db;
     private readonly IVacationBalanceService _balanceService;
+    private readonly VacationOptions _options;
 
-    public VacationRequestService(AppDbContext db, IVacationBalanceService balanceService)
+    public VacationRequestService(AppDbContext db, IVacationBalanceService balanceService, IOptions<VacationOptions> options)
     {
         _db = db;
         _balanceService = balanceService;
+        _options = options.Value;
     }
 
     /// <summary>
@@ -170,8 +175,8 @@ public class VacationRequestService : IVacationRequestService
         // ──────────────────────────────────────────────────
         // VALIDACIÓN 2: No solicitar en el pasado
         // ──────────────────────────────────────────────────
-        // Margen de 1 día para permitir correcciones inmediatas
-        if (startDate.Date < DateTime.UtcNow.Date.AddDays(-1))
+        // Margen configurable para permitir correcciones inmediatas
+        if (startDate.Date < DateTime.UtcNow.Date.AddDays(-_options.PastRequestMarginDays))
         {
             result.Errors.Add("No se pueden solicitar vacaciones en fechas pasadas");
             return result;
@@ -243,8 +248,8 @@ public class VacationRequestService : IVacationRequestService
         // - NO sea la solicitud que estamos editando (excludeRequestId)
         var overlappingRequests = await _db.VacationRequests
             .Where(r => r.EmployeeId == employeeId
-                     && r.Status != "REJECTED"
-                     && r.Status != "CANCELLED"
+                     && r.Status != VacationStatus.Rejected
+                     && r.Status != VacationStatus.Cancelled
                      && (excludeRequestId == null || r.RequestId != excludeRequestId)
                      && r.StartDate <= endDate    // Solapamiento: inicio antes del fin
                      && r.EndDate >= startDate)   // Solapamiento: fin después del inicio
@@ -263,10 +268,10 @@ public class VacationRequestService : IVacationRequestService
         // ──────────────────────────────────────────────────
         // VALIDACIÓN 6: Advertencias adicionales (no bloqueantes)
         // ──────────────────────────────────────────────────
-        if (workingDays > 15)
+        if (workingDays > _options.ConsecutiveDaysWarningThreshold)
         {
             result.Warnings.Add(
-                "Está solicitando más de 15 días consecutivos. " +
+                $"Está solicitando más de {_options.ConsecutiveDaysWarningThreshold} días consecutivos. " +
                 "Considere dividir la solicitud."
             );
         }
@@ -371,7 +376,7 @@ public class VacationRequestService : IVacationRequestService
         _db.AbsenceCalendar.RemoveRange(existingAbsences);
 
         // 3. Si la solicitud está APROBADA, crear nuevas ausencias
-        if (request.Status == "APPROVED")
+        if (request.Status == VacationStatus.Approved)
         {
             // Solo crear ausencias para días LABORABLES
             // (festivos/fines de semana no cuentan como ausencias)

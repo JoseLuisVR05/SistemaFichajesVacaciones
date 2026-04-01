@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
 [ApiController]
 [Route("api/import")]
 [Authorize]
-[RequireRole("ADMIN", "RRHH")]
+[RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
 public class ImportRunsController : ControllerBase
 {
     private readonly AppDbContext _db;

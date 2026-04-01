@@ -1,3 +1,5 @@
+using SistemaFichajesVacaciones.Domain.Constants;
+
 namespace SistemaFichajesVacaciones.Domain.Entities;
 
 public class VacationRequests
@@ -8,7 +10,7 @@ public class VacationRequests
     public DateTime EndDate { get; set; }
     public decimal RequestedDays { get; set; }
     public string Type { get; set; } = "VACATION"; // VACATION, PERSONAL, OTHER
-    public string Status { get; set; } = "DRAFT"; // DRAFT, SUBMITTED, APPROVED, REJECTED, CANCELLED
+    public string Status { get; set; } = VacationStatus.Draft; // DRAFT, SUBMITTED, APPROVED, REJECTED, CANCELLED
     public int? ApproverEmployeeId { get; set; }
     public string? ApproverComment { get; set; }
     public DateTime? SubmittedAt { get; set; }

@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
 using System.Text;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -14,11 +17,13 @@ public class TimeExportController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IEmployeeAuthorizationService _authService;
+    private readonly TimeTrackingOptions _timeOptions;
     
-    public TimeExportController(AppDbContext db, IEmployeeAuthorizationService authService)
+    public TimeExportController(AppDbContext db, IEmployeeAuthorizationService authService, IOptions<TimeTrackingOptions> timeOptions)
     {
         _db = db;
         _authService = authService;
+        _timeOptions = timeOptions.Value;
     }
 
     /// <summary>
@@ -32,7 +37,7 @@ public class TimeExportController : ControllerBase
         [FromQuery] DateTime? to,
         [FromQuery] string format = "csv")
     {
-        var userIdClaim = User.FindFirst("userID")?.Value;
+        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
 
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
 
@@ -49,11 +54,11 @@ public class TimeExportController : ControllerBase
         if (employeeId.HasValue)
         {
             // Verificar permisos
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
             
             if (!isAdminOrRrhh)
             {
-                if (User.IsInRole("MANAGER"))
+                if (User.IsInRole(AppRoles.Manager))
                 {
                     if (!await _authService.IsManagerOfEmployeeAsync(user.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
@@ -68,7 +73,7 @@ public class TimeExportController : ControllerBase
         else
         {
             // Sin employeeId: ADMIN/RRHH ven todo, resto solo lo propio
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
             if (!isAdminOrRrhh)
             {
                 if (user.EmployeeId == null)
@@ -79,7 +84,7 @@ public class TimeExportController : ControllerBase
         }
 
         // Filtros de fecha
-        var fromDate = from ?? DateTime.UtcNow.AddDays(-30);
+        var fromDate = from ?? DateTime.UtcNow.AddDays(-_timeOptions.DefaultQueryRangeDays);
         var toDate = to ?? DateTime.UtcNow;
 
         query = query.Where(e => e.EventTime >= fromDate.Date);

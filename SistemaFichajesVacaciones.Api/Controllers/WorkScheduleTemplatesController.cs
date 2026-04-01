@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Application.DTOs;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
 [ApiController]
 [Route("api/schedule-templates")]
 [Authorize]
-[RequireRole("ADMIN", "RRHH")]
+[RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
 public class WorkScheduleTemplatesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -124,7 +125,7 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTemplate([FromBody] CreateWorkScheduleTemplateDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
 
         // Validar territorio existe
         var territory = await _db.Territories.FindAsync(dto.TerritoryId);
@@ -183,7 +184,7 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpPut("{templateId}")]
     public async Task<IActionResult> UpdateTemplate(int templateId, [FromBody] UpdateWorkScheduleTemplateDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
         
         var template = await _db.WorkScheduleTemplates
             .Include(t => t.DayDetails)
@@ -244,7 +245,7 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpDelete("{templateId}")]
     public async Task<IActionResult> DeleteTemplate(int templateId)
     {
-        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
         var template = await _db.WorkScheduleTemplates
             .Include(t => t.DayDetails)
             .FirstOrDefaultAsync(t => t.WorkScheduleTemplateId == templateId);

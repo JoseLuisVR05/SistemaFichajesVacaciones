@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Domain.Entities;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Infrastructure.Services;
 
@@ -22,7 +25,12 @@ public class TimeSummaryValidation
 public class TimeSummaryService : ITimeSummaryService
 {
     private readonly AppDbContext _db;
-    public TimeSummaryService(AppDbContext db) => _db = db;
+    private readonly TimeTrackingOptions _options;
+    public TimeSummaryService(AppDbContext db, IOptions<TimeTrackingOptions> options)
+    {
+        _db = db;
+        _options = options.Value;
+    }
 
     public async Task<TimeDailySummary?> CalculateDailySummaryAsync(int employeeId, DateTime date)
     {
@@ -82,7 +90,7 @@ public class TimeSummaryService : ITimeSummaryService
             .FirstOrDefaultAsync();
 
         int expectedMinutes = 0;
-        TimeSpan endTimeOfDay = new TimeSpan(18, 0, 0); // 18:00 por defecto
+        TimeSpan endTimeOfDay = TimeSpan.Parse(_options.DefaultWorkdayEnd);
 
         if (isWorkingDay)
         {
@@ -133,7 +141,7 @@ public class TimeSummaryService : ITimeSummaryService
             }
             else
             {
-                expectedMinutes = 480; // 8h por defecto
+                expectedMinutes = _options.DefaultWorkdayMinutes; // Default from config
             }
         }
 
@@ -215,7 +223,7 @@ public class TimeSummaryService : ITimeSummaryService
             .AsNoTracking()
             .Where(tc => tc.EmployeeId == employeeId
                     && tc.Date == dateOnly
-                    && tc.Status == "APPROVED")
+                    && tc.Status == CorrectionStatus.Approved)
             .ToListAsync();
 
         // Sumar el delta (diferencia) de cada corrección aprobada

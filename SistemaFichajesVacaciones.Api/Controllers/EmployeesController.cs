@@ -5,6 +5,7 @@ using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using SistemaFichajesVacaciones.Application.DTOs;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
@@ -28,7 +29,7 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
     [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-           var userIdClaim = User.FindFirst("userID")?.Value;
+           var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
 
             if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
@@ -38,12 +39,12 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
             IQueryable<Employee> query = _context.Employees.Where(e => e.IsActive);
 
             //  ADMIN y RRHH ven todos
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
     
             if (!isAdminOrRrhh)
             {
                 // MANAGER solo ve sus subordinados
-                if (User.IsInRole("MANAGER"))
+                if (User.IsInRole(AppRoles.Manager))
                 {
                     query = query.Where(e => e.ManagerEmployeeId == user.EmployeeId);
                 }
@@ -119,18 +120,18 @@ public async Task<IActionResult> SearchEmployees([FromQuery] string term)
     if (string.IsNullOrWhiteSpace(term) || term.Length < 2)
         return Ok(new List<object>());
 
-    var userIdClaim = User.FindFirst("userID")?.Value;
+    var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
     if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
         return Unauthorized();
 
     var user = await _context.Users.SingleAsync(u => u.UserId == userId);
-    var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+    var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
     IQueryable<Employee> query = _context.Employees.Where(e => e.IsActive);
 
     if (!isAdminOrRrhh)
     {
-        if (User.IsInRole("MANAGER"))
+        if (User.IsInRole(AppRoles.Manager))
         {
             query = query.Where(e => e.ManagerEmployeeId == user.EmployeeId);
         }
@@ -267,7 +268,7 @@ private WorkScheduleInfoDto BuildWorkScheduleInfoDto(WorkScheduleTemplate? templ
             // Extramos el usuario actual para verificar permisos
             // y asi nadie ve el perfil de otro adivinando su ID
 
-            var userIdClaim = User.FindFirst("userID")?.Value;
+            var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
             if(userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
                 return Unauthorized();
             
@@ -277,12 +278,12 @@ private WorkScheduleInfoDto BuildWorkScheduleInfoDto(WorkScheduleTemplate? templ
 
             if(requistingUser == null) return Unauthorized();
 
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
             // ADMIN Y RRHH pueden ver cualquier empleado
             if(!isAdminOrRrhh)
             {
-                if(User.IsInRole("MANAGER"))
+                if(User.IsInRole(AppRoles.Manager))
                 {
                     //MANAGER solo puede ver sus subordinador directos
                     var isSubordinate =  await _authService.IsManagerOfEmployeeAsync(requistingUser.EmployeeId ?? 0, id);
@@ -355,7 +356,7 @@ private WorkScheduleInfoDto BuildWorkScheduleInfoDto(WorkScheduleTemplate? templ
 
     // ─── AÑADIR en EmployeesController, después de GetEmployee ───────────
     [HttpPatch("{id}/toggle-active")]
-    [RequireRole("ADMIN", "RRHH")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> ToggleActive(int id)
     {
         var employee = await _context.Employees.FindAsync(id);

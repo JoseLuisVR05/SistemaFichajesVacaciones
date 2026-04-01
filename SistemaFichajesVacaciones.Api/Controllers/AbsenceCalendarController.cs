@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -34,11 +35,11 @@ public class AbsenceCalendarController : ControllerBase
             query = query.Where(a => a.Employee.Department == department);
 
         // Filtrar según rol 
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
-        var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+        var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
-        if (!isAdminOrRrhh && User.IsInRole("MANAGER"))
+        if (!isAdminOrRrhh && User.IsInRole(AppRoles.Manager))
         {
             var subIds = await _authService.GetManagerSubordinateIdsAsync(user.EmployeeId ?? 0);
             // El MANAGER tambien puede ver las suyas

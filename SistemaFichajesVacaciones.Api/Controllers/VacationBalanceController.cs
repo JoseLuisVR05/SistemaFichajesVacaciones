@@ -5,6 +5,7 @@ using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -40,7 +41,7 @@ public class VacationBalanceController : ControllerBase
         [FromQuery] int? employeeId,
         [FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var currentYear = year ?? DateTime.UtcNow.Year;
 
         int targetEmployeeId;
@@ -48,11 +49,11 @@ public class VacationBalanceController : ControllerBase
         if (employeeId.HasValue)
         {
             // Verificar permisos
-            var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+            var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
             if (!isAdminOrRrhh)
             {
-                if (User.IsInRole("MANAGER"))
+                if (User.IsInRole(AppRoles.Manager))
                 {
                     var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
                     
@@ -111,19 +112,19 @@ public class VacationBalanceController : ControllerBase
     /// Obtener saldos de todo un equipo (para managers) o de todos (ADMIN/RRHH)
     /// </summary>
     [HttpGet("team")]
-    [RequireRole("ADMIN", "RRHH", "MANAGER")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> GetTeamBalances([FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var currentYear = year ?? DateTime.Now.Year;
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
-        var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
+        var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
         // Determinar qué empleados incluir
         IQueryable<Domain.Entities.Employee> employeesQuery = _db.Employees.Where(e => e.IsActive);
 
-        if (!isAdminOrRrhh && User.IsInRole("MANAGER"))
+        if (!isAdminOrRrhh && User.IsInRole(AppRoles.Manager))
         {
             // Solo subordinados del manager
             employeesQuery = employeesQuery
@@ -161,10 +162,10 @@ public class VacationBalanceController : ControllerBase
     /// Asignar saldos masivamente a todos los empleados activos (ADMIN/RRHH)
     /// </summary>
     [HttpPost("bulk-assign")]
-    [RequireRole("ADMIN", "RRHH")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> BulkAssign([FromBody] BulkAssignBalanceDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
 
         // Validar que la política existe
         var policy = await _db.VacationPolicies.FindAsync(dto.PolicyId);
@@ -200,12 +201,12 @@ public class VacationBalanceController : ControllerBase
     /// Útil si se detectan inconsistencias
     /// </summary>
     [HttpPost("recalculate")]
-    [RequireRole("ADMIN", "RRHH")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> Recalculate(
         [FromQuery] int employeeId,
         [FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
         var currentYear = year ?? DateTime.Now.Year;
 
         var balance = await _balanceService.RecalculateBalanceAsync(employeeId, currentYear);

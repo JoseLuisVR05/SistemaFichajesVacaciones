@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
+using RoleNames = SistemaFichajesVacaciones.Domain.Constants.AppRoles;
 
 
 namespace SistemaFichajesVacaciones.Infrastructure.Data;
@@ -14,10 +15,10 @@ public static class SeedData
         {
             var roles = new List<Roles>
             {
-                new() { Name = "ADMIN", Description = "Administrador del sistema" },
-                new() { Name = "RRHH", Description = "Recursos Humanos" },
-                new() { Name = "MANAGER", Description = "Responsable de equipo" },
-                new() { Name = "EMPLOYEE", Description = "Empleado básico" }
+                new() { Name = RoleNames.Admin, Description = "Administrador del sistema" },
+                new() { Name = RoleNames.Rrhh, Description = "Recursos Humanos" },
+                new() { Name = RoleNames.Manager, Description = "Responsable de equipo" },
+                new() { Name = RoleNames.Employee, Description = "Empleado básico" }
             };
 
             context.Roles.AddRange(roles);
@@ -123,7 +124,7 @@ public static class SeedData
             await context.SaveChangesAsync();
 
             // Asignar rol ADMIN al usuario creado
-            var adminRole = await context.Roles.FirstAsync(r => r.Name == "ADMIN");
+            var adminRole = await context.Roles.FirstAsync(r => r.Name == RoleNames.Admin);
             var userRoleAdmin = new UserRoles
             {
                 UserId = adminUser.UserId,
@@ -132,7 +133,7 @@ public static class SeedData
             context.UserRoles.Add(userRoleAdmin);
             
             // Asignar rol EMPLOYEE al usuario creado para poder fichar
-            var employeeRole = await context.Roles.FirstAsync(r => r.Name == "EMPLOYEE");
+            var employeeRole = await context.Roles.FirstAsync(r => r.Name == RoleNames.Employee);
             
             var userRoleEmployee = new UserRoles
             {
@@ -155,11 +156,11 @@ public static class SeedData
             // Verificar si el usuario admin tiene el rol EMPLOYEE
             var hasEmployeeRole = await context.UserRoles
                 .Include(ur => ur.Role)
-                .AnyAsync(ur => ur.UserId == adminUser.UserId && ur.Role.Name == "EMPLOYEE");
+                .AnyAsync(ur => ur.UserId == adminUser.UserId && ur.Role.Name == RoleNames.Employee);
         
             if (!hasEmployeeRole)
             {
-                var employeeRole = await context.Roles.FirstAsync(r => r.Name == "EMPLOYEE");
+                var employeeRole = await context.Roles.FirstAsync(r => r.Name == RoleNames.Employee);
                 
                 var userRoleEmployee = new UserRoles
                 {

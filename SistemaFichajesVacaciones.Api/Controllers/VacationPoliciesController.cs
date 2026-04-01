@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
+using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -69,10 +70,10 @@ public class VacationPoliciesController : ControllerBase
     /// Crear una nueva política de vacaciones
     /// </summary>
     [HttpPost]
-    [RequireRole("ADMIN", "RRHH")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> CreatePolicy([FromBody] CreatePolicyDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
 
         // Validar que no exista ya una política con mismo nombre y año
         var exists = await _db.VacationPolicies
@@ -115,10 +116,10 @@ public class VacationPoliciesController : ControllerBase
     /// Actualizar una política existente
     /// </summary>
     [HttpPut("{id}")]
-    [RequireRole("ADMIN", "RRHH")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> UpdatePolicy(int id, [FromBody] UpdatePolicyDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
 
         var policy = await _db.VacationPolicies.FindAsync(id);
         if (policy == null)
@@ -179,10 +180,10 @@ public class VacationPoliciesController : ControllerBase
     /// Eliminar una política (solo si no tiene saldos asociados)
     /// </summary>
     [HttpDelete("{id}")]
-    [RequireRole("ADMIN", "RRHH")]
+    [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> DeletePolicy(int id)
     {
-        var userId = int.Parse(User.FindFirst("userID")!.Value);
+        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
 
         var policy = await _db.VacationPolicies.FindAsync(id);
         if (policy == null)
