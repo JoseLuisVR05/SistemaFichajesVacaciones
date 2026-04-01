@@ -259,7 +259,6 @@ public static class SeedData
         {
             context.Calendar_Days.AddRange(festivosList);
             await context.SaveChangesAsync();
-            Console.WriteLine($"SeedData: {festivosList.Count} festivos inicializados en Calendar_Days");
         }
     }
 

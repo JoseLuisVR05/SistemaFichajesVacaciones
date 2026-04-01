@@ -5,7 +5,6 @@ export const useRole = () => {
   
   const hasRole = (rolesToCheck) => {
     if (!user?.role) {
-      console.log('NO hay rol en user:', user);
       return false;
     }
     

@@ -112,9 +112,7 @@ export function SchedulesTab({ showSnack }) {
 
   const handleAssignTemplate = async (payload) => {
     try {
-      console.log('[SchedulesTab] handleAssignTemplate payload:', payload);
       const response = await assignTemplateToEmployee(payload);
-      console.log('[SchedulesTab] assignTemplateToEmployee response:', response);
       showSnack?.('Plantilla asignada al empleado', 'success');
     } catch (error) {
       console.error('[SchedulesTab] Error en assign:', error?.response?.data || error?.message || error);
@@ -124,9 +122,7 @@ export function SchedulesTab({ showSnack }) {
 
   const handleUnassignTemplate = async (workScheduleId) => {
     try {
-      console.log('[SchedulesTab] handleUnassignTemplate workScheduleId:', workScheduleId);
       const response = await deleteWorkSchedule(workScheduleId);
-      console.log('[SchedulesTab] deleteWorkSchedule response:', response);
       showSnack?.('Asignación removida', 'success');
     } catch (error) {
       console.error('[SchedulesTab] Error en unassign:', error?.response?.data || error?.message || error);

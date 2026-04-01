@@ -72,7 +72,7 @@ public class VacationPoliciesController : ControllerBase
     [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> CreatePolicy([FromBody] CreatePolicyDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
 
         // Validar que no exista ya una política con mismo nombre y año
         var exists = await _db.VacationPolicies
@@ -118,7 +118,7 @@ public class VacationPoliciesController : ControllerBase
     [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> UpdatePolicy(int id, [FromBody] UpdatePolicyDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
 
         var policy = await _db.VacationPolicies.FindAsync(id);
         if (policy == null)
@@ -182,7 +182,7 @@ public class VacationPoliciesController : ControllerBase
     [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> DeletePolicy(int id)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
 
         var policy = await _db.VacationPolicies.FindAsync(id);
         if (policy == null)

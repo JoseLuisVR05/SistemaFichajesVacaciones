@@ -16,8 +16,6 @@ export const getDailySummary = async (params = {}) => {
     const { data } = await api.get(`/time-entries/summary/daily`, { params });
     return data;
   } catch (error) {
-    console.log(error.response?.data);   // 👈 mensaje real del servidor
-    console.log(error.response?.status);
     throw error;
   }
 };

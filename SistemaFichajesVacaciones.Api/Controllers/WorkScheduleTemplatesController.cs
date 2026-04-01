@@ -124,14 +124,7 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTemplate([FromBody] CreateWorkScheduleTemplateDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
-
-        // DEBUG: Log DTO recibido
-        Console.WriteLine($"🔍 CreateTemplate - DayDetails recibidos: {dto.DayDetails?.Count}");
-        foreach (var day in dto.DayDetails ?? new List<WorkScheduleDayDetailDto>())
-        {
-            Console.WriteLine($"  Día {day.DayOfWeek}: IsWorkDay={day.IsWorkDay}, BreakMinutes={day.BreakMinutes}");
-        }
+        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
 
         // Validar territorio existe
         var territory = await _db.Territories.FindAsync(dto.TerritoryId);
@@ -190,14 +183,7 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpPut("{templateId}")]
     public async Task<IActionResult> UpdateTemplate(int templateId, [FromBody] UpdateWorkScheduleTemplateDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
-        
-        // DEBUG: Log DTO recibido
-        Console.WriteLine($"🔍 UpdateTemplate - DayDetails recibidos: {dto.DayDetails?.Count}");
-        foreach (var day in dto.DayDetails ?? new List<WorkScheduleDayDetailDto>())
-        {
-            Console.WriteLine($"  Día {day.DayOfWeek}: IsWorkDay={day.IsWorkDay}, BreakMinutes={day.BreakMinutes}");
-        }
+        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
         
         var template = await _db.WorkScheduleTemplates
             .Include(t => t.DayDetails)
@@ -258,7 +244,7 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpDelete("{templateId}")]
     public async Task<IActionResult> DeleteTemplate(int templateId)
     {
-        var userId = int.Parse(User.FindFirst("userId")?.Value ?? "0");
+        var userId = int.Parse(User.FindFirst("userID")?.Value ?? "0");
         var template = await _db.WorkScheduleTemplates
             .Include(t => t.DayDetails)
             .FirstOrDefaultAsync(t => t.WorkScheduleTemplateId == templateId);

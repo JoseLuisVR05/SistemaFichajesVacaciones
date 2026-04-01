@@ -32,7 +32,7 @@ public class TimeEntriesController : ControllerBase
     public async Task<IActionResult> RegisterEntry([FromBody] RegisterEntryDto dto)
     {
         // Obtener userId del token JWT
-        var userIdClaim = User.FindFirst("userId")?.Value;
+        var userIdClaim = User.FindFirst("userID")?.Value;
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { message = "Token inválido" });
 
@@ -121,7 +121,7 @@ public class TimeEntriesController : ControllerBase
 
         {
         // Si no se especifica employeeId, usar el del usuario autenticado
-        var userIdClaim = User.FindFirst("userId")?.Value;
+        var userIdClaim = User.FindFirst("userID")?.Value;
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
@@ -219,7 +219,7 @@ public class TimeEntriesController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
+        var userIdClaim = User.FindFirst("userID")?.Value;
 
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
 

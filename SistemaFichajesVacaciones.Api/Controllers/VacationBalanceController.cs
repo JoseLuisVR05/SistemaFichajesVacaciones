@@ -40,7 +40,7 @@ public class VacationBalanceController : ControllerBase
         [FromQuery] int? employeeId,
         [FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var currentYear = year ?? DateTime.UtcNow.Year;
 
         int targetEmployeeId;
@@ -114,7 +114,7 @@ public class VacationBalanceController : ControllerBase
     [RequireRole("ADMIN", "RRHH", "MANAGER")]
     public async Task<IActionResult> GetTeamBalances([FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var currentYear = year ?? DateTime.Now.Year;
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
@@ -164,7 +164,7 @@ public class VacationBalanceController : ControllerBase
     [RequireRole("ADMIN", "RRHH")]
     public async Task<IActionResult> BulkAssign([FromBody] BulkAssignBalanceDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
 
         // Validar que la política existe
         var policy = await _db.VacationPolicies.FindAsync(dto.PolicyId);
@@ -205,7 +205,7 @@ public class VacationBalanceController : ControllerBase
         [FromQuery] int employeeId,
         [FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var currentYear = year ?? DateTime.Now.Year;
 
         var balance = await _balanceService.RecalculateBalanceAsync(employeeId, currentYear);

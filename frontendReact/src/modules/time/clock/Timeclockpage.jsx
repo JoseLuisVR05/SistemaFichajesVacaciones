@@ -280,7 +280,6 @@ export default function TimeClockPage() {
               size="small"
               variant="outlined"
               onClick={() => {
-                console.log('Sending state:', incident.date);
                 navigate('/corrections', {
                 state: { 
                   openNew: true, 

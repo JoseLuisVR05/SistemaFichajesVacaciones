@@ -306,7 +306,7 @@ private WorkScheduleInfoDto BuildWorkScheduleInfoDto(WorkScheduleTemplate? templ
                 .FirstOrDefaultAsync(e=> e.EmployeeId == id);
 
             if (employee == null)
-                return NotFound(new { messag = "Empleado no encontrado"});
+                return NotFound(new { message = "Empleado no encontrado"});
 
             // Cargar horario vigente del empleado (si existe)
             var today = DateTime.UtcNow.Date;

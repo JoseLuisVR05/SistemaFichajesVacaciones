@@ -39,21 +39,10 @@ export function EmployeeScheduleAssignment({
   const debounceTimer = useRef(null);
 
   const handleOpenEdit = (employee) => {
-    console.log('[EDIT] Abriendo dialog para:', {
-      employeeId: employee.employeeId,
-      fullName: employee.fullName,
-      workSchedule: employee.workSchedule,
-      workScheduleId: employee.workSchedule?.workScheduleId,
-      workScheduleTemplateId: employee.workSchedule?.workScheduleTemplateId,
-      isDefault: employee.workSchedule?.isDefault,
-      isException: employee.workSchedule?.isException,
-      name: employee.workSchedule?.name,
-    });
     setEditingEmployee(employee);
     setSelectedTemplateId(
       employee.workSchedule?.workScheduleTemplateId || ''
     );
-    console.log('[EDIT] selectedTemplateId set to:', employee.workSchedule?.workScheduleTemplateId || '(vacío)');
   };
 
   // Buscar empleados con debounce
@@ -74,11 +63,6 @@ export function EmployeeScheduleAssignment({
     debounceTimer.current = setTimeout(async () => {
       try {
         const results = await searchEmployees(searchTerm);
-        console.log('[SEARCH] Resultados raw:', JSON.stringify(results?.map(r => ({
-          id: r.employeeId,
-          name: r.fullName,
-          ws: r.workSchedule,
-        })), null, 2));
         setSearchResults(results || []);
       } catch (error) {
         console.error('Error en búsqueda:', error);
@@ -107,9 +91,7 @@ export function EmployeeScheduleAssignment({
       employeeId: editingEmployee.employeeId,
       workScheduleTemplateId: selectedTemplateId,
     };
-    console.log('[SAVE] Payload que se envía a onAssign:', payload);
     await onAssign(payload);
-    console.log('[SAVE] onAssign completado');
 
     setEditingEmployee(null);
 
@@ -123,31 +105,23 @@ export function EmployeeScheduleAssignment({
   };
 
   const handleRemoveAssignment = async () => {
-    console.log('[REMOVE] editingEmployee:', {
-      employeeId: editingEmployee?.employeeId,
-      workSchedule: editingEmployee?.workSchedule,
-    });
-
     if (!editingEmployee?.workSchedule) {
       alert('Este empleado no tiene plantilla asignada');
       return;
     }
 
-    console.log('[REMOVE] isDefault:', editingEmployee.workSchedule.isDefault);
     if (editingEmployee.workSchedule.isDefault) {
       alert('Ya tiene la plantilla por defecto de su territorio');
       return;
     }
 
     // Solo se puede "volver a default" si tiene una excepción (workScheduleId != null)
-    console.log('[REMOVE] workScheduleId:', editingEmployee.workSchedule.workScheduleId);
     if (!editingEmployee.workSchedule.workScheduleId) {
       alert('No hay excepción que eliminar');
       return;
     }
 
     if (window.confirm('¿Volver a la plantilla por defecto del territorio?')) {
-      console.log('[REMOVE] Llamando onUnassign con workScheduleId:', editingEmployee.workSchedule.workScheduleId);
       await onUnassign(editingEmployee.workSchedule.workScheduleId);
       setEditingEmployee(null);
 

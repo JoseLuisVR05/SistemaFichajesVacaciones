@@ -30,7 +30,7 @@ public class TimeCorrectionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> RequestCorrection([FromBody] CreateCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user = await _db.Users.Include(u => u.Employee).SingleAsync(u => u.UserId == userId);
         
         if (user.EmployeeId == null)
@@ -80,7 +80,7 @@ public class TimeCorrectionsController : ControllerBase
     [RequireRole("ADMIN", "RRHH", "MANAGER")]
     public async Task<IActionResult> ApproveCorrection(int id)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var correction = await _db.TimeCorrections
             .Include(tc => tc.Employee)
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -146,7 +146,7 @@ public class TimeCorrectionsController : ControllerBase
     [RequireRole("ADMIN", "RRHH", "MANAGER")]
     public async Task<IActionResult> RejectCorrection(int id, [FromBody] RejectCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var correction = await _db.TimeCorrections
             .Include(tc => tc.Employee)
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -195,7 +195,7 @@ public class TimeCorrectionsController : ControllerBase
         [FromQuery] bool includeOwn = false)
         
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
@@ -302,7 +302,7 @@ public class TimeCorrectionsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCorrection(int id, [FromBody] UpdateCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var correction = await _db.TimeCorrections
@@ -339,7 +339,7 @@ public class TimeCorrectionsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCorrection(int id)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var correction = await _db.TimeCorrections

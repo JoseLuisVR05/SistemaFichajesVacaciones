@@ -1,7 +1,5 @@
 import api from './api';
 
-console.log('📍 API configurada en scheduleService');
-
 export async function getTerritories() {
   try {
     const response = await api.get('/territories');
@@ -19,9 +17,7 @@ export async function getTemplatesByTerritory(territoryId) {
       ? `/schedule-templates/by-territory/${territoryId}`
       : '/schedule-templates';
     
-    console.log(`🔍 Cargando templates desde: ${endpoint}`);
     const response = await api.get(endpoint);
-    console.log('✅ Templates cargados:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ Error cargando templates:', error.response?.data || error.message);
@@ -41,9 +37,7 @@ export async function getTemplate(templateId) {
 
 export async function createTemplate(data) {
   try {
-    console.log('📝 Creando template:', JSON.stringify(data, null, 2));
     const response = await api.post(`/schedule-templates`, data);
-    console.log('✅ Template creado:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ Error creando template:', error.response?.data || error.message);
@@ -53,9 +47,7 @@ export async function createTemplate(data) {
 
 export async function updateTemplate(templateId, data) {
   try {
-    console.log('📝 Actualizando template:', templateId, JSON.stringify(data, null, 2));
     const response = await api.put(`/schedule-templates/${templateId}`, data);
-    console.log('✅ Template actualizado:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ Error actualizando template:', error.response?.data || error.message);
@@ -75,9 +67,7 @@ export async function deleteTemplate(templateId) {
 
 export async function assignTemplateToEmployee(data) {
   try {
-    console.log('📝 Asignando template a empleado:', data);
     const response = await api.post(`/schedules/assign`, data);
-    console.log('✅ Template asignado:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ Error asignando template:', error.response?.data || error.message);
@@ -87,9 +77,7 @@ export async function assignTemplateToEmployee(data) {
 
 export async function deleteWorkSchedule(workScheduleId) {
   try {
-    console.log('🗑️ Eliminando horario:', workScheduleId);
     const response = await api.delete(`/schedules/${workScheduleId}`);
-    console.log('✅ Horario eliminado:', response.data);
     return response.data;
   } catch (error) {
     console.error('❌ Error eliminando horario:', error.response?.data || error.message);

@@ -32,7 +32,7 @@ public class TimeExportController : ControllerBase
         [FromQuery] DateTime? to,
         [FromQuery] string format = "csv")
     {
-        var userIdClaim = User.FindFirst("userId")?.Value;
+        var userIdClaim = User.FindFirst("userID")?.Value;
 
         if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
 

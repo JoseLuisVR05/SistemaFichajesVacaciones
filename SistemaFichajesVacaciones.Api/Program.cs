@@ -175,17 +175,8 @@ if (app.Environment.IsDevelopment())
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        try
-        {
-            await SistemaFichajesVacaciones.Infrastructure.Data.SeedData
-                .EnsureSeedDataAsync(db);
-            Console.WriteLine("✅ SeedData ejecutado correctamente.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error during seeding: {ex.Message}");
-            throw;
-        }   
+        await SistemaFichajesVacaciones.Infrastructure.Data.SeedData
+            .EnsureSeedDataAsync(db);
     }
 }
 

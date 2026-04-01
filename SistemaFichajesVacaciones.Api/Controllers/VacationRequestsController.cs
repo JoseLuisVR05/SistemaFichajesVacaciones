@@ -40,7 +40,7 @@ public class VacationRequestsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateRequest([FromBody] CreateVacationRequestDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         if (user.EmployeeId == null)
@@ -116,7 +116,7 @@ public class VacationRequestsController : ControllerBase
     [HttpPost("{id}/submit")]
     public async Task<IActionResult> SubmitRequest(int id)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var request = await _db.VacationRequests
             .Include(r => r.Employee)
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -171,7 +171,7 @@ public class VacationRequestsController : ControllerBase
     [RequireRole("ADMIN", "RRHH", "MANAGER")]
     public async Task<IActionResult> ApproveRequest(int id, [FromBody] ApproveRejectRequestDto? dto = null)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var request = await _db.VacationRequests
             .Include(r => r.Employee)
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -230,7 +230,7 @@ public class VacationRequestsController : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.Comment))
             return BadRequest(new { message = "El motivo del rechazo es obligatorio" });
 
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var request = await _db.VacationRequests
             .Include(r => r.Employee)
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -277,7 +277,7 @@ public class VacationRequestsController : ControllerBase
     [HttpPost("{id}/cancel")]
     public async Task<IActionResult> CancelRequest(int id)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var request = await _db.VacationRequests
@@ -322,7 +322,7 @@ public class VacationRequestsController : ControllerBase
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         var isAdminOrRrhh = User.IsInRole("ADMIN") || User.IsInRole("RRHH");
@@ -418,7 +418,7 @@ public class VacationRequestsController : ControllerBase
     [HttpPost("validate")]
     public async Task<IActionResult> ValidateDates([FromBody] ValidateVacationDatesDto dto)
     {
-        var userId = int.Parse(User.FindFirst("userId")!.Value);
+        var userId = int.Parse(User.FindFirst("userID")!.Value);
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
         if (user.EmployeeId == null)

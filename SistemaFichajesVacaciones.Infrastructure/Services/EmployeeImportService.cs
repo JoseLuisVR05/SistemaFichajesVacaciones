@@ -291,7 +291,6 @@ public class EmployeeImportService : IEmployeeImportService
             if (toDeactivate.Any())
             {
                 await _db.SaveChangesAsync(cancellationToken);
-                Console.WriteLine($"⚠️ {toDeactivate.Count} empleados marcados como inactivos (no presentes en el CSV).");
             }
         }
 
