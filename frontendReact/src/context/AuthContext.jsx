@@ -9,8 +9,8 @@ export const AuthProvider = ({ children }) => { //Su trabajo es: "Proveer" el co
   
   useEffect(() => {
     //Recuperar sesion al cargar la aplicación
-    const currentUSer = authService.getCurrentUser();
-    setUser(currentUSer);
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
     setLoading(false);
   }, []);
   
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => { //Su trabajo es: "Proveer" el co
   // Función para verificar si el usuario tiene alguno de los roles especificados
   const hasRole = (roles) => {
     if (!user?.role) return false;
-    return roles.some(r => user.role.includes(r));
+    return roles.some(r => r === user.role);
   };
 
   return (

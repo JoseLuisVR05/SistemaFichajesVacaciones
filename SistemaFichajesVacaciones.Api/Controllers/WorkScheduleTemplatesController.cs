@@ -12,7 +12,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [Route("api/schedule-templates")]
 [Authorize]
 [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
-public class WorkScheduleTemplatesController : ControllerBase
+public class WorkScheduleTemplatesController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
@@ -125,7 +125,8 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTemplate([FromBody] CreateWorkScheduleTemplateDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         // Validar territorio existe
         var territory = await _db.Territories.FindAsync(dto.TerritoryId);
@@ -172,7 +173,7 @@ public class WorkScheduleTemplatesController : ControllerBase
 
         _db.WorkScheduleTemplates.Add(template);
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("WorkScheduleTemplate", template.WorkScheduleTemplateId, "CREATE", null, template, userId);
+        await _audit.LogAsync("WorkScheduleTemplate", template.WorkScheduleTemplateId, "CREATE", null, template, userId.Value);
 
         return CreatedAtAction(nameof(GetTemplate), new { templateId = template.WorkScheduleTemplateId }, 
             new { message = "Template creada", templateId = template.WorkScheduleTemplateId });
@@ -184,7 +185,8 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpPut("{templateId}")]
     public async Task<IActionResult> UpdateTemplate(int templateId, [FromBody] UpdateWorkScheduleTemplateDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         
         var template = await _db.WorkScheduleTemplates
             .Include(t => t.DayDetails)
@@ -234,7 +236,7 @@ public class WorkScheduleTemplatesController : ControllerBase
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("WorkScheduleTemplate", templateId, "UPDATE", oldValue,
-            new { template.Name, template.Description, template.IsActive }, userId);
+            new { template.Name, template.Description, template.IsActive }, userId.Value);
 
         return Ok(new { message = "Template actualizada" });
     }
@@ -245,7 +247,9 @@ public class WorkScheduleTemplatesController : ControllerBase
     [HttpDelete("{templateId}")]
     public async Task<IActionResult> DeleteTemplate(int templateId)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+
         var template = await _db.WorkScheduleTemplates
             .Include(t => t.DayDetails)
             .FirstOrDefaultAsync(t => t.WorkScheduleTemplateId == templateId);
@@ -263,7 +267,7 @@ public class WorkScheduleTemplatesController : ControllerBase
         _db.WorkScheduleDayDetails.RemoveRange(template.DayDetails);
         _db.WorkScheduleTemplates.Remove(template);
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("WorkScheduleTemplate", templateId, "DELETE", template, null, userId);
+        await _audit.LogAsync("WorkScheduleTemplate", templateId, "DELETE", template, null, userId.Value);
 
         return Ok(new { message = "Template eliminada" });
     }

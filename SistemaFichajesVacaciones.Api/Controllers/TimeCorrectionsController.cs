@@ -7,12 +7,13 @@ using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
 using SistemaFichajesVacaciones.Domain.Constants;
+using SistemaFichajesVacaciones.Api.Controllers;
 
 // Api/Controllers/TimeCorrectionsController.cs
 [ApiController]
 [Route("api/time-corrections")]
 [Authorize]
-public class TimeCorrectionsController : ControllerBase
+public class TimeCorrectionsController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
@@ -35,8 +36,9 @@ public class TimeCorrectionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> RequestCorrection([FromBody] CreateCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user = await _db.Users.Include(u => u.Employee).SingleAsync(u => u.UserId == userId);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+        var user = await _db.Users.Include(u => u.Employee).SingleAsync(u => u.UserId == userId.Value);
         
         if (user.EmployeeId == null)
             return BadRequest(new { message = "Usuario sin empleado asignado" });
@@ -73,7 +75,7 @@ public class TimeCorrectionsController : ControllerBase
         _db.TimeCorrections.Add(correction);
         await _db.SaveChangesAsync();
 
-        await _audit.LogAsync("TimeCorrection", correction.CorrectionId, "CREATE", null, correction, userId);
+        await _audit.LogAsync("TimeCorrection", correction.CorrectionId, "CREATE", null, correction, userId.Value);
 
         return Ok(new { message = "Solicitud de corrección creada", correctionId = correction.CorrectionId });
     }
@@ -85,7 +87,8 @@ public class TimeCorrectionsController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> ApproveCorrection(int id)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         var correction = await _db.TimeCorrections
             .Include(tc => tc.Employee)
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -139,7 +142,7 @@ public class TimeCorrectionsController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("TimeCorrection", id, "UPDATE", oldValue, new { correction.Status }, userId);
+        await _audit.LogAsync("TimeCorrection", id, "UPDATE", oldValue, new { correction.Status }, userId.Value);
 
         return Ok(new { message = "Corrección aprobada" });
     }
@@ -151,7 +154,8 @@ public class TimeCorrectionsController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> RejectCorrection(int id, [FromBody] RejectCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         var correction = await _db.TimeCorrections
             .Include(tc => tc.Employee)
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -183,7 +187,7 @@ public class TimeCorrectionsController : ControllerBase
         correction.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("TimeCorrection", id, "UPDATE", oldValue, new { correction.Status }, userId);
+        await _audit.LogAsync("TimeCorrection", id, "UPDATE", oldValue, new { correction.Status }, userId.Value);
 
         return Ok(new { message = "Corrección rechazada" });
     }
@@ -200,8 +204,9 @@ public class TimeCorrectionsController : ControllerBase
         [FromQuery] bool includeOwn = false)
         
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+        var user = await _db.Users.SingleAsync(u => u.UserId == userId.Value);
 
         var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
         var isManager = User.IsInRole(AppRoles.Manager);
@@ -307,8 +312,9 @@ public class TimeCorrectionsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateCorrection(int id, [FromBody] UpdateCorrectionDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+        var user   = await _db.Users.SingleAsync(u => u.UserId == userId.Value);
 
         var correction = await _db.TimeCorrections
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -333,7 +339,7 @@ public class TimeCorrectionsController : ControllerBase
         await _audit.LogAsync("TimeCorrection", id, "UPDATE",
             oldValue,
             new { correction.CorrectedMinutes, correction.Reason },
-            userId);
+            userId.Value);
 
         return Ok(new { message = "Corrección actualizada" });
     }
@@ -344,8 +350,9 @@ public class TimeCorrectionsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCorrection(int id)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user   = await _db.Users.SingleAsync(u => u.UserId == userId);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+        var user   = await _db.Users.SingleAsync(u => u.UserId == userId.Value);
 
         var correction = await _db.TimeCorrections
             .SingleOrDefaultAsync(tc => tc.CorrectionId == id);
@@ -361,7 +368,8 @@ public class TimeCorrectionsController : ControllerBase
 
         _db.TimeCorrections.Remove(correction);
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("TimeCorrection", id, "DELETE", correction, null, userId);
+        await _audit.LogAsync("TimeCorrection", id, "DELETE", correction, null, userId.Value);
+
 
         return Ok(new { message = "Corrección cancelada y eliminada" });
     }

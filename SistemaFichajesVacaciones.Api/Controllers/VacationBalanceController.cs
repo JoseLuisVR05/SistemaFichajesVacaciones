@@ -12,7 +12,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/vacation/balance")]
 [Authorize]
-public class VacationBalanceController : ControllerBase
+public class VacationBalanceController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IVacationBalanceService _balanceService;
@@ -41,7 +41,9 @@ public class VacationBalanceController : ControllerBase
         [FromQuery] int? employeeId,
         [FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+        
         var currentYear = year ?? DateTime.UtcNow.Year;
 
         int targetEmployeeId;
@@ -115,7 +117,8 @@ public class VacationBalanceController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> GetTeamBalances([FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         var currentYear = year ?? DateTime.Now.Year;
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
 
@@ -165,7 +168,8 @@ public class VacationBalanceController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> BulkAssign([FromBody] BulkAssignBalanceDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         // Validar que la política existe
         var policy = await _db.VacationPolicies.FindAsync(dto.PolicyId);
@@ -175,12 +179,12 @@ public class VacationBalanceController : ControllerBase
         try
         {
             var result = await _balanceService.BulkAssignBalancesAsync(
-                dto.PolicyId, dto.Year, userId);
+                dto.PolicyId, dto.Year, userId.Value);
 
             await _audit.LogAsync("VacationBalance", 0, "BULK_ASSIGN",
                 null,
                 new { dto.PolicyId, dto.Year, result.Created, result.Skipped },
-                userId);
+                userId.Value);
 
             return Ok(new
             {
@@ -206,7 +210,8 @@ public class VacationBalanceController : ControllerBase
         [FromQuery] int employeeId,
         [FromQuery] int? year)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         var currentYear = year ?? DateTime.Now.Year;
 
         var balance = await _balanceService.RecalculateBalanceAsync(employeeId, currentYear);
@@ -217,7 +222,7 @@ public class VacationBalanceController : ControllerBase
         await _audit.LogAsync("VacationBalance", balance.BalanceId, "RECALCULATE",
             null,
             new { balance.AllocatedDays, balance.UsedDays, balance.RemainingDays },
-            userId);
+            userId.Value);
 
         return Ok(new
         {

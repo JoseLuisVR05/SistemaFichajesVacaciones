@@ -1,9 +1,10 @@
+using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Domain.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 
 namespace SistemaFichajesVacaciones.Infrastructure.Services;
@@ -15,13 +16,13 @@ public interface ITokenService
 
 public class TokenService : ITokenService
 {
-    private readonly IConfiguration _config;
-    public TokenService(IConfiguration config) => _config = config;
+    private readonly JwtOptions _jwt;
+    public TokenService(IOptions<JwtOptions> jwtOptions) => _jwt = jwtOptions.Value;
 
     public string GenerateToken(int userId, string email, List<string>? roles = null)
     {
-        var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key missing"));
-        
+        var key = Encoding.UTF8.GetBytes(_jwt.Key);
+
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
@@ -36,18 +37,17 @@ public class TokenService : ITokenService
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
-            
+
             claims.Add(new Claim("role", roles.First()));
-            
         }
 
         var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: _config["Jwt:Issuer"],
-            audience: _config["Jwt:Audience"],
+            issuer: _jwt.Issuer,
+            audience: _jwt.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(int.Parse(_config["Jwt:ExpiresMinutes"] ?? "60")),
+            expires: DateTime.UtcNow.AddMinutes(_jwt.ExpiresMinutes),
             signingCredentials: creds
         );
 

@@ -13,7 +13,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class EmployeesController : ControllerBase// Controlador para devolver respuestas como ok(), notfound, badrequest, etc.
+public class EmployeesController : BaseApiController // Controlador para devolver respuestas como ok(), notfound, badrequest, etc.
 {
     private readonly AppDbContext _context;
     private readonly IEmployeeImportService _importService;
@@ -29,12 +29,11 @@ public class EmployeesController : ControllerBase// Controlador para devolver re
     [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-           var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
+           var userId = TryGetCurrentUserId();
 
-            if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-                return Unauthorized();
+            if (userId == null) return UnauthorizedUser();
 
-            var user = await _context.Users.SingleAsync(u => u.UserId == userId);
+            var user = await _context.Users.SingleAsync(u => u.UserId == userId.Value);
 
             IQueryable<Employee> query = _context.Employees.Where(e => e.IsActive);
 
@@ -120,11 +119,10 @@ public async Task<IActionResult> SearchEmployees([FromQuery] string term)
     if (string.IsNullOrWhiteSpace(term) || term.Length < 2)
         return Ok(new List<object>());
 
-    var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
-    if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-        return Unauthorized();
+    var userId = TryGetCurrentUserId();
+    if (userId == null) return UnauthorizedUser();
 
-    var user = await _context.Users.SingleAsync(u => u.UserId == userId);
+    var user = await _context.Users.SingleAsync(u => u.UserId == userId.Value);
     var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
     IQueryable<Employee> query = _context.Employees.Where(e => e.IsActive);
@@ -268,13 +266,13 @@ private WorkScheduleInfoDto BuildWorkScheduleInfoDto(WorkScheduleTemplate? templ
             // Extramos el usuario actual para verificar permisos
             // y asi nadie ve el perfil de otro adivinando su ID
 
-            var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
-            if(userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-                return Unauthorized();
+            var userId = TryGetCurrentUserId();
+            if(userId == null)
+                return Unauthorized(new { message = "Token inválido o claim ausente" });
             
             var requistingUser = await _context.Users
                 .AsNoTracking()
-                .SingleOrDefaultAsync( u => u.UserId ==userId);
+                .SingleOrDefaultAsync( u => u.UserId ==userId.Value);
 
             if(requistingUser == null) return Unauthorized();
 

@@ -10,7 +10,7 @@ public class Territory
     public string? Location { get; set; }                        // 'Cataluña', 'Maharashtra' (opcional)
     
     // Zona horaria
-    public int UTC { get; set; }  // Offset: 1=España, 5=India IST
+    public double UTC { get; set; }  // Offset en horas: 1=España invierno, 2=España verano, 5.5=India IST
     
     // Estado
     public bool IsActive { get; set; } = true;

@@ -13,7 +13,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/vacation/requests")]
 [Authorize]
-public class VacationRequestsController : ControllerBase
+public class VacationRequestsController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IVacationRequestService _requestService;
@@ -41,15 +41,12 @@ public class VacationRequestsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateRequest([FromBody] CreateVacationRequestDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user = await _db.Users.SingleAsync(u => u.UserId == userId);
-
-        if (user.EmployeeId == null)
-            return BadRequest(new { message = "Usuario sin empleado asignado" });
+        var (userId, employeeId, error) = await GetCurrentEmployeeAsync(_db);
+        if (error != null) return error;
 
         // Validar fechas y saldo
         var validation = await _requestService.ValidateRequestAsync(
-            user.EmployeeId.Value,
+            employeeId,
             dto.StartDate,
             dto.EndDate
         );
@@ -67,7 +64,7 @@ public class VacationRequestsController : ControllerBase
         // Crear solicitud
         var request = new VacationRequests
         {
-            EmployeeId = user.EmployeeId.Value,
+            EmployeeId = employeeId,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             RequestedDays = validation.WorkingDays,
@@ -90,8 +87,8 @@ public class VacationRequestsController : ControllerBase
         _db.AddRange(requestDays);
         await _db.SaveChangesAsync();
 
-        await _audit.LogAsync("VacationRequest", request.RequestId, "CREATE", 
-        null, 
+        await _audit.LogAsync("VacationRequest", request.RequestId, "CREATE",
+        null,
         new
             {
                 request.StartDate,
@@ -99,7 +96,7 @@ public class VacationRequestsController : ControllerBase
                 request.RequestedDays,
                 request.Type,
                 request.Status
-            }, 
+            },
             userId);
 
         return Ok(new
@@ -117,7 +114,9 @@ public class VacationRequestsController : ControllerBase
     [HttpPost("{id}/submit")]
     public async Task<IActionResult> SubmitRequest(int id)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var (userId, employeeId, error) = await GetCurrentEmployeeAsync(_db);
+        if (error != null) return error;
+
         var request = await _db.VacationRequests
             .Include(r => r.Employee)
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -126,8 +125,7 @@ public class VacationRequestsController : ControllerBase
             return NotFound(new { message = "Solicitud no encontrada" });
 
         // Verificar permisos: solo el dueño puede enviar
-        var user = await _db.Users.SingleAsync(u => u.UserId == userId);
-        if (request.EmployeeId != user.EmployeeId)
+        if (request.EmployeeId != employeeId)
             return Forbid();
 
         if (request.Status != VacationStatus.Draft)
@@ -157,9 +155,9 @@ public class VacationRequestsController : ControllerBase
         request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("VacationRequest", id, "SUBMIT", 
-        oldValue, 
-        new { request.Status, request.SubmittedAt }, 
+        await _audit.LogAsync("VacationRequest", id, "SUBMIT",
+        oldValue,
+        new { request.Status, request.SubmittedAt },
         userId);
 
         return Ok(new { message = "Solicitud enviada para aprobación" });
@@ -172,7 +170,15 @@ public class VacationRequestsController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh, AppRoles.Manager)]
     public async Task<IActionResult> ApproveRequest(int id, [FromBody] ApproveRejectRequestDto? dto = null)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+
+        // Una sola query para obtener el EmployeeId del aprobador, reutilizada abajo
+        var approver = await _db.Users
+            .Where(u => u.UserId == userId.Value)
+            .Select(u => new { u.EmployeeId })
+            .SingleOrDefaultAsync();
+
         var request = await _db.VacationRequests
             .Include(r => r.Employee)
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -186,15 +192,14 @@ public class VacationRequestsController : ControllerBase
         // Verificar permisos: Manager solo puede aprobar de sus subordinados
         if (User.IsInRole(AppRoles.Manager) && !User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Rrhh))
         {
-            var manager = await _db.Users.SingleAsync(u => u.UserId == userId);
-            if (!await _authService.IsManagerOfEmployeeAsync(manager.EmployeeId ?? 0, request.EmployeeId))
+            if (!await _authService.IsManagerOfEmployeeAsync(approver?.EmployeeId ?? 0, request.EmployeeId))
                 return Forbid();
         }
 
         var oldValue = new { request.Status };
 
         request.Status = VacationStatus.Approved;
-        request.ApproverEmployeeId = (await _db.Users.SingleAsync(u => u.UserId == userId)).EmployeeId;
+        request.ApproverEmployeeId = approver?.EmployeeId; // reutilizamos la query de arriba
         request.ApproverComment = dto?.Comment;
         request.DecisionAt = DateTime.UtcNow;
         request.UpdatedAt = DateTime.UtcNow;
@@ -207,16 +212,15 @@ public class VacationRequestsController : ControllerBase
         // Sincronizar calendario de ausencias
         await _requestService.SyncAbsenceCalendarAsync(request.RequestId);
 
-        await _audit.LogAsync("VacationRequest", id, "APPROVE", 
-            oldValue, 
-            new 
-            { 
+        await _audit.LogAsync("VacationRequest", id, "APPROVE",
+            oldValue,
+            new
+            {
                 request.Status,
                 request.ApproverComment,
                 request.DecisionAt
-        
-            }, 
-            userId);
+            },
+            userId.Value);
 
         return Ok(new { message = "Solicitud aprobada correctamente" });
     }
@@ -231,7 +235,15 @@ public class VacationRequestsController : ControllerBase
         if (string.IsNullOrWhiteSpace(dto.Comment))
             return BadRequest(new { message = "El motivo del rechazo es obligatorio" });
 
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+
+        // Una sola query para obtener el EmployeeId del aprobador, reutilizada abajo
+        var approver = await _db.Users
+            .Where(u => u.UserId == userId.Value)
+            .Select(u => new { u.EmployeeId })
+            .SingleOrDefaultAsync();
+
         var request = await _db.VacationRequests
             .Include(r => r.Employee)
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -245,30 +257,28 @@ public class VacationRequestsController : ControllerBase
         // Verificar permisos
         if (User.IsInRole(AppRoles.Manager) && !User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Rrhh))
         {
-            var manager = await _db.Users.SingleAsync(u => u.UserId == userId);
-            if (!await _authService.IsManagerOfEmployeeAsync(manager.EmployeeId ?? 0, request.EmployeeId))
+            if (!await _authService.IsManagerOfEmployeeAsync(approver?.EmployeeId ?? 0, request.EmployeeId))
                 return Forbid();
         }
 
         var oldValue = new { request.Status };
 
         request.Status = VacationStatus.Rejected;
-        request.ApproverEmployeeId = (await _db.Users.SingleAsync(u => u.UserId == userId)).EmployeeId;
+        request.ApproverEmployeeId = approver?.EmployeeId; // reutilizamos la query de arriba
         request.ApproverComment = dto.Comment;
         request.DecisionAt = DateTime.UtcNow;
         request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("VacationRequest", id, "REJECT", 
-            oldValue, 
-            new 
-            { 
+        await _audit.LogAsync("VacationRequest", id, "REJECT",
+            oldValue,
+            new
+            {
                 request.Status,
                 request.ApproverComment,
                 request.DecisionAt
-
-            }, 
-            userId);
+            },
+            userId.Value);
 
         return Ok(new { message = "Solicitud rechazada" });
     }
@@ -278,8 +288,8 @@ public class VacationRequestsController : ControllerBase
     [HttpPost("{id}/cancel")]
     public async Task<IActionResult> CancelRequest(int id)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+        var (userId, employeeId, error) = await GetCurrentEmployeeAsync(_db);
+        if (error != null) return error;
 
         var request = await _db.VacationRequests
             .SingleOrDefaultAsync(r => r.RequestId == id);
@@ -288,7 +298,7 @@ public class VacationRequestsController : ControllerBase
             return NotFound(new { message = "Solicitud no encontrada" });
 
         // Solo el dueño puede cancelar
-        if (request.EmployeeId != user.EmployeeId)
+        if (request.EmployeeId != employeeId)
             return Forbid();
 
         if (request.Status == VacationStatus.Approved)
@@ -303,12 +313,10 @@ public class VacationRequestsController : ControllerBase
         request.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("VacationRequest", id, "CANCEL", 
-            oldValue, 
-            new 
-            { 
-                request.Status, CancelledAt = DateTime.UtcNow }, 
-                userId);
+        await _audit.LogAsync("VacationRequest", id, "CANCEL",
+            oldValue,
+            new { request.Status, CancelledAt = DateTime.UtcNow },
+            userId);
 
         return Ok(new { message = "Solicitud cancelada" });
     }
@@ -321,10 +329,16 @@ public class VacationRequestsController : ControllerBase
         [FromQuery] int? employeeId,
         [FromQuery] string? status,
         [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to)
+        [FromQuery] DateTime? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+        // Limitar pageSize para evitar que alguien pida 100.000 registros de golpe
+        if (pageSize > 100) pageSize = 100;
+        if (page < 1) page = 1;
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
+        var user = await _db.Users.SingleAsync(u => u.UserId == userId.Value);
 
         var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
         var isManager = User.IsInRole(AppRoles.Manager);
@@ -385,14 +399,34 @@ public class VacationRequestsController : ControllerBase
 
         // Filtros adicionales
         if (!string.IsNullOrEmpty(status))
-            query = query.Where(r => r.Status == status.ToUpper());
+        {
+            var statusUpper = status.ToUpper();
+            var validStatuses = new[]
+            {
+                VacationStatus.Draft, VacationStatus.Submitted, VacationStatus.Approved,
+                VacationStatus.Rejected, VacationStatus.Cancelled
+            };
+
+            if (!validStatuses.Contains(statusUpper))
+                return BadRequest(new
+                {
+                    message = $"Estado no válido. Valores permitidos: {string.Join(", ", validStatuses)}"
+                });
+
+            query = query.Where(r => r.Status == statusUpper);
+        }
         if (from.HasValue)
             query = query.Where(r => r.StartDate >= from.Value.Date);
         if (to.HasValue)
             query = query.Where(r => r.EndDate <= to.Value.Date);
 
+        // Contar el total ANTES de paginar (EF Core lo traduce a SELECT COUNT(*))
+        var totalCount = await query.CountAsync();
+
         var requests = await query
             .OrderByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * pageSize)  // saltamos los registros de páginas anteriores
+            .Take(pageSize)               // tomamos solo los de esta página
             .Select(r => new
             {
                 r.RequestId,
@@ -410,7 +444,14 @@ public class VacationRequestsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(requests);
+        return Ok(new
+        {
+            data = requests,
+            page,
+            pageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        });
     }
 
     /// <summary>
@@ -419,14 +460,11 @@ public class VacationRequestsController : ControllerBase
     [HttpPost("validate")]
     public async Task<IActionResult> ValidateDates([FromBody] ValidateVacationDatesDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-        var user = await _db.Users.SingleAsync(u => u.UserId == userId);
-
-        if (user.EmployeeId == null)
-            return BadRequest(new { message = "Usuario sin empleado asignado" });
+        var (_, employeeId, error) = await GetCurrentEmployeeAsync(_db);
+        if (error != null) return error;
 
         var validation = await _requestService.ValidateRequestAsync(
-            user.EmployeeId.Value,
+            employeeId,
             dto.StartDate,
             dto.EndDate
         );

@@ -1,3 +1,4 @@
+using Serilog;
 using SistemaFichajesVacaciones.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure.Services;
@@ -9,13 +10,23 @@ using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.Services;
 using SistemaFichajesVacaciones.Api.JsonConverters;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Activar Serilog leyendo configuración desde appsettings.json
+builder.Host.UseSerilog((context, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
+
 // Options
 builder.Services.Configure<TimeTrackingOptions>(builder.Configuration.GetSection(TimeTrackingOptions.SectionName));
 builder.Services.Configure<VacationOptions>(builder.Configuration.GetSection(VacationOptions.SectionName));
+builder.Services.AddOptions<JwtOptions>()
+    .BindConfiguration(JwtOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // Aqui se añaden los servicios
 builder.Services.AddControllers()
@@ -102,12 +113,10 @@ builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
 builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();
 
 // Configuracion JWT
-var key = builder.Configuration["Jwt:Key"] ?? 
-          builder.Configuration["Jwt:key"] ?? 
-          throw new Exception("JWT Key no configurada");
-          
-var issuer = builder.Configuration["Jwt:Issuer"] ?? "SistemaFichajes";
-var audience = builder.Configuration["Jwt:Audience"] ?? "SistemaFichajesClient";
+var jwtConfig = builder.Configuration.GetSection(JwtOptions.SectionName);
+var key    = jwtConfig["Key"]      ?? throw new Exception("JWT Key no configurada");
+var issuer = jwtConfig["Issuer"]   ?? "SistemaFichajes";
+var audience = jwtConfig["Audience"] ?? "SistemaFichajesClient";
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -131,16 +140,32 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Congiguracion CORS para poder comsumir Api
+// Configuracion de Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("login", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 10; // Permitir 10 intentos
+        limiterOptions.Window = TimeSpan.FromMinutes(1); // Por minuto
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0; // No hacer cola, rechazar inmediatamente
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+// Configuracion CORS — orígenes definidos en appsettings.json
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        {
-            policy.WithOrigins("http://localhost:3000","http://localhost:5173") //  URLs de los frontends
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 // Aqui se construye la app
@@ -150,6 +175,12 @@ var app = builder.Build();
 
 // ✅ MIDDLEWARE GLOBAL DE EXCEPCIONES - Debe ser lo primero
 app.UseMiddleware<SistemaFichajesVacaciones.Api.Middleware.GlobalExceptionMiddleware>();
+
+// Añadir CorrelationId a todos los logs de cada petición (debe ir antes del request logging)
+app.UseMiddleware<SistemaFichajesVacaciones.Api.Middleware.CorrelationIdMiddleware>();
+
+// Registrar cada petición HTTP en los logs (método, ruta, status code, duración)
+app.UseSerilogRequestLogging();
 
 if  (app.Environment.IsDevelopment())
 {
@@ -168,7 +199,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

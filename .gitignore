@@ -17,3 +17,6 @@ x86/
 *.log
 appsettings.Development.json
 appsettings.Production.json
+
+## Claude Code (configuración local de la herramienta, no pertenece al repo)
+.claude/

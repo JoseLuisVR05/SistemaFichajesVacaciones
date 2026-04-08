@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SistemaFichajesVacaciones.Application.DTOs;
+using SistemaFichajesVacaciones.Application.DTOs.TimeControl;
 using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
@@ -16,7 +17,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/time-entries")]
 [Authorize] 
-public class TimeEntriesController : ControllerBase
+public class TimeEntriesController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly ITimeSummaryService _summaryService;
@@ -34,17 +35,17 @@ public class TimeEntriesController : ControllerBase
     /// Registrar entrada (IN) o salida (OUT)
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> RegisterEntry([FromBody] RegisterEntryDto dto)
+    public async Task<IActionResult> RegisterEntry([FromBody] RegisterEntryDto dto, CancellationToken cancellationToken)
     {
         // Obtener userId del token JWT
-        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
-        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-            return Unauthorized(new { message = "Token inválido" });
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         // Obtener empleado del usuario
         var user = await _db.Users
             .Include(u => u.Employee)
-            .SingleOrDefaultAsync(u => u.UserId == userId);
+            .ThenInclude(e => e!.Territory)
+            .SingleOrDefaultAsync(u => u.UserId == userId.Value, cancellationToken);
 
         if (user?.Employee == null)
             return BadRequest(new { message = "Usuario sin empleado asignado" });
@@ -55,17 +56,18 @@ public class TimeEntriesController : ControllerBase
         if (!string.IsNullOrEmpty(dto.EntryType) && dto.EntryType != "IN" && dto.EntryType != "OUT")
             return BadRequest(new { message = "EntryType debe ser IN, OUT, o vacío" });
 
-        var now = DateTime.Now;  // ✅ Usar hora local, no UTC
-        var today = DateTime.Now.Date;  // ✅ Hoy en hora local
+        // Hora actual en la zona horaria del territorio del empleado
+        // Garantiza que un fichaje web de India se guarda en IST, no en hora del servidor
+        var now = SistemaFichajesVacaciones.Infrastructure.Services.TimeZoneHelper.GetTerritoryNow(user.Employee.Territory);
+        var today = now.Date;
 
         // Obtener último registro del día
-        
         var lastEntry = await _db.TimeEntries
             .Where(e => e.EmployeeId == employeeId
                 && e.Time != null
                 && e.Time.Value.Date == today)
             .OrderByDescending(e => e.Time)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         // Validar secuencia usando pair inference
         if (!string.IsNullOrEmpty(dto.EntryType) && lastEntry != null)
@@ -76,7 +78,7 @@ public class TimeEntriesController : ControllerBase
                     && e.Time != null
                     && e.Time.Value.Date == today)
                 .OrderBy(e => e.Time)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             int indexOfLast = allEntriesInDay.FindIndex(e => e.TimeEntryId == lastEntry.TimeEntryId);
             string lastInferredType = (indexOfLast >= 0 && indexOfLast % 2 == 0) ? "IN" : "OUT";
@@ -95,16 +97,16 @@ public class TimeEntriesController : ControllerBase
         var entry = new TimeEntry
         {
             EmployeeId = employeeId,
-            EntryType = dto.EntryType,
+            EntryType = dto.EntryType ?? string.Empty,
             EventTime = now,
             Time = now,
             Source = "WEB",
             Comment = dto.Comment,
-            CreatedByUserId = userId
+            CreatedByUserId = userId.Value
         };
 
         _db.TimeEntries.Add(entry);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(cancellationToken);
 
         // Recalcular resumen diario tras cada fichaje
         await _summaryService.CalculateDailySummaryAsync(employeeId, now.Date);
@@ -125,13 +127,13 @@ public class TimeEntriesController : ControllerBase
     public async Task<IActionResult> GetEntries(
         [FromQuery] int? employeeId,
         [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to)
+        [FromQuery] DateTime? to,
+        CancellationToken cancellationToken)
 
         {
         // Si no se especifica employeeId, usar el del usuario autenticado
-        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
-        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-            return Unauthorized();
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         int targetEmployeeId;
 
@@ -144,8 +146,8 @@ public class TimeEntriesController : ControllerBase
             {
                 if(User.IsInRole(AppRoles.Manager))
                 {
-                    var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
-                    
+                    var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId, cancellationToken);
+
                     if (!await _authService.IsManagerOfEmployeeAsync(managerUser.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
                 }
@@ -159,10 +161,9 @@ public class TimeEntriesController : ControllerBase
         }
         else
         {
-            var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+            var user = await _db.Users.SingleAsync(u => u.UserId == userId.Value, cancellationToken);
 
             if (user.EmployeeId == null)
-
                 return BadRequest(new { message = "Usuario sin empleado asignado" });
 
             targetEmployeeId = user.EmployeeId.Value;
@@ -180,7 +181,7 @@ public class TimeEntriesController : ControllerBase
 
         var entries = await query
             .OrderBy(e => e.Time)  // Ordenar ASC para pair inference
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         // Calcular tipo de fichaje usando pair inference
         var entriesWithType = new List<TimeEntryDto>();
@@ -225,13 +226,12 @@ public class TimeEntriesController : ControllerBase
     public async Task<IActionResult> GetDailySummary(
         [FromQuery] int? employeeId,
         [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to)
+        [FromQuery] DateTime? to,
+        CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
+        var userId = TryGetCurrentUserId();
 
-        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-
-            return Unauthorized();
+        if (userId == null) return UnauthorizedUser();
 
         int targetEmployeeId;
 
@@ -243,8 +243,8 @@ public class TimeEntriesController : ControllerBase
             {
                 if (User.IsInRole(AppRoles.Manager))
                 {
-                    var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId);
-                    
+                    var managerUser = await _db.Users.SingleAsync(u => u.UserId == userId.Value, cancellationToken);
+
                     if (!await _authService.IsManagerOfEmployeeAsync(managerUser.EmployeeId ?? 0, employeeId.Value))
                         return Forbid();
                 }
@@ -253,15 +253,14 @@ public class TimeEntriesController : ControllerBase
                     return Forbid();
                 }
             }
-            
+
             targetEmployeeId = employeeId.Value;
         }
         else
         {
-            var user = await _db.Users.SingleAsync(u => u.UserId == userId);
+            var user = await _db.Users.SingleAsync(u => u.UserId == userId.Value, cancellationToken);
 
             if (user.EmployeeId == null)
-
                 return BadRequest(new { message = "Usuario sin empleado asignado" });
 
             targetEmployeeId = user.EmployeeId.Value;
@@ -270,38 +269,20 @@ public class TimeEntriesController : ControllerBase
         var fromDate = from ?? DateTime.Now.AddDays(-_timeOptions.DefaultQueryRangeDays).Date;  // ✅ Hora local
         var toDate = to ?? DateTime.Now.Date;  // ✅ Hora local
 
-        // Calcular resúmenes para cada día del rango
-        var summaries = new List<TimeSummaryDto>();
+        // Una sola llamada carga todos los días del rango en ~7 queries totales
+        var rawSummaries = await _summaryService.CalculateRangeSummaryAsync(targetEmployeeId, fromDate, toDate);
 
-        for (var d = fromDate; d <= toDate; d = d.AddDays(1))
+        var summaries = rawSummaries.Select(summary => new TimeSummaryDto
         {
-            var summary = await _summaryService.CalculateDailySummaryAsync(targetEmployeeId, d);
+            Date = summary.Date,
+            WorkedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
+            ExpectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
+            BalanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2),
+            IncidentType = summary.IncidentType,
+            HasOpenEntry = summary.HasOpenEntry,
+            ProposedCorrectionMinutes = summary.ExpectedMinutes
+        }).ToList();
 
-            if(summary != null)
-            {
-                summaries.Add(new TimeSummaryDto
-                {
-                    Date = summary.Date,
-                    WorkedHours = Math.Round(summary.WorkedMinutes / 60.0, 2),
-                    ExpectedHours = Math.Round(summary.ExpectedMinutes / 60.0, 2),
-                    BalanceHours = Math.Round(summary.BalanceMinutes / 60.0, 2),
-                    IncidentType = summary.IncidentType,
-                    HasOpenEntry = summary.HasOpenEntry,
-                    ProposedCorrectionMinutes = summary.ExpectedMinutes
-                });
-            }
-            else
-            {
-                summaries.Add(new TimeSummaryDto
-                {
-                    Date = d,
-                    WorkedHours = 0.0,
-                    ExpectedHours = 0.0,
-                    BalanceHours = 0.0
-                });
-            }
-        }
-        
         return Ok(summaries);
     }
 
@@ -311,7 +292,7 @@ public class TimeEntriesController : ControllerBase
     /// </summary>
     [HttpPost("recalculate-summaries")]
     [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Rrhh}")]
-    public async Task<IActionResult> RecalculateMissingSummaries([FromQuery] DateTime? from, [FromQuery] DateTime? to)
+    public async Task<IActionResult> RecalculateMissingSummaries([FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken cancellationToken)
     {
         var fromDate = from?.Date ?? DateTime.Now.AddDays(-7).Date;
         var toDate = to?.Date ?? DateTime.Now.Date;
@@ -321,12 +302,12 @@ public class TimeEntriesController : ControllerBase
             .Where(e => e.Time != null && e.Time.Value.Date >= fromDate && e.Time.Value.Date <= toDate)
             .Select(e => new { e.EmployeeId, Date = e.Time!.Value.Date })
             .Distinct()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var existingSummaries = await _db.TimeDailySummaries
             .Where(s => s.Date >= fromDate && s.Date <= toDate)
             .Select(s => new { s.EmployeeId, s.Date })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         var existingSet = existingSummaries.ToHashSet();
 
@@ -343,6 +324,4 @@ public class TimeEntriesController : ControllerBase
 
         return Ok(new { message = $"Recalculados {calculated} resúmenes faltantes", from = fromDate, to = toDate, total = calculated });
     }
-
-public record RegisterEntryDto(string EntryType, string? Comment);
 }

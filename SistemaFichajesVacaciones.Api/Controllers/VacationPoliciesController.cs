@@ -11,7 +11,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/vacation/policies")]
 [Authorize]
-public class VacationPoliciesController : ControllerBase
+public class VacationPoliciesController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
@@ -73,7 +73,8 @@ public class VacationPoliciesController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> CreatePolicy([FromBody] CreatePolicyDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         // Validar que no exista ya una política con mismo nombre y año
         var exists = await _db.VacationPolicies
@@ -103,7 +104,7 @@ public class VacationPoliciesController : ControllerBase
         _db.VacationPolicies.Add(policy);
         await _db.SaveChangesAsync();
 
-        await _audit.LogAsync("VacationPolicies", policy.PolicyId, "CREATE", null, policy, userId);
+        await _audit.LogAsync("VacationPolicies", policy.PolicyId, "CREATE", null, policy, userId.Value);
 
         return Ok(new
         {
@@ -119,7 +120,8 @@ public class VacationPoliciesController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> UpdatePolicy(int id, [FromBody] UpdatePolicyDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         var policy = await _db.VacationPolicies.FindAsync(id);
         if (policy == null)
@@ -171,7 +173,7 @@ public class VacationPoliciesController : ControllerBase
 
         await _audit.LogAsync("VacationPolicies", id, "UPDATE", oldValue,
             new { policy.Name, policy.Year, policy.AccrualType, policy.TotalDaysPerYear, policy.CarryOverMaxDays },
-            userId);
+            userId.Value);
 
         return Ok(new { message = "Política actualizada correctamente" });
     }
@@ -183,7 +185,8 @@ public class VacationPoliciesController : ControllerBase
     [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
     public async Task<IActionResult> DeletePolicy(int id)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         var policy = await _db.VacationPolicies.FindAsync(id);
         if (policy == null)
@@ -203,7 +206,7 @@ public class VacationPoliciesController : ControllerBase
         _db.VacationPolicies.Remove(policy);
         await _db.SaveChangesAsync();
 
-        await _audit.LogAsync("VacationPolicies", id, "DELETE", policy, null, userId);
+        await _audit.LogAsync("VacationPolicies", id, "DELETE", policy, null, userId.Value);
 
         return Ok(new { message = "Política eliminada correctamente" });
     }

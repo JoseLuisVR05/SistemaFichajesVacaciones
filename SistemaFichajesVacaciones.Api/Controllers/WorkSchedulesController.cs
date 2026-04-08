@@ -12,7 +12,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [Route("api/schedules")]
 [Authorize]
 [RequireRole(AppRoles.Admin, AppRoles.Rrhh)]
-public class WorkSchedulesController : ControllerBase
+public class WorkSchedulesController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IAuditService _audit;
@@ -116,8 +116,8 @@ public class WorkSchedulesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateSchedule([FromBody] ScheduleAssignmentDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
-
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         // Validate employee exists
         var employee = await _db.Employees.FindAsync(dto.EmployeeId);
         if (employee == null)
@@ -141,7 +141,7 @@ public class WorkSchedulesController : ControllerBase
 
         _db.Employee_WorkSchedules.Add(schedule);
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("WorkSchedule", schedule.WorkScheduleId, "CREATE", null, schedule, userId);
+        await _audit.LogAsync("WorkSchedule", schedule.WorkScheduleId, "CREATE", null, schedule, userId.Value);
 
         return Ok(new { message = "Asignación de horario creada", workScheduleId = schedule.WorkScheduleId });
     }
@@ -153,7 +153,8 @@ public class WorkSchedulesController : ControllerBase
     [HttpPost("assign")]
     public async Task<IActionResult> AssignTemplateToEmployee([FromBody] AssignTemplateToEmployeeDto dto)
     {
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)?.Value ?? "0");
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         // Validar empleado existe
         var employee = await _db.Employees.FindAsync(dto.EmployeeId);
@@ -184,7 +185,7 @@ public class WorkSchedulesController : ControllerBase
             await _db.SaveChangesAsync();
             await _audit.LogAsync("WorkSchedule", existingSchedule.WorkScheduleId, "UPDATE", 
                 new { previousTemplateId = existingSchedule.WorkScheduleTemplateId },
-                new { newTemplateId = dto.WorkScheduleTemplateId }, userId);
+                new { newTemplateId = dto.WorkScheduleTemplateId }, userId.Value);
         }
         else
         {
@@ -202,7 +203,7 @@ public class WorkSchedulesController : ControllerBase
 
             _db.Employee_WorkSchedules.Add(schedule);
             await _db.SaveChangesAsync();
-            await _audit.LogAsync("WorkSchedule", schedule.WorkScheduleId, "CREATE", null, schedule, userId);
+            await _audit.LogAsync("WorkSchedule", schedule.WorkScheduleId, "CREATE", null, schedule, userId.Value);
         }
 
         return Ok(new { message = "Template asignada al empleado" });
@@ -211,7 +212,8 @@ public class WorkSchedulesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateSchedule(int id, [FromBody] ScheduleAssignmentDto dto)
     {
-        var userId   = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId   = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         var schedule = await _db.Employee_WorkSchedules.FindAsync(id);
         if (schedule == null) return NotFound(new { message = "Asignación de horario no encontrada" });
 
@@ -238,7 +240,7 @@ public class WorkSchedulesController : ControllerBase
 
         await _db.SaveChangesAsync();
         await _audit.LogAsync("WorkSchedule", id, "UPDATE", oldValue,
-            new { schedule.WorkScheduleTemplateId, schedule.ValidFrom, schedule.ValidTo }, userId);
+            new { schedule.WorkScheduleTemplateId, schedule.ValidFrom, schedule.ValidTo }, userId.Value);
 
         return Ok(new { message = "Horario actualizado" });
     }
@@ -246,13 +248,14 @@ public class WorkSchedulesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteSchedule(int id)
     {
-        var userId   = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId   = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
         var schedule = await _db.Employee_WorkSchedules.FindAsync(id);
         if (schedule == null) return NotFound(new { message = "Horario no encontrado" });
 
         _db.Employee_WorkSchedules.Remove(schedule);
         await _db.SaveChangesAsync();
-        await _audit.LogAsync("WorkSchedule", id, "DELETE", schedule, null, userId);
+        await _audit.LogAsync("WorkSchedule", id, "DELETE", schedule, null, userId.Value);
 
         return Ok(new { message = "Horario eliminado" });
     }

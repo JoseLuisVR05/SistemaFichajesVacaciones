@@ -32,6 +32,9 @@ public class TimeSummaryService : ITimeSummaryService
         _options = options.Value;
     }
 
+    private static DateTime GetTerritoryNow(Territory? territory) =>
+        TimeZoneHelper.GetTerritoryNow(territory);
+
     public async Task<TimeDailySummary?> CalculateDailySummaryAsync(int employeeId, DateTime date)
     {
         var dateOnly = date.Date;
@@ -45,6 +48,9 @@ public class TimeSummaryService : ITimeSummaryService
 
         if (employee == null)
             return null;
+
+        // Hora "ahora" en la zona horaria del territorio del empleado (con DST correcto)
+        var territoryNow = GetTerritoryNow(employee.Territory);
 
         // ── LÓGICA SMART: Obtener CalendarTemplate ──────────────────────────
         CalendarTemplate? calendarTemplate = null;
@@ -167,52 +173,41 @@ public class TimeSummaryService : ITimeSummaryService
         {
             // Un solo fichaje: asumir que es entrada sin cerrar
             hasOpenEntry = true;
-            if (dateOnly == DateTime.UtcNow.Date)
+            if (dateOnly == territoryNow.Date)
             {
-                // HOY: suma tiempo desde el fichaje hasta AHORA
-                totalMinutes = (int)Math.Round((DateTime.UtcNow - entries[0].Time!.Value).TotalMinutes);
+                // HOY en la zona del empleado: suma tiempo desde el fichaje hasta AHORA
+                totalMinutes = (int)Math.Round((territoryNow - entries[0].Time!.Value).TotalMinutes);
             }
             else
             {
-                // Día pasado: corta en fin de jornada del horario
                 var cutoff = dateOnly.Add(endTimeOfDay);
                 if (cutoff > entries[0].Time!.Value)
                     totalMinutes = (int)Math.Round((cutoff - entries[0].Time!.Value).TotalMinutes);
-
-                // Nunca superar los minutos esperados
                 totalMinutes = Math.Min(totalMinutes, expectedMinutes);
             }
         }
         else
         {
-            // 2 o más fichajes: asumir pares entrada-salida
-            // Primero=entrada, segundo=salida, tercero=entrada de nuevo, etc.
             for (int i = 0; i < entries.Count - 1; i += 2)
             {
-                var entrada = entries[i].Time!.Value;
-                var salida = entries[i + 1].Time!.Value;
-                totalMinutes += (int)Math.Round((salida - entrada).TotalMinutes);
+                totalMinutes += (int)Math.Round((entries[i + 1].Time!.Value - entries[i].Time!.Value).TotalMinutes);
             }
 
-            // Si hay número impar de fichajes, el último quedó sin cerrar
             if (entries.Count % 2 == 1)
             {
                 hasOpenEntry = true;
                 var lastEntry = entries[entries.Count - 1];
 
-                if (dateOnly == DateTime.UtcNow.Date)
+                if (dateOnly == territoryNow.Date)
                 {
-                    // HOY: suma tiempo desde el último fichaje hasta AHORA
-                    totalMinutes += (int)Math.Round((DateTime.UtcNow - lastEntry.Time!.Value).TotalMinutes);
+                    // HOY en la zona del empleado
+                    totalMinutes += (int)Math.Round((territoryNow - lastEntry.Time!.Value).TotalMinutes);
                 }
                 else
                 {
-                    // Día pasado: corta en fin de jornada del horario
                     var cutoff = dateOnly.Add(endTimeOfDay);
                     if (cutoff > lastEntry.Time!.Value)
                         totalMinutes += (int)Math.Round((cutoff - lastEntry.Time.Value).TotalMinutes);
-
-                    // Nunca superar los minutos esperados
                     totalMinutes = Math.Min(totalMinutes, expectedMinutes);
                 }
             }
@@ -234,7 +229,7 @@ public class TimeSummaryService : ITimeSummaryService
         // ── Tipo de incidencia (solo días pasados laborables con horario) ─────
         string? incidentType = null;
 
-        if (isWorkingDay && expectedMinutes > 0 && dateOnly < DateTime.UtcNow.Date)
+        if (isWorkingDay && expectedMinutes > 0 && dateOnly < DateTime.Now.Date)
         {
             if (entries.Count == 0)
                 incidentType = "NO_ENTRIES";
@@ -287,19 +282,228 @@ public class TimeSummaryService : ITimeSummaryService
 
         public async Task<List<TimeDailySummary>> CalculateRangeSummaryAsync(int employeeId, DateTime fromDate, DateTime toDate)
         {
-            var summaries = new List<TimeDailySummary>();
+            var from = fromDate.Date;
+            var to = toDate.Date;
+            var nextDay = to.AddDays(1);
 
-            for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
+            // ── 1. Empleado (1 query) ────────────────────────────────────────
+            var employee = await _db.Employees
+                .AsNoTracking()
+                .Include(e => e.Territory)
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
+
+            if (employee == null) return new List<TimeDailySummary>();
+
+            var territoryOffsetHours = employee.Territory?.UTC ?? 0;
+
+            // ── 2. CalendarTemplate del empleado o territorio (1 query) ──────
+            CalendarTemplate? calendarTemplate = null;
+            if (employee.CalendarTemplateId.HasValue)
             {
-                var summary = await CalculateDailySummaryAsync(employeeId, date);
-
-                if( summary != null)
-                {
-                    summaries.Add(summary);
-                }
+                calendarTemplate = await _db.CalendarTemplates
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(ct => ct.CalendarTemplateId == employee.CalendarTemplateId);
             }
-            
-            return summaries;
+            else if (employee.TerritoryId.HasValue)
+            {
+                calendarTemplate = await _db.CalendarTemplates
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(ct => ct.TerritoryId == employee.TerritoryId
+                                            && ct.Year == DateTime.UtcNow.Year
+                                            && ct.IsDefault == true);
+            }
+
+            // ── 3. Todos los días del calendario en el rango (1 query) ───────
+            var calendarDays = calendarTemplate != null
+                ? await _db.Calendar_Days
+                    .AsNoTracking()
+                    .Where(c => c.CalendarTemplateId == calendarTemplate.CalendarTemplateId
+                             && c.Date >= from && c.Date <= to)
+                    .ToDictionaryAsync(c => c.Date)
+                : new Dictionary<DateTime, Calendar_Days>();
+
+            // ── 4. Horarios del empleado vigentes en el rango (1 query) ──────
+            var workSchedules = await _db.Employee_WorkSchedules
+                .AsNoTracking()
+                .Include(s => s.WorkScheduleTemplate)
+                .ThenInclude(t => t!.DayDetails)
+                .Where(s => s.EmployeeId == employeeId
+                         && s.ValidFrom <= to
+                         && (s.ValidTo == null || s.ValidTo >= from))
+                .OrderByDescending(s => s.ValidFrom)
+                .ToListAsync();
+
+            // Horario default del territorio como fallback (1 query)
+            WorkScheduleTemplate? defaultTemplate = null;
+            if (employee.TerritoryId.HasValue)
+            {
+                defaultTemplate = await _db.WorkScheduleTemplates
+                    .AsNoTracking()
+                    .Include(t => t.DayDetails)
+                    .FirstOrDefaultAsync(t =>
+                        t.TerritoryId == employee.TerritoryId
+                        && t.IsDefault == true
+                        && t.IsActive == true);
+            }
+
+            // ── 5. Todos los fichajes del rango en una sola query ────────────
+            var allEntries = await _db.TimeEntries
+                .AsNoTracking()
+                .Where(e => e.EmployeeId == employeeId
+                        && e.Time != null
+                        && e.Time >= from
+                        && e.Time < nextDay)
+                .OrderBy(e => e.Time)
+                .ToListAsync();
+
+            var entriesByDate = allEntries
+                .GroupBy(e => e.Time!.Value.Date)
+                .ToDictionary(g => g.Key, g => g.OrderBy(e => e.Time).ToList());
+
+            // ── 6. Todas las correcciones aprobadas del rango (1 query) ──────
+            var allCorrections = await _db.TimeCorrections
+                .AsNoTracking()
+                .Where(tc => tc.EmployeeId == employeeId
+                          && tc.Date >= from && tc.Date <= to
+                          && tc.Status == CorrectionStatus.Approved)
+                .ToListAsync();
+
+            var correctionsByDate = allCorrections
+                .GroupBy(tc => tc.Date)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // ── 7. Resúmenes existentes para upsert en bloque (1 query) ──────
+            var existingSummaries = await _db.TimeDailySummaries
+                .Where(s => s.EmployeeId == employeeId && s.Date >= from && s.Date <= to)
+                .ToDictionaryAsync(s => s.Date);
+
+            // ── Calcular en memoria para cada día ────────────────────────────
+            var results = new List<TimeDailySummary>();
+            var territoryNow = GetTerritoryNow(employee.Territory);
+            var today = territoryNow.Date;  // "Hoy" en la zona horaria del territorio del empleado
+            TimeSpan defaultEndTime = TimeSpan.Parse(_options.DefaultWorkdayEnd);
+
+            for (var d = from; d <= to; d = d.AddDays(1))
+            {
+                calendarDays.TryGetValue(d, out var calendarDay);
+                bool isWorkingDay = calendarDay == null || (!calendarDay.IsWeekend && !calendarDay.IsHoliday);
+
+                // Horario vigente para este día concreto
+                var schedule = workSchedules.FirstOrDefault(s => s.ValidFrom <= d && (s.ValidTo == null || s.ValidTo >= d));
+                var effectiveTemplate = schedule?.WorkScheduleTemplate ?? defaultTemplate;
+
+                int expectedMinutes = 0;
+                TimeSpan endTimeOfDay = defaultEndTime;
+
+                if (isWorkingDay)
+                {
+                    if (effectiveTemplate != null)
+                    {
+                        int dayOfWeek = (int)d.DayOfWeek == 0 ? 6 : (int)d.DayOfWeek - 1;
+                        var dayDetail = effectiveTemplate.DayDetails.FirstOrDefault(dd => dd.DayOfWeek == dayOfWeek);
+
+                        if (dayDetail != null && dayDetail.IsWorkDay && dayDetail.ExpectedStartTime.HasValue && dayDetail.ExpectedEndTime.HasValue)
+                        {
+                            var workDuration = dayDetail.ExpectedEndTime.Value.ToTimeSpan() - dayDetail.ExpectedStartTime.Value.ToTimeSpan();
+                            expectedMinutes = (int)Math.Round(workDuration.TotalMinutes) - dayDetail.BreakMinutes;
+                            endTimeOfDay = dayDetail.ExpectedEndTime.Value.ToTimeSpan();
+                        }
+                    }
+                    else
+                    {
+                        expectedMinutes = _options.DefaultWorkdayMinutes;
+                    }
+                }
+
+                entriesByDate.TryGetValue(d, out var dayEntries);
+                dayEntries ??= new List<TimeEntry>();
+
+                int totalMinutes = 0;
+                bool hasOpenEntry = false;
+
+                if (dayEntries.Count == 1)
+                {
+                    hasOpenEntry = true;
+                    if (d == today)
+                        totalMinutes = (int)Math.Round((territoryNow - dayEntries[0].Time!.Value).TotalMinutes);
+                    else
+                    {
+                        var cutoff = d.Add(endTimeOfDay);
+                        if (cutoff > dayEntries[0].Time!.Value)
+                            totalMinutes = (int)Math.Round((cutoff - dayEntries[0].Time!.Value).TotalMinutes);
+                        totalMinutes = Math.Min(totalMinutes, expectedMinutes);
+                    }
+                }
+                else if (dayEntries.Count > 1)
+                {
+                    for (int i = 0; i < dayEntries.Count - 1; i += 2)
+                        totalMinutes += (int)Math.Round((dayEntries[i + 1].Time!.Value - dayEntries[i].Time!.Value).TotalMinutes);
+
+                    if (dayEntries.Count % 2 == 1)
+                    {
+                        hasOpenEntry = true;
+                        var lastEntry = dayEntries[dayEntries.Count - 1];
+                        if (d == today)
+                            totalMinutes += (int)Math.Round((territoryNow - lastEntry.Time!.Value).TotalMinutes);
+                        else
+                        {
+                            var cutoff = d.Add(endTimeOfDay);
+                            if (cutoff > lastEntry.Time!.Value)
+                                totalMinutes += (int)Math.Round((cutoff - lastEntry.Time.Value).TotalMinutes);
+                            totalMinutes = Math.Min(totalMinutes, expectedMinutes);
+                        }
+                    }
+                }
+
+                if (correctionsByDate.TryGetValue(d, out var dayCorrections))
+                {
+                    int correctionMinutes = dayCorrections.Sum(tc => tc.CorrectedMinutes - (tc.OriginalMinutes ?? totalMinutes));
+                    totalMinutes += correctionMinutes;
+                }
+
+                string? incidentType = null;
+                if (isWorkingDay && expectedMinutes > 0 && d < today)
+                {
+                    if (dayEntries.Count == 0)
+                        incidentType = "NO_ENTRIES";
+                    else if (hasOpenEntry)
+                        incidentType = "UNCLOSED_ENTRY";
+                    else if (totalMinutes < expectedMinutes)
+                        incidentType = "INCOMPLETE";
+                }
+
+                int balance = totalMinutes - expectedMinutes;
+
+                if (existingSummaries.TryGetValue(d, out var summary))
+                {
+                    summary.ExpectedMinutes = expectedMinutes;
+                    summary.WorkedMinutes = totalMinutes;
+                    summary.BalanceMinutes = balance;
+                    summary.LastCalculatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    summary = new TimeDailySummary
+                    {
+                        EmployeeId = employeeId,
+                        Date = d,
+                        ExpectedMinutes = expectedMinutes,
+                        WorkedMinutes = totalMinutes,
+                        BalanceMinutes = balance,
+                        LastCalculatedAt = DateTime.UtcNow
+                    };
+                    _db.TimeDailySummaries.Add(summary);
+                    existingSummaries[d] = summary;
+                }
+
+                summary.IncidentType = incidentType;
+                summary.HasOpenEntry = hasOpenEntry;
+                results.Add(summary);
+            }
+
+            await _db.SaveChangesAsync(); // Un solo save para todo el rango
+
+            return results;
         }
 
     public async Task<TimeSummaryValidation> ValidateDayEntriesAsync(int employeeId, DateTime date)

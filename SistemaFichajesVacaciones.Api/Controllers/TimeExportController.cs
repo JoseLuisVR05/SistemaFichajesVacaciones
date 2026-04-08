@@ -13,7 +13,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/time-entries")]
 [Authorize]
-public class TimeExportController : ControllerBase
+public class TimeExportController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IEmployeeAuthorizationService _authService;
@@ -37,15 +37,12 @@ public class TimeExportController : ControllerBase
         [FromQuery] DateTime? to,
         [FromQuery] string format = "csv")
     {
-        var userIdClaim = User.FindFirst(ClaimNames.UserId)?.Value;
-
-        if (userIdClaim == null || !int.TryParse(userIdClaim, out var userId))
-
-            return Unauthorized();
+        var userId = TryGetCurrentUserId();
+        if (userId == null) return UnauthorizedUser();
 
         var user = await _db.Users
             .Include(u => u.Employee)
-            .SingleAsync(u => u.UserId == userId);
+            .SingleAsync(u => u.UserId == userId.Value);
 
         // Determina qué empleados puede exportar
         IQueryable<Domain.Entities.TimeEntry> query = _db.TimeEntries

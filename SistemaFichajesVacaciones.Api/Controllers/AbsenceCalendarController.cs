@@ -10,7 +10,7 @@ namespace SistemaFichajesVacaciones.Api.Controllers;
 [ApiController]
 [Route("api/vacation/absence-calendar")]
 [Authorize]
-public class AbsenceCalendarController : ControllerBase
+public class AbsenceCalendarController : BaseApiController
 {
     private readonly AppDbContext _db;
     private readonly IEmployeeAuthorizationService _authService;
@@ -35,7 +35,7 @@ public class AbsenceCalendarController : ControllerBase
             query = query.Where(a => a.Employee.Department == department);
 
         // Filtrar según rol 
-        var userId = int.Parse(User.FindFirst(ClaimNames.UserId)!.Value);
+        var userId = TryGetCurrentUserId();
         var user = await _db.Users.SingleAsync(u => u.UserId == userId);
         var isAdminOrRrhh = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.Rrhh);
 
