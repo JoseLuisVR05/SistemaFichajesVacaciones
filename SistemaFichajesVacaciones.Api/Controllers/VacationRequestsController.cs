@@ -1,12 +1,13 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SistemaFichajesVacaciones.Domain.Entities;
-using SistemaFichajesVacaciones.Infrastructure;
-using SistemaFichajesVacaciones.Infrastructure.Services;
 using SistemaFichajesVacaciones.Application.DTOs.Vacations;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Domain.Constants;
+using SistemaFichajesVacaciones.Domain.Entities;
+using SistemaFichajesVacaciones.Infrastructure;
+using SistemaFichajesVacaciones.Infrastructure.Services;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -20,19 +21,22 @@ public class VacationRequestsController : BaseApiController
     private readonly IVacationBalanceService _balanceService;
     private readonly IAuditService _audit;
     private readonly IEmployeeAuthorizationService _authService;
+    private readonly IValidator<CreateVacationRequestDto> _createValidator;
 
     public VacationRequestsController(
         AppDbContext db,
         IVacationRequestService requestService,
         IVacationBalanceService balanceService,
         IAuditService audit,
-        IEmployeeAuthorizationService authService)
+        IEmployeeAuthorizationService authService,
+        IValidator<CreateVacationRequestDto> createValidator)
     {
         _db = db;
         _requestService = requestService;
         _balanceService = balanceService;
         _audit = audit;
         _authService = authService;
+        _createValidator = createValidator;
     }
 
     /// <summary>
@@ -41,6 +45,10 @@ public class VacationRequestsController : BaseApiController
     [HttpPost]
     public async Task<IActionResult> CreateRequest([FromBody] CreateVacationRequestDto dto)
     {
+        var validationResult = await _createValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return BadRequest(new { errors = validationResult.ToDictionary() });
+
         var (userId, employeeId, error) = await GetCurrentEmployeeAsync(_db);
         if (error != null) return error;
 

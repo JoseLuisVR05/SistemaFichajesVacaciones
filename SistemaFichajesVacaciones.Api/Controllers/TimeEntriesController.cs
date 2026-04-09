@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,10 +7,10 @@ using Microsoft.Extensions.Options;
 using SistemaFichajesVacaciones.Application.DTOs;
 using SistemaFichajesVacaciones.Application.DTOs.TimeControl;
 using SistemaFichajesVacaciones.Domain.Configuration;
+using SistemaFichajesVacaciones.Domain.Constants;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
-using SistemaFichajesVacaciones.Domain.Constants;
 
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
@@ -23,12 +24,20 @@ public class TimeEntriesController : BaseApiController
     private readonly ITimeSummaryService _summaryService;
     private readonly IEmployeeAuthorizationService _authService;
     private readonly TimeTrackingOptions _timeOptions;
-    public TimeEntriesController(AppDbContext db, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService, IOptions<TimeTrackingOptions> timeOptions)
+    private readonly IValidator<RegisterEntryDto> _entryValidator;
+
+    public TimeEntriesController(
+        AppDbContext db,
+        ITimeSummaryService summaryService,
+        IEmployeeAuthorizationService authService,
+        IOptions<TimeTrackingOptions> timeOptions,
+        IValidator<RegisterEntryDto> entryValidator)
     {
         _db = db;
         _summaryService = summaryService;
         _authService = authService;
         _timeOptions = timeOptions.Value;
+        _entryValidator = entryValidator;
     }
 
     /// <summary>
@@ -37,6 +46,10 @@ public class TimeEntriesController : BaseApiController
     [HttpPost]
     public async Task<IActionResult> RegisterEntry([FromBody] RegisterEntryDto dto, CancellationToken cancellationToken)
     {
+        var validationResult = await _entryValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return BadRequest(new { errors = validationResult.ToDictionary() });
+
         // Obtener userId del token JWT
         var userId = TryGetCurrentUserId();
         if (userId == null) return UnauthorizedUser();

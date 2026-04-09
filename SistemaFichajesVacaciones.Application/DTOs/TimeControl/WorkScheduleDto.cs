@@ -126,8 +126,19 @@ public class WorkScheduleTemplateDetailsDto
 public class AssignTemplateToEmployeeDto
 {
     public int EmployeeId { get; set; }
-    
+
     public int WorkScheduleTemplateId { get; set; }
-    
+
     public DateTime? ValidTo { get; set; } // null = indefinido
 }
+
+/// <summary>
+/// DTO para crear o actualizar un horario manual de empleado (con rango de fechas completo)
+/// </summary>
+public record ScheduleAssignmentDto(
+    int       EmployeeId,
+    int       WorkScheduleTemplateId,
+    DateTime  ValidFrom,
+    DateTime? ValidTo,
+    string?   Notes
+);

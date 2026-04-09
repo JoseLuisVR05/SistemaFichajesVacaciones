@@ -1,4 +1,5 @@
 using Serilog;
+using FluentValidation;
 using SistemaFichajesVacaciones.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Infrastructure.Services;
@@ -9,6 +10,9 @@ using Microsoft.OpenApi.Models;
 using SistemaFichajesVacaciones.Domain.Configuration;
 using SistemaFichajesVacaciones.Application.Interfaces;
 using SistemaFichajesVacaciones.Application.Services;
+using SistemaFichajesVacaciones.Application.DTOs.TimeControl;
+using SistemaFichajesVacaciones.Application.DTOs.Vacations;
+using SistemaFichajesVacaciones.Application.Validators;
 using SistemaFichajesVacaciones.Api.JsonConverters;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
@@ -111,6 +115,11 @@ builder.Services.AddScoped<IEmployeeAuthorizationService, EmployeeAuthorizationS
 // Servicios de Vacaciones (desde Application)
 builder.Services.AddScoped<IVacationBalanceService, VacationBalanceService>();
 builder.Services.AddScoped<IVacationRequestService, VacationRequestService>();
+
+// Validators (FluentValidation)
+builder.Services.AddScoped<IValidator<CreateVacationRequestDto>, CreateVacationRequestValidator>();
+builder.Services.AddScoped<IValidator<RegisterEntryDto>, RegisterEntryValidator>();
+builder.Services.AddScoped<IValidator<CreateCorrectionDto>, CreateCorrectionValidator>();
 
 // Configuracion JWT
 var jwtConfig = builder.Configuration.GetSection(JwtOptions.SectionName);

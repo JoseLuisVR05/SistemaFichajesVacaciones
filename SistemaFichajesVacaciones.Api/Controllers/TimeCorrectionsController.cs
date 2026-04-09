@@ -1,12 +1,14 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SistemaFichajesVacaciones.Application.DTOs.TimeControl;
 using SistemaFichajesVacaciones.Domain.Configuration;
+using SistemaFichajesVacaciones.Domain.Constants;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
-using SistemaFichajesVacaciones.Domain.Constants;
 using SistemaFichajesVacaciones.Api.Controllers;
 
 // Api/Controllers/TimeCorrectionsController.cs
@@ -20,14 +22,22 @@ public class TimeCorrectionsController : BaseApiController
     private readonly ITimeSummaryService _summaryService;
     private readonly IEmployeeAuthorizationService _authService;
     private readonly TimeTrackingOptions _timeOptions;
+    private readonly IValidator<CreateCorrectionDto> _createValidator;
 
-    public TimeCorrectionsController(AppDbContext db, IAuditService audit, ITimeSummaryService summaryService, IEmployeeAuthorizationService authService, IOptions<TimeTrackingOptions> timeOptions)
+    public TimeCorrectionsController(
+        AppDbContext db,
+        IAuditService audit,
+        ITimeSummaryService summaryService,
+        IEmployeeAuthorizationService authService,
+        IOptions<TimeTrackingOptions> timeOptions,
+        IValidator<CreateCorrectionDto> createValidator)
     {
         _db = db;
         _audit = audit;
         _summaryService = summaryService;
         _authService = authService;
         _timeOptions = timeOptions.Value;
+        _createValidator = createValidator;
     }
 
     /// <summary>
@@ -36,16 +46,16 @@ public class TimeCorrectionsController : BaseApiController
     [HttpPost]
     public async Task<IActionResult> RequestCorrection([FromBody] CreateCorrectionDto dto)
     {
+        var validationResult = await _createValidator.ValidateAsync(dto);
+        if (!validationResult.IsValid)
+            return BadRequest(new { errors = validationResult.ToDictionary() });
+
         var userId = TryGetCurrentUserId();
         if (userId == null) return UnauthorizedUser();
         var user = await _db.Users.Include(u => u.Employee).SingleAsync(u => u.UserId == userId.Value);
         
         if (user.EmployeeId == null)
             return BadRequest(new { message = "Usuario sin empleado asignado" });
-
-        // Validar fecha no futura
-        if (dto.Date > DateTime.Now.Date)  // ✅ Usar hora local
-            return BadRequest(new { message = "No se puede corregir una fecha futura" });
 
         // Validar que no exista corrección pendiente para esa fecha
         var existingPending = await _db.TimeCorrections
@@ -375,6 +385,3 @@ public class TimeCorrectionsController : BaseApiController
     }
 
 }
-public record UpdateCorrectionDto(int CorrectedMinutes, string Reason);
-public record CreateCorrectionDto(DateTime Date, int CorrectedMinutes, string Reason);
-public record RejectCorrectionDto(string RejectionReason);

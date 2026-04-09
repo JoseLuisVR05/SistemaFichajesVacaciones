@@ -2,9 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaFichajesVacaciones.Application.DTOs;
+using SistemaFichajesVacaciones.Application.DTOs.TimeControl;
+using SistemaFichajesVacaciones.Domain.Constants;
 using SistemaFichajesVacaciones.Domain.Entities;
 using SistemaFichajesVacaciones.Infrastructure;
-using SistemaFichajesVacaciones.Domain.Constants;
 
 namespace SistemaFichajesVacaciones.Api.Controllers;
 
@@ -261,10 +262,3 @@ public class WorkSchedulesController : BaseApiController
     }
 }
 
-public record ScheduleAssignmentDto(
-    int      EmployeeId,
-    int      WorkScheduleTemplateId,
-    DateTime ValidFrom,
-    DateTime? ValidTo,
-    string?  Notes
-);

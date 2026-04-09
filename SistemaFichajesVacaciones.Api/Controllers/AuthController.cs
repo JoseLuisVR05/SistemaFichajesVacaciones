@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
+using SistemaFichajesVacaciones.Application.DTOs.Auth;
 using SistemaFichajesVacaciones.Infrastructure;
 using SistemaFichajesVacaciones.Infrastructure.Services;
-using Microsoft.AspNetCore.RateLimiting;
 
 
 
@@ -59,5 +60,3 @@ public class AuthController : ControllerBase
         });
     }
 }
-
-public record LoginDto(string Email, string Password);
