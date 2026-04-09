@@ -40,7 +40,7 @@ export default function VacationApprovals() {
       await approve(requestId);
       showSnack(t('vacations.messages.requestApproved'));
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al aprobar', 'error');
+      showSnack(err.response?.data?.message || t('vacations.approvals.messages.errorApprove'), 'error');
     }
   };
 
@@ -56,7 +56,7 @@ export default function VacationApprovals() {
       setRejectComment('');
       setSelectedRow(null);
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al rechazar', 'error');
+      showSnack(err.response?.data?.message || t('vacations.approvals.messages.errorReject'), 'error');
     }
   };
 

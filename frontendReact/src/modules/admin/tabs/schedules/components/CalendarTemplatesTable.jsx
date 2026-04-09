@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Table,
   TableBody,
@@ -23,8 +24,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
-const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-
 export function CalendarTemplatesTable({
   templates,
   loading,
@@ -32,6 +31,7 @@ export function CalendarTemplatesTable({
   onEdit,
   onDelete,
 }) {
+  const { t } = useTranslation();
   const [viewDetailId, setViewDetailId] = useState(null);
   const viewDetail = templates?.find(t => t.workScheduleTemplateId === viewDetailId);
 
@@ -39,40 +39,39 @@ export function CalendarTemplatesTable({
     <>
       <Card sx={{ boxShadow: 2 }}>
         <CardHeader
-          title="Plantillas de Horarios"
+          title={t('admin.schedules.templatesTable.title')}
           action={
-            <Button 
-              variant="contained" 
-              onClick={onAdd} 
+            <Button
+              variant="contained"
+              onClick={onAdd}
               size="small"
               disabled={loading}
             >
-              + Crear Nueva
+              {t('admin.schedules.templatesTable.btnCreate')}
             </Button>
           }
         />
         <CardContent>
-          {/* Tabla */}
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress size={24} />
             </Box>
           ) : templates?.length === 0 ? (
             <Typography color="textSecondary">
-              No hay plantillas. Crea la primera.
+              {t('admin.schedules.templatesTable.empty')}
             </Typography>
           ) : (
             <TableContainer sx={{ border: '1px solid #e0e0e0', borderRadius: 1 }}>
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Nombre</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.templatesTable.colName')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.templatesTable.colDescription')}</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                      Por Defecto
+                      {t('admin.schedules.templatesTable.colDefault')}
                     </TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold', width: 140 }}>
-                      Acciones
+                      {t('common.actions')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -84,19 +83,19 @@ export function CalendarTemplatesTable({
                       </TableCell>
                       <TableCell>{template.description || '—'}</TableCell>
                       <TableCell align="center">
-                        {template.isDefault ? '✅ SÍ' : ''}
+                        {template.isDefault ? `✅ ${t('admin.schedules.templatesTable.isDefault')}` : ''}
                       </TableCell>
                       <TableCell align="right">
                         <IconButton
                           size="small"
-                          title="Ver detalles"
+                          title={t('admin.schedules.templatesTable.tooltipView')}
                           onClick={() => setViewDetailId(template.workScheduleTemplateId)}
                         >
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
                         <IconButton
                           size="small"
-                          title="Editar"
+                          title={t('admin.schedules.templatesTable.tooltipEdit')}
                           onClick={() => onEdit(template)}
                         >
                           <EditIcon fontSize="small" />
@@ -104,9 +103,9 @@ export function CalendarTemplatesTable({
                         <IconButton
                           size="small"
                           color="error"
-                          title="Eliminar"
+                          title={t('admin.schedules.templatesTable.tooltipDelete')}
                           onClick={() => {
-                            if (window.confirm(`¿Eliminar "${template.name}"?`)) {
+                            if (window.confirm(t('admin.schedules.templatesTable.confirmDelete', { name: template.name }))) {
                               onDelete(template.workScheduleTemplateId);
                             }
                           }}
@@ -125,7 +124,9 @@ export function CalendarTemplatesTable({
 
       {/* Dialog: Ver detalles de template */}
       <Dialog open={Boolean(viewDetail)} onClose={() => setViewDetailId(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>{viewDetail?.name} - Detalles por Día</DialogTitle>
+        <DialogTitle>
+          {t('admin.schedules.templatesTable.detailTitle', { name: viewDetail?.name })}
+        </DialogTitle>
         <DialogContent>
           {viewDetail && (
             <Box sx={{ mt: 2 }}>
@@ -138,23 +139,25 @@ export function CalendarTemplatesTable({
                 <Table size="small">
                   <TableHead>
                     <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                      <TableCell>Día</TableCell>
-                      <TableCell align="center">Laboral</TableCell>
-                      <TableCell>Inicio</TableCell>
-                      <TableCell>Fin</TableCell>
-                      <TableCell>Descanso</TableCell>
+                      <TableCell>{t('admin.schedules.templateForm.colDay')}</TableCell>
+                      <TableCell align="center">{t('admin.schedules.templatesTable.colWorkday')}</TableCell>
+                      <TableCell>{t('admin.schedules.templateForm.colStart')}</TableCell>
+                      <TableCell>{t('admin.schedules.templateForm.colEnd')}</TableCell>
+                      <TableCell>{t('admin.schedules.templatesTable.colBreak')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {viewDetail.dayDetails?.map((day) => (
                       <TableRow key={day.dayOfWeek}>
-                        <TableCell>{DAYS_OF_WEEK[day.dayOfWeek]}</TableCell>
+                        <TableCell>{t(`admin.schedules.templateForm.days.${day.dayOfWeek}`)}</TableCell>
                         <TableCell align="center">
-                          {day.isWorkDay ? 'Sí' : 'No'}
+                          {day.isWorkDay
+                            ? t('admin.schedules.templatesTable.yes')
+                            : t('admin.schedules.templatesTable.no')}
                         </TableCell>
                         <TableCell>{day.expectedStartTime || '—'}</TableCell>
                         <TableCell>{day.expectedEndTime || '—'}</TableCell>
-                        <TableCell>{day.breakMinutes ?? 0} min</TableCell>
+                        <TableCell>{day.breakMinutes ?? 0} {t('admin.schedules.templatesTable.minutes')}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -164,7 +167,7 @@ export function CalendarTemplatesTable({
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setViewDetailId(null)}>Cerrar</Button>
+          <Button onClick={() => setViewDetailId(null)}>{t('common.close')}</Button>
         </DialogActions>
       </Dialog>
     </>

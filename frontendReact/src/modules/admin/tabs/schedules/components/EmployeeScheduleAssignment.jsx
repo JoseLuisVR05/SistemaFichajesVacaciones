@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -30,6 +31,7 @@ export function EmployeeScheduleAssignment({
   onAssign,
   onUnassign,
 }) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
@@ -65,12 +67,12 @@ export function EmployeeScheduleAssignment({
         const results = await searchEmployees(searchTerm);
         setSearchResults(results || []);
       } catch (error) {
-        console.error('Error en búsqueda:', error);
+        console.error('Employee search error:', error);
         setSearchResults([]);
       } finally {
         setLoadingSearch(false);
       }
-    }, 500); // Espera 500ms después de que el usuario deja de escribir
+    }, 500);
 
     return () => {
       if (debounceTimer.current) {
@@ -83,7 +85,7 @@ export function EmployeeScheduleAssignment({
     if (!editingEmployee) return;
 
     if (!selectedTemplateId) {
-      alert('Selecciona una plantilla');
+      alert(t('admin.schedules.assignment.alertSelectTemplate'));
       return;
     }
 
@@ -95,7 +97,6 @@ export function EmployeeScheduleAssignment({
 
     setEditingEmployee(null);
 
-    // Refrescar resultados de búsqueda
     if (searchTerm.trim()) {
       try {
         const results = await searchEmployees(searchTerm);
@@ -106,26 +107,24 @@ export function EmployeeScheduleAssignment({
 
   const handleRemoveAssignment = async () => {
     if (!editingEmployee?.workSchedule) {
-      alert('Este empleado no tiene plantilla asignada');
+      alert(t('admin.schedules.assignment.alertNoTemplate'));
       return;
     }
 
     if (editingEmployee.workSchedule.isDefault) {
-      alert('Ya tiene la plantilla por defecto de su territorio');
+      alert(t('admin.schedules.assignment.alertIsDefault'));
       return;
     }
 
-    // Solo se puede "volver a default" si tiene una excepción (workScheduleId != null)
     if (!editingEmployee.workSchedule.workScheduleId) {
-      alert('No hay excepción que eliminar');
+      alert(t('admin.schedules.assignment.alertNoException'));
       return;
     }
 
-    if (window.confirm('¿Volver a la plantilla por defecto del territorio?')) {
+    if (window.confirm(t('admin.schedules.assignment.confirmResetDefault'))) {
       await onUnassign(editingEmployee.workSchedule.workScheduleId);
       setEditingEmployee(null);
 
-      // Refrescar resultados
       if (searchTerm.trim()) {
         try {
           const results = await searchEmployees(searchTerm);
@@ -138,11 +137,10 @@ export function EmployeeScheduleAssignment({
   return (
     <>
       <Card>
-        <CardHeader title="👥 Asignación de Plantillas a Empleados" />
+        <CardHeader title={`👥 ${t('admin.schedules.assignment.title')}`} />
         <CardContent>
-          {/* Buscador */}
           <TextField
-            placeholder="Buscar por nombre, ID o email..."
+            placeholder={t('admin.schedules.assignment.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             fullWidth
@@ -150,32 +148,31 @@ export function EmployeeScheduleAssignment({
             sx={{ mb: 2 }}
           />
 
-          {/* Tabla */}
           {loadingSearch ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress size={24} />
             </Box>
           ) : !hasSearched ? (
             <Typography color="textSecondary" sx={{ textAlign: 'center', p: 2 }}>
-              Ingresa nombre, email o ID del empleado para buscar
+              {t('admin.schedules.assignment.searchHint')}
             </Typography>
           ) : searchResults.length === 0 ? (
             <Typography color="textSecondary" sx={{ textAlign: 'center', p: 2 }}>
-              No se encontraron empleados con ese criterio
+              {t('admin.schedules.assignment.noResults')}
             </Typography>
           ) : (
             <TableContainer sx={{ border: '1px solid #e0e0e0', borderRadius: 1 }}>
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Nombre</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.assignment.colName')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.assignment.colEmail')}</TableCell>
                     <TableCell sx={{ fontWeight: 'bold' }}>
-                      Plantilla Actual
+                      {t('admin.schedules.assignment.colTemplate')}
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Por Defecto</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.assignment.colDefault')}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                      Acciones
+                      {t('common.actions')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -185,7 +182,7 @@ export function EmployeeScheduleAssignment({
                       <TableCell>{emp.fullName}</TableCell>
                       <TableCell>{emp.email || '—'}</TableCell>
                       <TableCell sx={{ fontWeight: 500, color: emp.workSchedule?.name ? 'inherit' : '#999' }}>
-                        {emp.workSchedule?.name || emp.workSchedule?.description || 'Sin asignar'}
+                        {emp.workSchedule?.name || emp.workSchedule?.description || t('admin.schedules.assignment.noTemplate')}
                       </TableCell>
                       <TableCell>
                         {emp.workSchedule?.isDefault ? '✅' : ''}
@@ -194,7 +191,7 @@ export function EmployeeScheduleAssignment({
                         <IconButton
                           size="small"
                           onClick={() => handleOpenEdit(emp)}
-                          title="Cambiar plantilla"
+                          title={t('admin.schedules.assignment.tooltipChange')}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>
@@ -215,14 +212,15 @@ export function EmployeeScheduleAssignment({
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Cambiar Plantilla - {editingEmployee?.fullName}</DialogTitle>
+        <DialogTitle>
+          {t('admin.schedules.assignment.dialogTitle', { name: editingEmployee?.fullName })}
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            {/* Plantilla actual */}
             {editingEmployee?.workSchedule?.name && (
               <Box sx={{ p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  📋 Plantilla Actual: {editingEmployee.workSchedule.name}
+                  📋 {t('admin.schedules.assignment.currentTemplate', { name: editingEmployee.workSchedule.name })}
                 </Typography>
                 {editingEmployee.workSchedule.description && (
                   <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
@@ -237,10 +235,9 @@ export function EmployeeScheduleAssignment({
               </Box>
             )}
 
-            {/* Selector de nueva plantilla */}
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                Asignar Nueva Plantilla
+                {t('admin.schedules.assignment.assignNew')}
               </Typography>
               <Select
                 value={selectedTemplateId}
@@ -248,10 +245,10 @@ export function EmployeeScheduleAssignment({
                 fullWidth
                 size="small"
               >
-                <MenuItem value="">Selecciona una plantilla...</MenuItem>
-                {templates?.map((t) => (
-                  <MenuItem key={t.workScheduleTemplateId} value={t.workScheduleTemplateId}>
-                    {t.name} {t.isDefault ? '(DEFAULT)' : ''}
+                <MenuItem value="">{t('admin.schedules.assignment.selectTemplate')}</MenuItem>
+                {templates?.map((tmpl) => (
+                  <MenuItem key={tmpl.workScheduleTemplateId} value={tmpl.workScheduleTemplateId}>
+                    {tmpl.name} {tmpl.isDefault ? '(DEFAULT)' : ''}
                   </MenuItem>
                 ))}
               </Select>
@@ -264,11 +261,11 @@ export function EmployeeScheduleAssignment({
             onClick={handleRemoveAssignment}
             disabled={editingEmployee?.workSchedule?.isDefault}
           >
-            Volver a Default
+            {t('admin.schedules.assignment.btnResetDefault')}
           </Button>
-          <Button onClick={() => setEditingEmployee(null)}>Cancelar</Button>
+          <Button onClick={() => setEditingEmployee(null)}>{t('common.cancel')}</Button>
           <Button variant="contained" onClick={handleSaveAssignment}>
-            Guardar
+            {t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>

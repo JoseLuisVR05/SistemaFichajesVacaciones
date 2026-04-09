@@ -298,7 +298,11 @@
         "reason": "Rejection reason",
         "confirm": "Confirm rejection"
       },
-      "detail": "Request detail"
+      "detail": "Request detail",
+      "messages": {
+        "errorApprove": "Error approving the request",
+        "errorReject": "Error rejecting the request"
+      }
     },
     "calendar": {
       "title": "Annual Absence Calendar",
@@ -317,7 +321,11 @@
       "requestCancel": "request canceled",
       "requestApproved": "request approved correctly",
       "requestRejected": "request rejected",
-      "requestReason": "The reason for the rejection is mandatory"
+      "requestReason": "The reason for the rejection is mandatory",
+      "errorValidateDates": "Error validating dates",
+      "errorCreate": "Error creating the request",
+      "errorSubmit": "Error submitting the request",
+      "errorCancel": "Error cancelling the request"
     }
   },
   "employees": {
@@ -403,6 +411,90 @@
         "title": "Confirm deletion",
         "description": "Delete this schedule?",
         "confirm": "Delete"
+      },
+      "tabs": {
+        "templates": "Schedule Templates",
+        "assign": "Assign to Employees"
+      },
+      "messages": {
+        "templateCreated": "Template created",
+        "templateUpdated": "Template updated",
+        "templateDeleted": "Template deleted",
+        "templateAssigned": "Template assigned to employee",
+        "assignmentRemoved": "Assignment removed",
+        "errorLoad": "Error loading templates",
+        "errorCreate": "Error creating template",
+        "errorUpdate": "Error updating template",
+        "errorDelete": "Error deleting template",
+        "errorAssign": "Error assigning template",
+        "errorUnassign": "Error removing assignment"
+      },
+      "templatesTable": {
+        "title": "Schedule Templates",
+        "btnCreate": "+ Create New",
+        "empty": "No templates yet. Create the first one.",
+        "colName": "Name",
+        "colDescription": "Description",
+        "colDefault": "Default",
+        "isDefault": "YES",
+        "tooltipView": "View details",
+        "tooltipEdit": "Edit",
+        "tooltipDelete": "Delete",
+        "confirmDelete": "Delete \"{{name}}\"?",
+        "detailTitle": "{{name}} - Details by Day",
+        "colWorkday": "Working",
+        "colBreak": "Break",
+        "yes": "Yes",
+        "no": "No",
+        "minutes": "min"
+      },
+      "assignment": {
+        "title": "Employee Template Assignment",
+        "searchPlaceholder": "Search by name, ID or email...",
+        "searchHint": "Enter employee name, email or ID to search",
+        "noResults": "No employees found with that criteria",
+        "colName": "Name",
+        "colEmail": "Email",
+        "colTemplate": "Current Template",
+        "colDefault": "Default",
+        "noTemplate": "Not assigned",
+        "tooltipChange": "Change template",
+        "dialogTitle": "Change Template - {{name}}",
+        "currentTemplate": "Current Template: {{name}}",
+        "assignNew": "Assign New Template",
+        "selectTemplate": "Select a template...",
+        "btnResetDefault": "Reset to Default",
+        "alertSelectTemplate": "Please select a template",
+        "alertNoTemplate": "This employee has no template assigned",
+        "alertIsDefault": "Already using the territory's default template",
+        "alertNoException": "No exception to remove",
+        "confirmResetDefault": "Reset to the territory's default template?"
+      },
+      "templateForm": {
+        "titleCreate": "Create New Template",
+        "titleEdit": "Edit Template",
+        "nameLabel": "Template name",
+        "namePlaceholder": "e.g.: Standard Schedule 9-18",
+        "descriptionLabel": "Description (optional)",
+        "isDefaultLabel": "Set as default template for the territory",
+        "tableTitle": "Schedule by Day of the Week",
+        "colDay": "Day",
+        "colWorkday": "Working day?",
+        "colStart": "Start",
+        "colEnd": "End",
+        "colBreak": "Break (min)",
+        "nameRequired": "Please enter a name for the template",
+        "btnCreate": "Create",
+        "btnSave": "Save",
+        "days": {
+          "0": "Monday",
+          "1": "Tuesday",
+          "2": "Wednesday",
+          "3": "Thursday",
+          "4": "Friday",
+          "5": "Saturday",
+          "6": "Sunday"
+        }
       }
     },
     "import": {

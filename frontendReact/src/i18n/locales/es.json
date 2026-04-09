@@ -296,7 +296,11 @@
         "reason": "Motivo del rechazo",
         "confirm": "Confirmar rechazo"
       },
-      "detail": "Detalle de solicitud"
+      "detail": "Detalle de solicitud",
+      "messages": {
+        "errorApprove": "Error al aprobar la solicitud",
+        "errorReject": "Error al rechazar la solicitud"
+      }
     },
     "calendar": {
       "title": "Calendario Anual de Ausencias",
@@ -315,7 +319,11 @@
       "requestCancel": "Solicitud cancelada",
       "requestApproved": "Solicitud aprobada correctamente",
       "requestRejected": "Solicitud rechazada",
-      "requestReason": "El motivo del rechazo es obligatorio"
+      "requestReason": "El motivo del rechazo es obligatorio",
+      "errorValidateDates": "Error al validar las fechas",
+      "errorCreate": "Error al crear la solicitud",
+      "errorSubmit": "Error al enviar la solicitud",
+      "errorCancel": "Error al cancelar la solicitud"
     }
   },
   "employees": {
@@ -394,13 +402,97 @@
         "start": "Entrada",
         "end": "Salida",
         "break": "Descanso",
-        "notes": "Notas", 
+        "notes": "Notas",
         "helperText": "Dejar vacío si el horario no tiene fecha de fin"
       },
       "delete": {
         "title": "Confirmar eliminación",
         "description": "¿Eliminar este horario?",
         "confirm": "Eliminar"
+      },
+      "tabs": {
+        "templates": "Plantillas de Horarios",
+        "assign": "Asignar a Empleados"
+      },
+      "messages": {
+        "templateCreated": "Plantilla creada",
+        "templateUpdated": "Plantilla actualizada",
+        "templateDeleted": "Plantilla eliminada",
+        "templateAssigned": "Plantilla asignada al empleado",
+        "assignmentRemoved": "Asignación removida",
+        "errorLoad": "Error al cargar plantillas",
+        "errorCreate": "Error al crear plantilla",
+        "errorUpdate": "Error al actualizar la plantilla",
+        "errorDelete": "Error al eliminar la plantilla",
+        "errorAssign": "Error al asignar plantilla",
+        "errorUnassign": "Error al remover asignación"
+      },
+      "templatesTable": {
+        "title": "Plantillas de Horarios",
+        "btnCreate": "+ Crear Nueva",
+        "empty": "No hay plantillas. Crea la primera.",
+        "colName": "Nombre",
+        "colDescription": "Descripción",
+        "colDefault": "Por Defecto",
+        "isDefault": "SÍ",
+        "tooltipView": "Ver detalles",
+        "tooltipEdit": "Editar",
+        "tooltipDelete": "Eliminar",
+        "confirmDelete": "¿Eliminar \"{{name}}\"?",
+        "detailTitle": "{{name}} - Detalles por Día",
+        "colWorkday": "Laboral",
+        "colBreak": "Descanso",
+        "yes": "Sí",
+        "no": "No",
+        "minutes": "min"
+      },
+      "assignment": {
+        "title": "Asignación de Plantillas a Empleados",
+        "searchPlaceholder": "Buscar por nombre, ID o email...",
+        "searchHint": "Ingresa nombre, email o ID del empleado para buscar",
+        "noResults": "No se encontraron empleados con ese criterio",
+        "colName": "Nombre",
+        "colEmail": "Email",
+        "colTemplate": "Plantilla Actual",
+        "colDefault": "Por Defecto",
+        "noTemplate": "Sin asignar",
+        "tooltipChange": "Cambiar plantilla",
+        "dialogTitle": "Cambiar Plantilla - {{name}}",
+        "currentTemplate": "Plantilla Actual: {{name}}",
+        "assignNew": "Asignar Nueva Plantilla",
+        "selectTemplate": "Selecciona una plantilla...",
+        "btnResetDefault": "Volver a Default",
+        "alertSelectTemplate": "Selecciona una plantilla",
+        "alertNoTemplate": "Este empleado no tiene plantilla asignada",
+        "alertIsDefault": "Ya tiene la plantilla por defecto de su territorio",
+        "alertNoException": "No hay excepción que eliminar",
+        "confirmResetDefault": "¿Volver a la plantilla por defecto del territorio?"
+      },
+      "templateForm": {
+        "titleCreate": "Crear Nueva Plantilla",
+        "titleEdit": "Editar Plantilla",
+        "nameLabel": "Nombre de la plantilla",
+        "namePlaceholder": "ej: Horario Estándar 9-18",
+        "descriptionLabel": "Descripción (opcional)",
+        "isDefaultLabel": "Establecer como plantilla por defecto del territorio",
+        "tableTitle": "Horarios por Día de la Semana",
+        "colDay": "Día",
+        "colWorkday": "¿Laborable?",
+        "colStart": "Inicio",
+        "colEnd": "Fin",
+        "colBreak": "Descanso (min)",
+        "nameRequired": "Ingresa un nombre para la plantilla",
+        "btnCreate": "Crear",
+        "btnSave": "Guardar",
+        "days": {
+          "0": "Lunes",
+          "1": "Martes",
+          "2": "Miércoles",
+          "3": "Jueves",
+          "4": "Viernes",
+          "5": "Sábado",
+          "6": "Domingo"
+        }
       }
     },
     "import": {

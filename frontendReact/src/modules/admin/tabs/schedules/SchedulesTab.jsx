@@ -44,8 +44,8 @@ export function SchedulesTab({ showSnack }) {
       const data = await getTemplatesByTerritory(null);
       setTemplates(data);
     } catch (error) {
-      console.error('Error al cargar templates:', error);
-      showSnack?.('Error al cargar plantillas', 'error');
+      console.error('Error loading templates:', error);
+      showSnack?.(t('admin.schedules.messages.errorLoad'), 'error');
     } finally {
       setLoadingTemplates(false);
     }
@@ -72,7 +72,7 @@ export function SchedulesTab({ showSnack }) {
           ...templateData,
           territoryId: editingTemplate.territoryId  // Mantener el territorio original
         });
-        showSnack?.('Plantilla actualizada', 'success');
+        showSnack?.(t('admin.schedules.messages.templateUpdated'), 'success');
       } else {
         // Crear - usar territorio por defecto (1 = España)
         await createTemplate({
@@ -80,7 +80,7 @@ export function SchedulesTab({ showSnack }) {
           territoryId: 1,  // Default: España
           isActive: true,
         });
-        showSnack?.('Plantilla creada', 'success');
+        showSnack?.(t('admin.schedules.messages.templateCreated'), 'success');
       }
 
       // Recargar todas las plantillas
@@ -89,7 +89,9 @@ export function SchedulesTab({ showSnack }) {
     } catch (error) {
       console.error('Error:', error);
       showSnack?.(
-        editingTemplate ? 'Error al actualizar' : 'Error al crear plantilla',
+        editingTemplate
+          ? t('admin.schedules.messages.errorUpdate')
+          : t('admin.schedules.messages.errorCreate'),
         'error'
       );
     } finally {
@@ -100,11 +102,11 @@ export function SchedulesTab({ showSnack }) {
   const handleDeleteTemplate = async (templateId) => {
     try {
       await deleteTemplate(templateId);
-      showSnack?.('Plantilla eliminada', 'success');
+      showSnack?.(t('admin.schedules.messages.templateDeleted'), 'success');
       await loadAllTemplates();
     } catch (error) {
       console.error('Error:', error);
-      showSnack?.('Error al eliminar plantilla', 'error');
+      showSnack?.(t('admin.schedules.messages.errorDelete'), 'error');
     }
   };
 
@@ -113,20 +115,20 @@ export function SchedulesTab({ showSnack }) {
   const handleAssignTemplate = async (payload) => {
     try {
       const response = await assignTemplateToEmployee(payload);
-      showSnack?.('Plantilla asignada al empleado', 'success');
+      showSnack?.(t('admin.schedules.messages.templateAssigned'), 'success');
     } catch (error) {
       console.error('[SchedulesTab] Error en assign:', error?.response?.data || error?.message || error);
-      showSnack?.('Error al asignar plantilla', 'error');
+      showSnack?.(t('admin.schedules.messages.errorAssign'), 'error');
     }
   };
 
   const handleUnassignTemplate = async (workScheduleId) => {
     try {
       const response = await deleteWorkSchedule(workScheduleId);
-      showSnack?.('Asignación removida', 'success');
+      showSnack?.(t('admin.schedules.messages.assignmentRemoved'), 'success');
     } catch (error) {
       console.error('[SchedulesTab] Error en unassign:', error?.response?.data || error?.message || error);
-      showSnack?.('Error al remover asignación', 'error');
+      showSnack?.(t('admin.schedules.messages.errorUnassign'), 'error');
     }
   };
 
@@ -135,8 +137,8 @@ export function SchedulesTab({ showSnack }) {
       {/* TABS */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
-          <Tab label="📅 Plantillas de Horarios" />
-          <Tab label="👥 Asignar a Empleados" />
+          <Tab label={`📅 ${t('admin.schedules.tabs.templates')}`} />
+          <Tab label={`👥 ${t('admin.schedules.tabs.assign')}`} />
         </Tabs>
       </Box>
 

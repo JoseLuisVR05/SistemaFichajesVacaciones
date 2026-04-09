@@ -82,7 +82,7 @@ export default function VacationRequests() {
       } catch {
         setValidation({
           isValid: false,
-          errors: ['Error al validar las fechas.'],
+          errors: [t('vacations.messages.errorValidateDates')],
           warnings: [],
           workingDays: 0,
           availableDays: 0,
@@ -121,7 +121,7 @@ export default function VacationRequests() {
       refetchBalance();
       setActiveTab(1);
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al crear la solicitud', 'error');
+      showSnack(err.response?.data?.message || t('vacations.messages.errorCreate'), 'error');
     } finally {
       setCreating(false);
     }
@@ -132,7 +132,7 @@ export default function VacationRequests() {
       await submit(requestId);
       showSnack(t('vacations.messages.submittedForApproval'));
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al enviar', 'error');
+      showSnack(err.response?.data?.message || t('vacations.messages.errorSubmit'), 'error');
     }
   };
   
@@ -143,7 +143,7 @@ export default function VacationRequests() {
       showSnack(t('vacations.messages.requestCancel'), 'info');
       refetchBalance();
     } catch (err) {
-      showSnack(err.response?.data?.message || 'Error al cancelar', 'error');
+      showSnack(err.response?.data?.message || t('vacations.messages.errorCancel'), 'error');
     }
   };
 

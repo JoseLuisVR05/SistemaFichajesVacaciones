@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -18,8 +19,6 @@ import {
   Typography,
   CircularProgress,
 } from '@mui/material';
-
-const DAYS_OF_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const DEFAULT_TEMPLATE = {
   name: '',
@@ -43,6 +42,7 @@ export function CalendarTemplateForm({
   editingTemplate = null,
   loading = false,
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(DEFAULT_TEMPLATE);
   const [isNew, setIsNew] = useState(true);
 
@@ -74,7 +74,7 @@ export function CalendarTemplateForm({
 
   const handleSave = () => {
     if (!form.name?.trim()) {
-      alert('Ingresa un nombre para la plantilla');
+      alert(t('admin.schedules.templateForm.nameRequired'));
       return;
     }
     onSave(form);
@@ -83,23 +83,23 @@ export function CalendarTemplateForm({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        {isNew ? '➕ Crear Nueva Plantilla' : '✏️ Editar Plantilla'}
+        {isNew ? `➕ ${t('admin.schedules.templateForm.titleCreate')}` : `✏️ ${t('admin.schedules.templateForm.titleEdit')}`}
       </DialogTitle>
 
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
           {/* Campos básicos */}
           <TextField
-            label="Nombre de la plantilla"
+            label={t('admin.schedules.templateForm.nameLabel')}
             value={form.name}
             onChange={(e) => handleFormChange('name', e.target.value)}
             fullWidth
             size="small"
-            placeholder="ej: Horario Estándar 9-18"
+            placeholder={t('admin.schedules.templateForm.namePlaceholder')}
           />
 
           <TextField
-            label="Descripción (opcional)"
+            label={t('admin.schedules.templateForm.descriptionLabel')}
             value={form.description}
             onChange={(e) => handleFormChange('description', e.target.value)}
             fullWidth
@@ -117,31 +117,31 @@ export function CalendarTemplateForm({
                 }
               />
             }
-            label="Establecer como plantilla por defecto del territorio"
+            label={t('admin.schedules.templateForm.isDefaultLabel')}
           />
 
           {/* Tabla de horarios por día */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-              Horarios por Día de la Semana
+              {t('admin.schedules.templateForm.tableTitle')}
             </Typography>
             <TableContainer sx={{ border: '1px solid #e0e0e0' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Día</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.templateForm.colDay')}</TableCell>
                     <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                      ¿Laborable?
+                      {t('admin.schedules.templateForm.colWorkday')}
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Inicio</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Fin</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Descanso (min)</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.templateForm.colStart')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.templateForm.colEnd')}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold' }}>{t('admin.schedules.templateForm.colBreak')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {form.dayDetails.map((day, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{DAYS_OF_WEEK[day.dayOfWeek]}</TableCell>
+                      <TableCell>{t(`admin.schedules.templateForm.days.${day.dayOfWeek}`)}</TableCell>
 
                       {/* Checkbox laborable */}
                       <TableCell align="center">
@@ -223,13 +223,18 @@ export function CalendarTemplateForm({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={handleSave}
           disabled={loading}
         >
-          {loading ? <CircularProgress size={20} /> : isNew ? 'Crear' : 'Guardar'}
+          {loading
+            ? <CircularProgress size={20} />
+            : isNew
+              ? t('admin.schedules.templateForm.btnCreate')
+              : t('admin.schedules.templateForm.btnSave')
+          }
         </Button>
       </DialogActions>
     </Dialog>
