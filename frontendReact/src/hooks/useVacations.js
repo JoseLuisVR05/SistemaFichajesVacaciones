@@ -46,7 +46,7 @@ export function useVacationRequests(params = {}) {
   }, [refetch]);
 
   return {
-    requests: data?.data ?? [],
+    requests: data ?? [],
     loading,
     error,
     refetch,

@@ -387,7 +387,15 @@
       "messages": {
         "updatedPolicy": "política actualizada",
         "createdPolicy": "política creada",
-        "removedPolicy": "política eliminada"
+        "removedPolicy": "política eliminada",
+        "bulkAssigned": "Asignación completada: {{created}} asignados, {{skipped}} omitidos"
+      },
+      "bulkAssign": {
+        "tooltip": "Asignación masiva",
+        "title": "Asignación masiva de política",
+        "description": "Asignará saldo de vacaciones a todos los empleados activos que aún no tengan saldo para el año indicado.",
+        "yearLabel": "Año de asignación",
+        "confirm": "Asignar"
       }
     },
     "schedules": {

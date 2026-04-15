@@ -82,7 +82,7 @@ export const getVacationRequests = async (params = {}) => {
     if (params.from) query.from = params.from;
     if (params.to) query.to = params.to;
     const { data } = await api.get('/vacation/requests', { params: query});
-    return data;
+    return data.data ?? [];
 };
 
 /* Envia una solicitud DRAFT para aprobacion*/

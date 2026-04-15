@@ -389,7 +389,15 @@
       "messages": {
         "updatedPolicy": "updated policy",
         "createdPolicy": "created policy",
-        "removedPolicy": "removed policy"
+        "removedPolicy": "removed policy",
+        "bulkAssigned": "Assignment completed: {{created}} assigned, {{skipped}} skipped"
+      },
+      "bulkAssign": {
+        "tooltip": "Bulk assignment",
+        "title": "Bulk policy assignment",
+        "description": "Will assign vacation balance to all active employees who do not yet have a balance for the indicated year.",
+        "yearLabel": "Assignment year",
+        "confirm": "Assign"
       }
     },
     "schedules": {

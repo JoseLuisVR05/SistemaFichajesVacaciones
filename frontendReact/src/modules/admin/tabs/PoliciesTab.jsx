@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Box, Button, TextField, CircularProgress,
   IconButton, Tooltip, MenuItem, Dialog, DialogTitle,
-  DialogContent, DialogActions, Typography, Paper
+  DialogContent, DialogActions, Typography, Paper, Alert
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { Add, Edit, Delete } from '@mui/icons-material';
-import { getPolicies, createPolicy, updatePolicy, deletePolicy } from '../../../services/vacationsService';
+import { Add, Edit, Delete, GroupAdd } from '@mui/icons-material';
+import { getPolicies, createPolicy, updatePolicy, deletePolicy, bulkAssignBalances } from '../../../services/vacationsService';
 import { ConfirmDialog, LoadingSpinner } from '../../../components/ui';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +26,11 @@ export function PoliciesTab({ showSnack }) {
   const [form, setForm]             = useState(EMPTY_POLICY);
   const [saving, setSaving]         = useState(false);
   const [deleteId, setDeleteId]     = useState(null);
+
+  // ── Asignación masiva ────────────────────────────────
+  const [bulkPolicy, setBulkPolicy]   = useState(null);
+  const [bulkYear, setBulkYear]       = useState(new Date().getFullYear());
+  const [bulkSaving, setBulkSaving]   = useState(false);
   
   const { t } = useTranslation();
 
@@ -76,6 +81,24 @@ export function PoliciesTab({ showSnack }) {
     }
   };
 
+  const openBulkAssign = (row) => {
+    setBulkPolicy(row);
+    setBulkYear(row.year);
+  };
+
+  const handleBulkAssign = async () => {
+    setBulkSaving(true);
+    try {
+      const result = await bulkAssignBalances({ policyId: bulkPolicy.id, year: bulkYear });
+      showSnack(t('admin.policies.messages.bulkAssigned', { created: result.created, skipped: result.skipped }));
+      setBulkPolicy(null);
+    } catch (err) {
+      showSnack(err.response?.data?.message || 'Error en asignación masiva', 'error');
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
   const handleDelete = async () => {
     try {
       await deletePolicy(deleteId);
@@ -95,9 +118,14 @@ export function PoliciesTab({ showSnack }) {
     { field: 'totalDaysPerYear', headerName: t('admin.policies.columns.daysPerYear'),      width: 100 },
     { field: 'carryOverMaxDays', headerName: t('admin.policies.columns.carryOver'),  width: 120 },
     {
-      field: 'acciones', headerName: t('common.actions'), width: 110, sortable: false,
+      field: 'acciones', headerName: t('common.actions'), width: 150, sortable: false,
       renderCell: ({ row }) => (
         <>
+          <Tooltip title={t('admin.policies.bulkAssign.tooltip')}>
+            <IconButton size="small" color="primary" onClick={() => openBulkAssign(row)}>
+              <GroupAdd fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={t('common.edit')}>
             <IconButton size="small" onClick={() => openEdit(row)}>
               <Edit fontSize="small" />
@@ -182,6 +210,32 @@ export function PoliciesTab({ showSnack }) {
         confirmLabel={t('common.delete')}
         confirmColor="error"
       />
+
+      {/* Dialog asignación masiva */}
+      <Dialog open={Boolean(bulkPolicy)} onClose={() => setBulkPolicy(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t('admin.policies.bulkAssign.title')}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <Alert severity="info">{t('admin.policies.bulkAssign.description')}</Alert>
+            <Typography variant="body2">
+              <strong>{t('admin.policies.columns.name')}:</strong> {bulkPolicy?.name}
+            </Typography>
+            <TextField
+              label={t('admin.policies.bulkAssign.yearLabel')}
+              type="number"
+              value={bulkYear}
+              fullWidth
+              onChange={e => setBulkYear(+e.target.value)}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBulkPolicy(null)}>{t('common.cancel')}</Button>
+          <Button variant="contained" onClick={handleBulkAssign} disabled={bulkSaving}>
+            {bulkSaving ? <CircularProgress size={18} /> : t('admin.policies.bulkAssign.confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
